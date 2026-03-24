@@ -9,8 +9,14 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) return unauthorized();
+  let userId: string;
+  if (!process.env.AUTH_MICROSOFT_ENTRA_ID_ID) {
+    userId = "dev-user";
+  } else {
+    const session = await auth();
+    if (!session?.user?.id) return unauthorized();
+    userId = session.user.id;
+  }
 
   const { id } = await params;
   const [deleted] = await db
@@ -18,7 +24,7 @@ export async function DELETE(
     .where(
       and(
         eq(personalAccessTokens.id, id),
-        eq(personalAccessTokens.userOid, session.user.id)
+        eq(personalAccessTokens.userOid, userId)
       )
     )
     .returning();

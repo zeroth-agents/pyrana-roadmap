@@ -16,6 +16,11 @@ function hashToken(token: string): string {
 export async function getUser(
   headers: Headers
 ): Promise<AuthUser | null> {
+  // Dev bypass — skip auth when Entra ID is not configured
+  if (!process.env.AUTH_MICROSOFT_ENTRA_ID_ID) {
+    return { oid: "dev-user", name: "Dev User" };
+  }
+
   // Try session auth first
   const session = await auth();
   if (session?.user?.id && session.user.name) {

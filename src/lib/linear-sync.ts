@@ -69,6 +69,8 @@ export async function runFullSync(): Promise<SyncResult> {
           .set({
             title: project.name,
             description: project.description,
+            content: project.content,
+            milestones: JSON.stringify(project.milestones),
             pillarId: pillar.id,
             lane: lane as any,
             size: size as any,
@@ -86,6 +88,8 @@ export async function runFullSync(): Promise<SyncResult> {
         await db.insert(initiatives).values({
           title: project.name,
           description: project.description,
+          content: project.content,
+          milestones: JSON.stringify(project.milestones),
           pillarId: pillar.id,
           lane: lane as any,
           size: size as any,

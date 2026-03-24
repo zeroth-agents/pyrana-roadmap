@@ -14,11 +14,21 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CommentThread } from "./comment-thread";
+import Markdown from "react-markdown";
+
+interface Milestone {
+  name: string;
+  description: string;
+  progress: number;
+  sortOrder: number;
+}
 
 interface Initiative {
   id: string;
   title: string;
   description: string;
+  content: string;
+  milestones: string;
   why: string;
   lane: string;
   size: string;
@@ -232,10 +242,48 @@ export function InitiativeDetail({
             )}
           </div>
 
-          {/* Project description */}
+          {/* Project subtitle + description */}
           {initiative.description && (
             <p className="text-sm text-muted-foreground leading-relaxed">{initiative.description}</p>
           )}
+          {initiative.content && (
+            <div className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{initiative.content}</div>
+          )}
+
+          {/* Milestones */}
+          {(() => {
+            const milestones: Milestone[] = (() => { try { return JSON.parse(initiative.milestones); } catch { return []; } })();
+            if (milestones.length === 0) return null;
+            return (
+              <>
+                <Separator />
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-foreground/60">
+                    Milestones ({milestones.length})
+                  </span>
+                  <div className="mt-3 flex flex-col gap-3">
+                    {milestones.map((m) => (
+                      <div key={m.name} className="rounded-md border bg-card p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">{m.name}</span>
+                          <span className="text-xs text-muted-foreground">{Math.round(m.progress)}%</span>
+                        </div>
+                        {m.description && (
+                          <p className="mt-1 text-xs text-muted-foreground">{m.description}</p>
+                        )}
+                        <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full rounded-full bg-primary transition-all"
+                            style={{ width: `${Math.round(m.progress)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
 
           <Separator />
 
@@ -326,22 +374,27 @@ export function InitiativeDetail({
                       {isExpanded && (
                         <div className="ml-6 mr-2 mb-2 mt-1 rounded-md border bg-card p-3 space-y-3">
                           {issue.description && (
-                            <p className="text-xs text-muted-foreground">{issue.description}</p>
+                            <div className="prose prose-xs prose-muted max-w-none text-xs text-muted-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-xs [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:my-1 [&_ul]:my-1 [&_ul]:pl-4 [&_li]:my-0.5 [&_strong]:text-foreground/70">
+                              <Markdown>{issue.description}</Markdown>
+                            </div>
                           )}
                           <div className="flex gap-3">
                             {/* Status dropdown */}
                             <div className="flex-1">
                               <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Status</label>
                               <Select
-                                value={teamStates.find((s) => s.name === issue.status)?.id ?? ""}
-                                onValueChange={(stateId) => { if (stateId) handleUpdateIssue(issue.id, { stateId }); }}
+                                value={issue.status}
+                                onValueChange={(name) => {
+                                  const state = teamStates.find((s) => s.name === name);
+                                  if (state) handleUpdateIssue(issue.id, { stateId: state.id });
+                                }}
                               >
                                 <SelectTrigger className="h-8 text-xs mt-1">
                                   <SelectValue placeholder={issue.status} />
                                 </SelectTrigger>
                                 <SelectContent>
                                   {teamStates.map((s) => (
-                                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                    <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
@@ -350,20 +403,23 @@ export function InitiativeDetail({
                             <div className="flex-1">
                               <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Assignee</label>
                               <Select
-                                value={issue.assigneeId ?? "unassigned"}
-                                onValueChange={(val) =>
-                                  handleUpdateIssue(issue.id, {
-                                    assigneeId: val === "unassigned" ? null : val,
-                                  })
-                                }
+                                value={issue.assigneeName ?? "Unassigned"}
+                                onValueChange={(name) => {
+                                  if (name === "Unassigned") {
+                                    handleUpdateIssue(issue.id, { assigneeId: null });
+                                  } else {
+                                    const member = teamMembers.find((m) => m.name === name);
+                                    if (member) handleUpdateIssue(issue.id, { assigneeId: member.id });
+                                  }
+                                }}
                               >
                                 <SelectTrigger className="h-8 text-xs mt-1">
                                   <SelectValue placeholder={issue.assigneeName ?? "Unassigned"} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                                  <SelectItem value="Unassigned">Unassigned</SelectItem>
                                   {teamMembers.map((m) => (
-                                    <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                                    <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>

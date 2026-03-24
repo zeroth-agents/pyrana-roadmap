@@ -15,6 +15,8 @@ export default function SettingsPage() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [newToken, setNewToken] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ created: number; updated: number; errors: string[] } | null>(null);
 
   useEffect(() => {
     fetch("/api/tokens").then((r) => r.json()).then(setTokens);
@@ -39,6 +41,37 @@ export default function SettingsPage() {
   return (
     <div className="max-w-xl">
       <h1 className="mb-4 text-xl font-semibold">Settings</h1>
+
+      <h2 className="mb-2 text-lg font-medium">Linear Sync</h2>
+      <p className="mb-4 text-sm text-muted-foreground">
+        Pull latest project data from Linear — descriptions, leads, issue counts, and statuses.
+      </p>
+      <div className="mb-8 flex items-center gap-3">
+        <Button
+          onClick={async () => {
+            setSyncing(true);
+            setSyncResult(null);
+            try {
+              const res = await fetch("/api/sync/linear", { method: "POST" });
+              const data = await res.json();
+              setSyncResult(data);
+            } catch {
+              setSyncResult({ created: 0, updated: 0, errors: ["Sync request failed"] });
+            }
+            setSyncing(false);
+          }}
+          disabled={syncing}
+        >
+          {syncing ? "Syncing..." : "Sync from Linear"}
+        </Button>
+        {syncResult && (
+          <span className="text-sm text-muted-foreground">
+            {syncResult.errors.length > 0
+              ? `Error: ${syncResult.errors[0]}`
+              : `${syncResult.created} created, ${syncResult.updated} updated`}
+          </span>
+        )}
+      </div>
 
       <h2 className="mb-2 text-lg font-medium">API Tokens</h2>
       <p className="mb-4 text-sm text-muted-foreground">

@@ -38,13 +38,22 @@ export function issueCountToSize(count: number): "S" | "M" | "L" {
 
 // --- Project operations ---
 
+export interface LinearMilestone {
+  name: string;
+  description: string;
+  progress: number;
+  sortOrder: number;
+}
+
 export interface LinearProjectSummary {
   id: string;
   name: string;
   description: string;
+  content: string;
   status: string;
   url: string;
   leadName?: string;
+  milestones: LinearMilestone[];
   issueCountTotal: number;
   issueCountDone: number;
 }
@@ -67,6 +76,7 @@ export async function fetchInitiativeProjects(
     const status = (await project.status)?.name ?? "Backlog";
     const lead = await project.lead;
     const issues = await project.issues();
+    const milestonesData = await project.projectMilestones();
 
     let totalCount = 0;
     let doneCount = 0;
@@ -78,13 +88,24 @@ export async function fetchInitiativeProjects(
       }
     }
 
+    const milestones: LinearMilestone[] = milestonesData.nodes
+      .map((m) => ({
+        name: m.name,
+        description: m.description ?? "",
+        progress: m.progress,
+        sortOrder: m.sortOrder,
+      }))
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+
     results.push({
       id: project.id,
       name: project.name,
       description: project.description ?? "",
+      content: project.content ?? "",
       status,
       url: project.url,
       leadName: lead?.name ?? undefined,
+      milestones,
       issueCountTotal: totalCount,
       issueCountDone: doneCount,
     });

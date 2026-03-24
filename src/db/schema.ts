@@ -48,6 +48,8 @@ export const initiatives = pgTable("initiatives", {
   linearId: text("linear_id"),
   linearStatus: text("linear_status"),
   description: text().notNull().default(""),
+  content: text().notNull().default(""),
+  milestones: text().notNull().default("[]"),
   linearProjectLead: text("linear_project_lead"),
   linearAssignee: text("linear_assignee"),
   linearSyncedAt: timestamp("linear_synced_at", { withTimezone: true }),

@@ -5,6 +5,10 @@ import {
   DndContext,
   DragOverlay,
   closestCorners,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -62,6 +66,11 @@ export function BoardView({
 }: BoardViewProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor)
+  );
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over) return;
@@ -117,6 +126,7 @@ export function BoardView({
     <TooltipProvider>
       <CapacityIndicator activePillarCount={activePillarCount} />
       <DndContext
+        sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={(e) => setActiveId(e.active.id as string)}
         onDragEnd={handleDragEnd}

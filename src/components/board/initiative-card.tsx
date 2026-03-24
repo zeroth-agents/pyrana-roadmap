@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Badge } from "@/components/ui/badge";
@@ -49,38 +48,25 @@ export function InitiativeCard({
     transition,
   };
 
-  const pointerStart = useRef<{ x: number; y: number } | null>(null);
-
   const depNames = initiative.dependsOn
     .map((id) => allInitiatives.find((i) => i.id === id)?.title)
     .filter(Boolean);
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    pointerStart.current = { x: e.clientX, y: e.clientY };
-    listeners?.onPointerDown?.(e as any);
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (pointerStart.current) {
-      const dx = e.clientX - pointerStart.current.x;
-      const dy = e.clientY - pointerStart.current.y;
-      if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
-        onClick();
-      }
-    }
-    pointerStart.current = null;
-  };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
+      {...listeners}
     >
       <div
         className="cursor-pointer overflow-hidden rounded-lg bg-card shadow-[0_2px_8px_rgba(57,65,80,0.08)] transition-shadow hover:shadow-md dark:border dark:border-border"
+        onClick={(e) => {
+          if (!isDragging) {
+            e.stopPropagation();
+            onClick();
+          }
+        }}
       >
         {/* Slate header */}
         <div className="flex items-center justify-between bg-card-header px-2.5 py-1.5">

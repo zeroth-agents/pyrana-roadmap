@@ -2,6 +2,7 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
@@ -28,9 +29,6 @@ interface InitiativeCardProps {
   onClick: () => void;
   allInitiatives: Initiative[];
 }
-
-// Module-level to survive re-renders triggered by dnd-kit
-let _pointerStart: { x: number; y: number } | null = null;
 
 const SIZE_COLORS: Record<string, string> = {
   S: "bg-green-100 text-green-700",
@@ -59,31 +57,26 @@ export function InitiativeCard({
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      onPointerDown={(e: React.PointerEvent) => {
-        _pointerStart = { x: e.clientX, y: e.clientY };
-        listeners?.onPointerDown?.(e as any);
-      }}
-      onPointerUp={(e: React.PointerEvent) => {
-        if (_pointerStart) {
-          const dx = Math.abs(e.clientX - _pointerStart.x);
-          const dy = Math.abs(e.clientY - _pointerStart.y);
-          if (dx < 5 && dy < 5) {
-            onClick();
-          }
-        }
-        _pointerStart = null;
-      }}
     >
       <div
         className="cursor-pointer overflow-hidden rounded-lg bg-card shadow-[0_2px_8px_rgba(57,65,80,0.08)] transition-shadow hover:shadow-md dark:border dark:border-border"
+        onClick={onClick}
       >
-        {/* Slate header */}
-        <div className="flex items-center justify-between bg-card-header px-2.5 py-1.5">
-          <span className="truncate text-xs font-semibold text-card-header-foreground">
-            {initiative.title}
-          </span>
+        {/* Slate header — drag handle */}
+        <div
+          className={cn(
+            "flex items-center justify-between bg-card-header px-2.5 py-1.5",
+            isDragging ? "cursor-grabbing" : "cursor-grab"
+          )}
+          {...attributes}
+          {...listeners}
+        >
+          <div className="flex items-center gap-1 overflow-hidden">
+            <GripVertical className="h-3.5 w-3.5 shrink-0 text-card-header-foreground/50" />
+            <span className="truncate text-xs font-semibold text-card-header-foreground">
+              {initiative.title}
+            </span>
+          </div>
           <Badge
             variant="outline"
             className={cn(

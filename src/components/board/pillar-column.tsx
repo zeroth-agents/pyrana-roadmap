@@ -7,7 +7,6 @@ import {
 } from "@dnd-kit/sortable";
 import { Badge } from "@/components/ui/badge";
 import { InitiativeCard } from "./initiative-card";
-import { Separator } from "@/components/ui/separator";
 
 interface Pillar {
   id: string;
@@ -53,24 +52,29 @@ export function PillarColumn({
   });
 
   return (
-    <div className="flex w-64 flex-shrink-0 flex-col rounded-lg border bg-muted/30">
-      <div className="flex items-center justify-between p-3">
-        <h3 className="text-sm font-semibold">{pillar.name}</h3>
+    <div className="flex w-64 flex-shrink-0 flex-col">
+      <div className="flex items-center justify-between pb-2">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/60">
+          {pillar.name}
+        </h3>
         {pendingProposalCount > 0 && (
           <Badge variant="secondary">{pendingProposalCount}</Badge>
         )}
       </div>
 
       {/* Now section */}
-      <div ref={setNowRef} className="min-h-[80px] px-2">
-        <span className="text-xs font-medium uppercase text-muted-foreground">
+      <div className="mb-2 flex items-center gap-2">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
           Now
         </span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+      <div ref={setNowRef} className="min-h-[80px]">
         <SortableContext
           items={nowItems.map((i) => i.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="mt-1 flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             {nowItems.map((initiative) => (
               <InitiativeCard
                 key={initiative.id}
@@ -83,18 +87,19 @@ export function PillarColumn({
         </SortableContext>
       </div>
 
-      <Separator className="my-2" />
-
       {/* Next section */}
-      <div ref={setNextRef} className="min-h-[80px] px-2 pb-3">
-        <span className="text-xs font-medium uppercase text-muted-foreground">
+      <div className="mb-2 mt-4 flex items-center gap-2">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
           Next
         </span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+      <div ref={setNextRef} className="min-h-[80px] pb-3">
         <SortableContext
           items={nextItems.map((i) => i.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="mt-1 flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             {nextItems.map((initiative) => (
               <InitiativeCard
                 key={initiative.id}

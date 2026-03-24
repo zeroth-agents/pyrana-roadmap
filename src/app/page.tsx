@@ -38,17 +38,34 @@ export default function BoardPage() {
   const [selectedInitiative, setSelectedInitiative] = useState<Initiative | null>(null);
 
   useEffect(() => {
-    fetch("/api/pillars").then((r) => r.json()).then(setPillars);
-    fetch("/api/initiatives").then((r) => r.json()).then(setInitiatives);
-    fetch("/api/proposals?status=pending")
-      .then((r) => r.json())
-      .then((proposals: Array<{ pillarId: string }>) => {
+    async function load() {
+      const [pillarsRes, initiativesRes, proposalsRes] = await Promise.all([
+        fetch("/api/pillars"),
+        fetch("/api/initiatives"),
+        fetch("/api/proposals?status=pending"),
+      ]);
+
+      // If any request is 401, redirect to sign-in
+      if ([pillarsRes, initiativesRes, proposalsRes].some((r) => r.status === 401)) {
+        window.location.href = "/api/auth/signin";
+        return;
+      }
+
+      const pillarsData = await pillarsRes.json();
+      const initiativesData = await initiativesRes.json();
+      const proposalsData = await proposalsRes.json();
+
+      if (Array.isArray(pillarsData)) setPillars(pillarsData);
+      if (Array.isArray(initiativesData)) setInitiatives(initiativesData);
+      if (Array.isArray(proposalsData)) {
         const counts: Record<string, number> = {};
-        proposals.forEach((p) => {
+        proposalsData.forEach((p: { pillarId: string }) => {
           counts[p.pillarId] = (counts[p.pillarId] ?? 0) + 1;
         });
         setProposalCounts(counts);
-      });
+      }
+    }
+    load();
   }, []);
 
   async function handleReorder(

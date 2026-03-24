@@ -66,7 +66,10 @@ export default function BoardPage() {
         initiatives={initiatives}
         proposalCounts={proposalCounts}
         onReorder={handleReorder}
-        onCardClick={setSelectedInitiative}
+        onCardClick={(init) => {
+          console.log("[page] onCardClick called", init.title);
+          setSelectedInitiative(init);
+        }}
       />
       {selectedInitiative && (
         <InitiativeDetail

@@ -14,6 +14,7 @@ interface Initiative {
   pillarId: string;
   linearProjectUrl?: string | null;
   linearStatus?: string | null;
+  linearAssignee?: string | null;
   linearSyncedAt?: string | null;
 }
 

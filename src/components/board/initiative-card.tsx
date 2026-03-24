@@ -18,6 +18,8 @@ interface Initiative {
   dependsOn: string[];
   lane: string;
   pillarId: string;
+  linearStatus?: string | null;
+  linearAssignee?: string | null;
 }
 
 interface InitiativeCardProps {

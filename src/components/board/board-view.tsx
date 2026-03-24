@@ -72,6 +72,12 @@ export function BoardView({
       targetLane = "next";
     }
 
+    // Skip if card didn't actually move
+    if (targetPillarId === initiative.pillarId && targetLane === initiative.lane) {
+      setActiveId(null);
+      return;
+    }
+
     // Place the moved card at top of the target lane, then re-index
     const targetLaneItems = initiatives
       .filter((i) => i.pillarId === targetPillarId && i.lane === targetLane && i.id !== initiative.id);

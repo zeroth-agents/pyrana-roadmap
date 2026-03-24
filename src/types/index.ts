@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Enums
-export const Lane = z.enum(["now", "next", "backlog"]);
+export const Lane = z.enum(["now", "next", "backlog", "done"]);
 export const Size = z.enum(["S", "M", "L"]);
 export const ProposalStatus = z.enum(["pending", "accepted", "rejected"]);
 export const CommentTarget = z.enum(["initiative", "pillar"]);

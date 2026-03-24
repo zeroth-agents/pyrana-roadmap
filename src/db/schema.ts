@@ -8,7 +8,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 // Enums
-export const laneEnum = pgEnum("lane", ["now", "next", "backlog"]);
+export const laneEnum = pgEnum("lane", ["now", "next", "backlog", "done"]);
 export const sizeEnum = pgEnum("size", ["S", "M", "L"]);
 export const proposalStatusEnum = pgEnum("proposal_status", [
   "pending",

@@ -1,0 +1,1 @@
+ALTER TYPE "public"."lane" ADD VALUE 'done';

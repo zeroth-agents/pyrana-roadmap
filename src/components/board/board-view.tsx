@@ -110,7 +110,7 @@ export function BoardView({
               key={pillar.id}
               pillar={pillar}
               initiatives={initiatives.filter(
-                (i) => i.pillarId === pillar.id && i.lane !== "backlog"
+                (i) => i.pillarId === pillar.id && i.lane !== "backlog" && i.lane !== "done"
               )}
               allInitiatives={initiatives}
               pendingProposalCount={proposalCounts[pillar.id] ?? 0}

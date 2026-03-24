@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +59,7 @@ export function InitiativeCard({
   onClick,
   allInitiatives,
 }: InitiativeCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: initiative.id, data: initiative });
 
   const style = {
@@ -66,21 +67,35 @@ export function InitiativeCard({
     transition,
   };
 
+  const pointerStart = useRef<{ x: number; y: number } | null>(null);
+
   const depNames = initiative.dependsOn
     .map((id) => allInitiatives.find((i) => i.id === id)?.title)
     .filter(Boolean);
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <div
-        className="cursor-pointer overflow-hidden rounded-lg bg-card shadow-[0_2px_8px_rgba(57,65,80,0.08)] transition-shadow hover:shadow-md dark:border dark:border-border"
-        onPointerUp={(e) => {
-          // Only fire click if not dragging (dnd-kit sets data-dragging)
-          if (!transform) {
-            e.stopPropagation();
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onPointerDown={(e) => {
+        pointerStart.current = { x: e.clientX, y: e.clientY };
+        listeners?.onPointerDown?.(e);
+      }}
+      onPointerUp={(e) => {
+        if (pointerStart.current) {
+          const dx = e.clientX - pointerStart.current.x;
+          const dy = e.clientY - pointerStart.current.y;
+          if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
             onClick();
           }
-        }}
+        }
+        pointerStart.current = null;
+      }}
+    >
+      <div
+        className="cursor-pointer overflow-hidden rounded-lg bg-card shadow-[0_2px_8px_rgba(57,65,80,0.08)] transition-shadow hover:shadow-md dark:border dark:border-border"
       >
         {/* Slate header */}
         <div className="flex items-center justify-between bg-card-header px-2.5 py-1.5">

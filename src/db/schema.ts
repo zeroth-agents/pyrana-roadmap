@@ -44,10 +44,13 @@ export const initiatives = pgTable("initiatives", {
     .notNull()
     .default([]),
   linearProjectUrl: text("linear_project_url"),
+  linearProjectId: text("linear_project_id"),
   linearId: text("linear_id"),
   linearStatus: text("linear_status"),
   linearAssignee: text("linear_assignee"),
   linearSyncedAt: timestamp("linear_synced_at", { withTimezone: true }),
+  issueCountTotal: integer("issue_count_total").notNull().default(0),
+  issueCountDone: integer("issue_count_done").notNull().default(0),
   sortOrder: integer("sort_order").notNull().default(0),
   createdBy: text("created_by").notNull(),
   createdByName: text("created_by_name").notNull(),

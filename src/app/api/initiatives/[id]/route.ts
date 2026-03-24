@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { initiatives } from "@/db/schema";
 import { getUser } from "@/lib/auth-utils";
 import { unauthorized, badRequest, notFound } from "@/lib/errors";
+import { updateProjectStatus } from "@/lib/linear";
 import { UpdateInitiativeSchema } from "@/types";
 
 export async function PATCH(
@@ -27,6 +28,13 @@ export async function PATCH(
     .returning();
 
   if (!updated) return notFound("Initiative not found");
+
+  // Push lane change to Linear (fire-and-forget)
+  if (parsed.data.lane && updated.linearProjectId) {
+    updateProjectStatus(updated.linearProjectId, parsed.data.lane).catch(
+      (err) => console.error("Failed to push lane to Linear:", err)
+    );
+  }
 
   return NextResponse.json(updated);
 }

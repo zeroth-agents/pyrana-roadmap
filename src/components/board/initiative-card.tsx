@@ -19,8 +19,6 @@ interface Initiative {
   dependsOn: string[];
   lane: string;
   pillarId: string;
-  linearStatus?: string | null;
-  linearAssignee?: string | null;
   linearProjectId?: string | null;
   issueCountTotal?: number;
   issueCountDone?: number;
@@ -37,25 +35,6 @@ const SIZE_COLORS: Record<string, string> = {
   M: "bg-yellow-100 text-yellow-700",
   L: "bg-red-100 text-red-700",
 };
-
-const STATUS_PROGRESS: Record<string, number> = {
-  Backlog: 0,
-  Triage: 5,
-  Todo: 10,
-  "In Progress": 50,
-  "In Review": 75,
-  Done: 100,
-  Canceled: 0,
-};
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
 
 export function InitiativeCard({
   initiative,
@@ -128,40 +107,33 @@ export function InitiativeCard({
           )}
 
           {/* Progress bar */}
-          {initiative.linearStatus && (
+          {(initiative.issueCountTotal ?? 0) > 0 && (
             <div className="mt-2 flex items-center gap-1.5">
               <div className="h-0.5 flex-1 overflow-hidden rounded-full bg-muted">
                 <div
                   className="h-full rounded-full bg-primary transition-all"
                   style={{
-                    width: `${STATUS_PROGRESS[initiative.linearStatus] ?? 0}%`,
+                    width: `${Math.round(((initiative.issueCountDone ?? 0) / (initiative.issueCountTotal ?? 1)) * 100)}%`,
                   }}
                 />
               </div>
               <span className="text-[10px] text-muted-foreground">
-                {STATUS_PROGRESS[initiative.linearStatus] ?? 0}%
+                {initiative.issueCountDone ?? 0}/{initiative.issueCountTotal ?? 0}
               </span>
             </div>
           )}
 
-          {/* Avatar + dependency row */}
-          <div className="mt-2 flex items-center justify-between">
-            {initiative.linearAssignee ? (
-              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[8px] font-semibold text-primary-foreground">
-                {getInitials(initiative.linearAssignee)}
-              </div>
-            ) : (
-              <div />
-            )}
-            {depNames.length > 0 && (
+          {/* Dependency indicator */}
+          {depNames.length > 0 && (
+            <div className="mt-2">
               <Tooltip>
                 <TooltipTrigger className="inline-block h-2 w-2 rounded-full bg-primary/60" />
                 <TooltipContent>
                   Depends on: {depNames.join(", ")}
                 </TooltipContent>
               </Tooltip>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -8,9 +8,10 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { PillarColumn } from "./pillar-column";
+import { Badge } from "@/components/ui/badge";
 import { CapacityIndicator } from "./capacity-indicator";
 import { InitiativeCard } from "./initiative-card";
+import { LaneCell } from "./lane-cells";
 
 interface Pillar {
   id: string;
@@ -43,6 +44,12 @@ interface BoardViewProps {
   onCardClick: (initiative: Initiative) => void;
 }
 
+const LANES = [
+  { id: "now", label: "Now", droppable: true },
+  { id: "next", label: "Next", droppable: true },
+  { id: "done", label: "Done", droppable: false },
+] as const;
+
 export function BoardView({
   pillars,
   initiatives,
@@ -59,7 +66,6 @@ export function BoardView({
     const initiative = initiatives.find((i) => i.id === active.id);
     if (!initiative) return;
 
-    // Parse the droppable ID: "{pillarId}-{lane}"
     const overId = over.id as string;
     let targetPillarId = initiative.pillarId;
     let targetLane = initiative.lane;
@@ -72,13 +78,11 @@ export function BoardView({
       targetLane = "next";
     }
 
-    // Skip if card didn't actually move
     if (targetPillarId === initiative.pillarId && targetLane === initiative.lane) {
       setActiveId(null);
       return;
     }
 
-    // Place the moved card at top of the target lane, then re-index
     const targetLaneItems = initiatives
       .filter((i) => i.pillarId === targetPillarId && i.lane === targetLane && i.id !== initiative.id);
 
@@ -102,6 +106,10 @@ export function BoardView({
     initiatives.some((i) => i.pillarId === p.id && i.lane === "now")
   ).length;
 
+  const boardInitiatives = initiatives.filter(
+    (i) => i.lane !== "backlog"
+  );
+
   return (
     <TooltipProvider>
       <CapacityIndicator activePillarCount={activePillarCount} />
@@ -110,19 +118,68 @@ export function BoardView({
         onDragStart={(e) => setActiveId(e.active.id as string)}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div
+          className="overflow-x-auto pb-4"
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${pillars.length}, minmax(240px, 1fr))`,
+            gap: "16px",
+          }}
+        >
+          {/* Pillar headers */}
           {pillars.map((pillar) => (
-            <PillarColumn
-              key={pillar.id}
-              pillar={pillar}
-              initiatives={initiatives.filter(
-                (i) => i.pillarId === pillar.id && i.lane !== "backlog" && i.lane !== "done"
+            <div key={pillar.id} className="flex items-center justify-between pb-1">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/60">
+                {pillar.name}
+              </h3>
+              {(proposalCounts[pillar.id] ?? 0) > 0 && (
+                <Badge variant="secondary">{proposalCounts[pillar.id]}</Badge>
               )}
-              allInitiatives={initiatives}
-              pendingProposalCount={proposalCounts[pillar.id] ?? 0}
-              onCardClick={onCardClick}
-            />
+            </div>
           ))}
+
+          {/* Lane rows */}
+          {LANES.map((lane) => {
+            const hasAnyItems = pillars.some((p) =>
+              boardInitiatives.some((i) => i.pillarId === p.id && i.lane === lane.id)
+            );
+            if (lane.id === "done" && !hasAnyItems) return null;
+
+            return [
+              // Lane header row
+              ...pillars.map((pillar, idx) => (
+                <div
+                  key={`${lane.id}-header-${pillar.id}`}
+                  className="flex items-center gap-2 pt-2"
+                >
+                  {idx === 0 ? (
+                    <>
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        {lane.label}
+                      </span>
+                      <div className="h-px flex-1 bg-border" />
+                    </>
+                  ) : (
+                    <div className="h-px flex-1 bg-border" />
+                  )}
+                </div>
+              )),
+              // Lane card cells
+              ...pillars.map((pillar) => (
+                <LaneCell
+                  key={`${lane.id}-${pillar.id}`}
+                  pillarId={pillar.id}
+                  lane={lane.id}
+                  items={boardInitiatives.filter(
+                    (i) => i.pillarId === pillar.id && i.lane === lane.id
+                  )}
+                  allInitiatives={initiatives}
+                  onCardClick={onCardClick}
+                  droppable={lane.droppable}
+                />
+              )),
+            ];
+          })}
         </div>
         <DragOverlay>
           {activeInitiative && (

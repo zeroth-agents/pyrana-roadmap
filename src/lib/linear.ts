@@ -153,37 +153,70 @@ export interface LinearIssue {
   url: string;
 }
 
+interface ProjectIssuesResponse {
+  project: {
+    issues: {
+      nodes: Array<{
+        id: string;
+        identifier: string;
+        title: string;
+        description?: string;
+        priority: number;
+        priorityLabel: string;
+        url: string;
+        state: { name: string; type: string } | null;
+        assignee: { id: string; name: string } | null;
+        labels: { nodes: Array<{ name: string }> };
+      }>;
+    };
+  };
+}
+
+const PROJECT_ISSUES_QUERY = `
+  query ProjectIssues($id: String!) {
+    project(id: $id) {
+      issues {
+        nodes {
+          id
+          identifier
+          title
+          description
+          priority
+          priorityLabel
+          url
+          state { name type }
+          assignee { id name }
+          labels { nodes { name } }
+        }
+      }
+    }
+  }
+`;
+
 export async function fetchProjectIssues(
   projectId: string
 ): Promise<LinearIssue[]> {
   if (!process.env.LINEAR_API_KEY) return [];
 
-  const project = await linear.project(projectId);
-  const issues = await project.issues();
+  const data = await linear.client.request<ProjectIssuesResponse, { id: string }>(
+    PROJECT_ISSUES_QUERY,
+    { id: projectId }
+  );
 
-  const results: LinearIssue[] = [];
-  for (const issue of issues.nodes) {
-    const state = await issue.state;
-    const assignee = await issue.assignee;
-    const labels = await issue.labels();
-
-    results.push({
-      id: issue.id,
-      identifier: issue.identifier,
-      title: issue.title,
-      description: issue.description ?? undefined,
-      status: state?.name ?? "Unknown",
-      statusType: state?.type ?? "unstarted",
-      assigneeName: assignee?.name ?? undefined,
-      assigneeId: assignee?.id ?? undefined,
-      priority: issue.priority,
-      priorityLabel: issue.priorityLabel,
-      labels: labels.nodes.map((l) => l.name),
-      url: issue.url,
-    });
-  }
-
-  return results;
+  return data.project.issues.nodes.map((issue) => ({
+    id: issue.id,
+    identifier: issue.identifier,
+    title: issue.title,
+    description: issue.description ?? undefined,
+    status: issue.state?.name ?? "Unknown",
+    statusType: issue.state?.type ?? "unstarted",
+    assigneeName: issue.assignee?.name ?? undefined,
+    assigneeId: issue.assignee?.id ?? undefined,
+    priority: issue.priority,
+    priorityLabel: issue.priorityLabel,
+    labels: issue.labels.nodes.map((l) => l.name),
+    url: issue.url,
+  }));
 }
 
 export async function createProjectIssue(

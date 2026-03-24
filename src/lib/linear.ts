@@ -41,8 +41,10 @@ export function issueCountToSize(count: number): "S" | "M" | "L" {
 export interface LinearProjectSummary {
   id: string;
   name: string;
+  description: string;
   status: string;
   url: string;
+  leadName?: string;
   issueCountTotal: number;
   issueCountDone: number;
 }
@@ -63,6 +65,7 @@ export async function fetchInitiativeProjects(
 
   for (const project of projects.nodes) {
     const status = (await project.status)?.name ?? "Backlog";
+    const lead = await project.lead;
     const issues = await project.issues();
 
     let totalCount = 0;
@@ -78,8 +81,10 @@ export async function fetchInitiativeProjects(
     results.push({
       id: project.id,
       name: project.name,
+      description: project.description ?? "",
       status,
       url: project.url,
+      leadName: lead?.name ?? undefined,
       issueCountTotal: totalCount,
       issueCountDone: doneCount,
     });

@@ -18,12 +18,14 @@ import { CommentThread } from "./comment-thread";
 interface Initiative {
   id: string;
   title: string;
+  description: string;
   why: string;
   lane: string;
   size: string;
   pillarId: string;
   linearProjectId?: string | null;
   linearProjectUrl?: string | null;
+  linearProjectLead?: string | null;
   linearSyncedAt?: string | null;
   issueCountTotal?: number;
   issueCountDone?: number;
@@ -193,6 +195,11 @@ export function InitiativeDetail({
             <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-0">
               {initiative.size} · {total} issues
             </Badge>
+            {initiative.linearProjectLead && (
+              <Badge variant="outline" className="bg-muted border-0">
+                Lead: {initiative.linearProjectLead}
+              </Badge>
+            )}
           </div>
 
           {/* Progress bar */}
@@ -224,6 +231,11 @@ export function InitiativeDetail({
               <span>Synced {new Date(initiative.linearSyncedAt).toLocaleString()}</span>
             )}
           </div>
+
+          {/* Project description */}
+          {initiative.description && (
+            <p className="text-sm text-muted-foreground leading-relaxed">{initiative.description}</p>
+          )}
 
           <Separator />
 

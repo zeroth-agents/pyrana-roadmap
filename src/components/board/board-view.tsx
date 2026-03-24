@@ -26,6 +26,7 @@ interface Pillar {
 interface Initiative {
   id: string;
   title: string;
+  description: string;
   size: string;
   why: string;
   dependsOn: string[];
@@ -34,6 +35,7 @@ interface Initiative {
   linearStatus?: string | null;
   linearAssignee?: string | null;
   linearProjectId?: string | null;
+  linearProjectLead?: string | null;
   issueCountTotal?: number;
   issueCountDone?: number;
 }

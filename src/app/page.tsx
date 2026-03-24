@@ -7,6 +7,7 @@ import { InitiativeDetail } from "@/components/initiative-detail";
 interface Initiative {
   id: string;
   title: string;
+  description: string;
   size: string;
   why: string;
   dependsOn: string[];
@@ -15,6 +16,7 @@ interface Initiative {
   linearProjectUrl?: string | null;
   linearStatus?: string | null;
   linearAssignee?: string | null;
+  linearProjectLead?: string | null;
   linearSyncedAt?: string | null;
   linearProjectId?: string | null;
   issueCountTotal?: number;

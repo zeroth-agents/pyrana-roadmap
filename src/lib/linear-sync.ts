@@ -68,12 +68,14 @@ export async function runFullSync(): Promise<SyncResult> {
           .update(initiatives)
           .set({
             title: project.name,
+            description: project.description,
             pillarId: pillar.id,
             lane: lane as any,
             size: size as any,
             issueCountTotal: project.issueCountTotal,
             issueCountDone: project.issueCountDone,
             linearProjectUrl: project.url,
+            linearProjectLead: project.leadName ?? null,
             linearSyncedAt: new Date(),
             updatedAt: new Date(),
           })
@@ -83,6 +85,7 @@ export async function runFullSync(): Promise<SyncResult> {
         // Create new
         await db.insert(initiatives).values({
           title: project.name,
+          description: project.description,
           pillarId: pillar.id,
           lane: lane as any,
           size: size as any,
@@ -91,6 +94,7 @@ export async function runFullSync(): Promise<SyncResult> {
           issueCountDone: project.issueCountDone,
           linearProjectId: project.id,
           linearProjectUrl: project.url,
+          linearProjectLead: project.leadName ?? null,
           linearSyncedAt: new Date(),
           createdBy: "sync",
           createdByName: "Linear Sync",

@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +29,9 @@ interface InitiativeCardProps {
   allInitiatives: Initiative[];
 }
 
+// Module-level to survive re-renders triggered by dnd-kit
+let _pointerStart: { x: number; y: number } | null = null;
+
 const SIZE_COLORS: Record<string, string> = {
   S: "bg-green-100 text-green-700",
   M: "bg-yellow-100 text-yellow-700",
@@ -53,26 +55,25 @@ export function InitiativeCard({
     .map((id) => allInitiatives.find((i) => i.id === id)?.title)
     .filter(Boolean);
 
-  const startPos = React.useRef<{ x: number; y: number } | null>(null);
-
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
+      {...listeners}
       onPointerDown={(e: React.PointerEvent) => {
-        startPos.current = { x: e.clientX, y: e.clientY };
+        _pointerStart = { x: e.clientX, y: e.clientY };
         listeners?.onPointerDown?.(e as any);
       }}
       onPointerUp={(e: React.PointerEvent) => {
-        if (startPos.current) {
-          const dx = Math.abs(e.clientX - startPos.current.x);
-          const dy = Math.abs(e.clientY - startPos.current.y);
+        if (_pointerStart) {
+          const dx = Math.abs(e.clientX - _pointerStart.x);
+          const dy = Math.abs(e.clientY - _pointerStart.y);
           if (dx < 5 && dy < 5) {
             onClick();
           }
         }
-        startPos.current = null;
+        _pointerStart = null;
       }}
     >
       <div

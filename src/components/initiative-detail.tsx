@@ -178,12 +178,12 @@ export function InitiativeDetail({
 
   return (
     <Sheet open onOpenChange={onClose}>
-      <SheetContent className="w-[700px] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="text-lg">{initiative.title}</SheetTitle>
+      <SheetContent className="data-[side=right]:w-[780px] data-[side=right]:sm:max-w-none overflow-y-auto">
+        <SheetHeader className="px-7 pt-5 pb-0">
+          <SheetTitle className="text-xl">{initiative.title}</SheetTitle>
         </SheetHeader>
 
-        <div className="mt-4 space-y-4">
+        <div className="mt-2 space-y-6 px-7 pb-7">
           {/* Status badges + progress */}
           <div className="flex items-center gap-2 flex-wrap">
             <Badge variant="outline" className="bg-primary/10 text-primary border-0">
@@ -294,7 +294,7 @@ export function InitiativeDetail({
                     <div key={issue.id}>
                       {/* Issue row */}
                       <button
-                        className="w-full flex items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-muted/50 transition-colors"
+                        className="w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-left hover:bg-muted/50 transition-colors"
                         onClick={() => setExpandedIssueId(isExpanded ? null : issue.id)}
                       >
                         <div

@@ -1,0 +1,132 @@
+---
+name: roadmap
+description: View and manage the Pyrana roadmap — list pillars and initiatives, move items between lanes, submit and review proposals, and trigger Linear syncs. Use when the user says "/roadmap", "show the roadmap", "move initiative", "propose", "list proposals", or wants to interact with the roadmap board.
+---
+
+# Pyrana Roadmap Skill
+
+Interact with the Pyrana Roadmap via the production API.
+
+## Configuration
+
+- `ROADMAP_API_URL` — Base URL of the roadmap app. Default: `https://roadmap.pyrana.ai`
+- `ROADMAP_API_TOKEN` — Personal access token for API authentication
+
+If either is missing, guide the user through setup (see Setup section below).
+
+## Setup
+
+If `ROADMAP_API_TOKEN` is not set:
+
+1. Tell the user: "You need a personal access token. Open the roadmap web UI at `$ROADMAP_API_URL/settings`, sign in with your org account, and click 'Generate Token'. Copy the token — it's only shown once."
+2. Tell them to set the env var: `export ROADMAP_API_TOKEN=<the-token>` (or add to their shell profile)
+3. Verify by calling `GET $ROADMAP_API_URL/api/pillars` with the token
+
+## Commands
+
+Parse the first argument to determine the subcommand. If no argument is provided, default to `board`.
+
+### `/roadmap` or `/roadmap board`
+
+Fetch pillars and initiatives, display as a board grouped by lane.
+
+```bash
+PILLARS=$(curl -sf "$ROADMAP_API_URL/api/pillars" -H "Authorization: Bearer $ROADMAP_API_TOKEN")
+INITIATIVES=$(curl -sf "$ROADMAP_API_URL/api/initiatives" -H "Authorization: Bearer $ROADMAP_API_TOKEN")
+```
+
+Format output as a markdown table grouped by pillar, with columns for each lane (Now, Next, Backlog, Done). Show initiative title and size. Include issue progress (e.g., "3/7") if available.
+
+### `/roadmap show <name>`
+
+Fetch all initiatives, find the one matching `<name>` (case-insensitive partial match), and display full details:
+
+```bash
+INITIATIVES=$(curl -sf "$ROADMAP_API_URL/api/initiatives" -H "Authorization: Bearer $ROADMAP_API_TOKEN")
+```
+
+Display: title, pillar, lane, size, why, Linear URL, issue progress, description, milestones, created by, updated at.
+
+If multiple matches, list them and ask the user to be more specific.
+
+### `/roadmap move <name> <lane>`
+
+Find the initiative by name, then update its lane. Valid lanes: `now`, `next`, `backlog`, `done`.
+
+```bash
+# Find initiative ID by name match first (from GET /api/initiatives)
+curl -sf -X PATCH "$ROADMAP_API_URL/api/initiatives/<ID>" \
+  -H "Authorization: Bearer $ROADMAP_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"lane": "<LANE>"}'
+```
+
+Confirm the move: "Moved '<title>' to <lane>". Note that this also pushes the change to Linear.
+
+### `/roadmap propose <title>`
+
+Submit a new proposal. After receiving the title, ask the user for:
+- **Pillar** — show available pillars (from `GET /api/pillars`) and let them pick
+- **Size** — S, M, or L (default M)
+- **Why** — brief justification
+
+Then create:
+
+```bash
+curl -sf -X POST "$ROADMAP_API_URL/api/proposals" \
+  -H "Authorization: Bearer $ROADMAP_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"pillarId": "<ID>", "title": "<TITLE>", "size": "<SIZE>", "why": "<WHY>"}'
+```
+
+### `/roadmap proposals`
+
+List proposals, optionally filtered by status.
+
+```bash
+# All proposals
+curl -sf "$ROADMAP_API_URL/api/proposals" -H "Authorization: Bearer $ROADMAP_API_TOKEN"
+
+# Or filtered: ?status=pending
+```
+
+Format as a markdown table: ID (first 8 chars), Title, Pillar, Size, Status, Proposed By, Date.
+
+### `/roadmap review <id> <accept|reject>`
+
+Review a proposal. Optionally ask for reviewer notes.
+
+```bash
+curl -sf -X PATCH "$ROADMAP_API_URL/api/proposals/<ID>" \
+  -H "Authorization: Bearer $ROADMAP_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "<accepted|rejected>", "reviewerNotes": "<NOTES>"}'
+```
+
+If accepted, the API automatically creates an initiative in the backlog. Report this to the user.
+
+### `/roadmap sync`
+
+Trigger a full Linear sync.
+
+```bash
+curl -sf -X POST "$ROADMAP_API_URL/api/sync/linear" \
+  -H "Authorization: Bearer $ROADMAP_API_TOKEN"
+```
+
+Report the sync result (pillars matched, initiatives updated/created).
+
+### `/roadmap token`
+
+Guide the user through generating and saving a personal access token. The `POST /api/tokens` endpoint requires session auth (browser login), so this command cannot call the API directly.
+
+1. Tell the user to open `$ROADMAP_API_URL/settings` in their browser and sign in with their org account
+2. Tell them to click "Generate Token" and copy the token (shown only once)
+3. Tell them to save it: `export ROADMAP_API_TOKEN=<the-token>` (or add to shell profile / `.env`)
+4. Verify by calling `GET $ROADMAP_API_URL/api/pillars` with the token
+
+## Error Handling
+
+- **401 Unauthorized**: Token is invalid or expired. Guide user to regenerate at `$ROADMAP_API_URL/settings`.
+- **Network error**: Check that `$ROADMAP_API_URL` is reachable.
+- **404 Not Found**: Initiative or proposal ID doesn't exist — suggest running `/roadmap board` or `/roadmap proposals` to find the correct item.

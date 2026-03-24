@@ -16,6 +16,9 @@ interface Initiative {
   linearStatus?: string | null;
   linearAssignee?: string | null;
   linearSyncedAt?: string | null;
+  linearProjectId?: string | null;
+  issueCountTotal?: number;
+  issueCountDone?: number;
 }
 
 interface Pillar {

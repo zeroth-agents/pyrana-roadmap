@@ -29,6 +29,9 @@ interface Initiative {
   pillarId: string;
   linearStatus?: string | null;
   linearAssignee?: string | null;
+  linearProjectId?: string | null;
+  issueCountTotal?: number;
+  issueCountDone?: number;
 }
 
 interface BoardViewProps {

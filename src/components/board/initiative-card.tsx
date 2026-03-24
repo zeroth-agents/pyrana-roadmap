@@ -21,6 +21,9 @@ interface Initiative {
   pillarId: string;
   linearStatus?: string | null;
   linearAssignee?: string | null;
+  linearProjectId?: string | null;
+  issueCountTotal?: number;
+  issueCountDone?: number;
 }
 
 interface InitiativeCardProps {
@@ -73,26 +76,29 @@ export function InitiativeCard({
     .map((id) => allInitiatives.find((i) => i.id === id)?.title)
     .filter(Boolean);
 
+  const handlePointerDown = (e: React.PointerEvent) => {
+    pointerStart.current = { x: e.clientX, y: e.clientY };
+    listeners?.onPointerDown?.(e as any);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (pointerStart.current) {
+      const dx = e.clientX - pointerStart.current.x;
+      const dy = e.clientY - pointerStart.current.y;
+      if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
+        onClick();
+      }
+    }
+    pointerStart.current = null;
+  };
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      onPointerDown={(e) => {
-        pointerStart.current = { x: e.clientX, y: e.clientY };
-        listeners?.onPointerDown?.(e);
-      }}
-      onPointerUp={(e) => {
-        if (pointerStart.current) {
-          const dx = e.clientX - pointerStart.current.x;
-          const dy = e.clientY - pointerStart.current.y;
-          if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
-            onClick();
-          }
-        }
-        pointerStart.current = null;
-      }}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
     >
       <div
         className="cursor-pointer overflow-hidden rounded-lg bg-card shadow-[0_2px_8px_rgba(57,65,80,0.08)] transition-shadow hover:shadow-md dark:border dark:border-border"

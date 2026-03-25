@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
-import { auth, signOut } from "../../auth";
+import { auth } from "../../auth";
 import { Sidebar } from "@/components/sidebar";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -19,11 +19,6 @@ export const metadata: Metadata = {
   title: "Pyrana Roadmap",
   description: "Internal roadmap management",
 };
-
-async function handleSignOut() {
-  "use server";
-  await signOut({ redirectTo: "/" });
-}
 
 export default async function RootLayout({
   children,
@@ -50,7 +45,6 @@ export default async function RootLayout({
               pendingProposalCount={pendingCount}
               userName={session?.user?.name ?? null}
               userEmail={session?.user?.email ?? null}
-              signOutAction={handleSignOut}
             />
             <main className="flex-1 overflow-y-auto px-6 py-6">{children}</main>
           </div>

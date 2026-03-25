@@ -16,7 +16,6 @@ interface SidebarProps {
   pendingProposalCount: number;
   userName: string | null;
   userEmail: string | null;
-  signOutAction: () => Promise<void>;
 }
 
 const NAV_ITEMS = [
@@ -26,7 +25,7 @@ const NAV_ITEMS = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function Sidebar({ pendingProposalCount, userName, userEmail, signOutAction }: SidebarProps) {
+export function Sidebar({ pendingProposalCount, userName, userEmail }: SidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -91,7 +90,7 @@ export function Sidebar({ pendingProposalCount, userName, userEmail, signOutActi
       {/* Theme toggle + User avatar */}
       <div className="mt-auto flex flex-col items-center gap-2">
         <ThemeToggle />
-        <UserAvatarPopover name={userName} email={userEmail} signOutAction={signOutAction} />
+        <UserAvatarPopover name={userName} email={userEmail} />
       </div>
     </aside>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { signOut } from "next-auth/react";
 import { User, LogOut } from "lucide-react";
 import {
   Popover,
@@ -11,7 +12,6 @@ import { Separator } from "@/components/ui/separator";
 interface UserAvatarPopoverProps {
   name: string | null | undefined;
   email: string | null | undefined;
-  signOutAction: () => Promise<void>;
 }
 
 function getInitials(name: string): string {
@@ -22,7 +22,7 @@ function getInitials(name: string): string {
   return parts[0][0].toUpperCase();
 }
 
-export function UserAvatarPopover({ name, email, signOutAction }: UserAvatarPopoverProps) {
+export function UserAvatarPopover({ name, email }: UserAvatarPopoverProps) {
   if (!name?.trim()) {
     return (
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/50">
@@ -55,15 +55,13 @@ export function UserAvatarPopover({ name, email, signOutAction }: UserAvatarPopo
           )}
         </div>
         <Separator className="my-2 bg-sidebar-border" />
-        <form action={signOutAction}>
-          <button
-            type="submit"
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-primary/15 hover:text-primary"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            Sign out
-          </button>
-        </form>
+        <button
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-primary/15 hover:text-primary"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          Sign out
+        </button>
       </PopoverContent>
     </Popover>
   );

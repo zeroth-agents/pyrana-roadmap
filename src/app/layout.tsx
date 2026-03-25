@@ -29,7 +29,12 @@ export default async function RootLayout({
     <html
       lang="en"
       className={`${plusJakarta.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <link rel="icon" href="/favicon-light.svg" type="image/svg+xml" media="(prefers-color-scheme: light)" />
+        <link rel="icon" href="/favicon-dark.svg" type="image/svg+xml" media="(prefers-color-scheme: dark)" />
+      </head>
       <body className="h-full">
         <div className="flex h-full">
           <Sidebar pendingProposalCount={pendingCount} />

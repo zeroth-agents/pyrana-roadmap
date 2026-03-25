@@ -1,14 +1,24 @@
-name: Deploy to Coolify
+name: Release & Deploy
 
 on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
-  deploy:
+  release:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Coolify deployment
+      - uses: actions/checkout@v4
+
+      - name: Tag release
+        run: |
+          VERSION="v$(node -p 'require("./package.json").version')"
+          git tag "$VERSION" 2>/dev/null && git push origin "$VERSION" || echo "Tag $VERSION already exists, skipping"
+
+      - name: Deploy to Coolify
         run: |
           curl -sf "${{ secrets.COOLIFY_URL }}/api/v1/deploy?uuid=COOLIFY_UUID_REDACTED&force=true" \
             -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"

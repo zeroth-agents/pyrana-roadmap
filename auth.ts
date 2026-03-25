@@ -69,8 +69,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (account && profile) {
         token.oid = (profile as Record<string, unknown>).oid ?? profile.sub;
         token.email =
-          (profile as Record<string, unknown>).email ??
-          (profile as Record<string, unknown>).preferred_username;
+          ((profile as Record<string, unknown>).email ??
+          (profile as Record<string, unknown>).preferred_username) as string;
         token.accessToken = account.access_token;
         token.accessTokenExpires = account.expires_at
           ? account.expires_at * 1000

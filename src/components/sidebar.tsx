@@ -9,9 +9,14 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { UserAvatarPopover } from "@/components/user-avatar-popover";
 
 interface SidebarProps {
   pendingProposalCount: number;
+  userName: string | null;
+  userEmail: string | null;
+  signOutAction: () => Promise<void>;
 }
 
 const NAV_ITEMS = [
@@ -21,7 +26,7 @@ const NAV_ITEMS = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function Sidebar({ pendingProposalCount }: SidebarProps) {
+export function Sidebar({ pendingProposalCount, userName, userEmail, signOutAction }: SidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -83,9 +88,10 @@ export function Sidebar({ pendingProposalCount }: SidebarProps) {
         })}
       </nav>
 
-      {/* User avatar */}
-      <div className="mt-auto flex h-8 w-8 items-center justify-center rounded-full bg-primary">
-        <span className="text-[10px] font-semibold text-white">SM</span>
+      {/* Theme toggle + User avatar */}
+      <div className="mt-auto flex flex-col items-center gap-2">
+        <ThemeToggle />
+        <UserAvatarPopover name={userName} email={userEmail} signOutAction={signOutAction} />
       </div>
     </aside>
   );

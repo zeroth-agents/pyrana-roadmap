@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
+import { auth, signOut } from "../../auth";
 import { Sidebar } from "@/components/sidebar";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -18,12 +20,18 @@ export const metadata: Metadata = {
   description: "Internal roadmap management",
 };
 
+async function handleSignOut() {
+  "use server";
+  await signOut({ redirectTo: "/" });
+}
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const pendingCount = 0; // TODO: wire to API via server-side fetch
+  const session = await auth();
 
   return (
     <html
@@ -36,10 +44,17 @@ export default async function RootLayout({
         <link rel="icon" href="/favicon-dark.svg" type="image/svg+xml" media="(prefers-color-scheme: dark)" />
       </head>
       <body className="h-full">
-        <div className="flex h-full">
-          <Sidebar pendingProposalCount={pendingCount} />
-          <main className="flex-1 overflow-y-auto px-6 py-6">{children}</main>
-        </div>
+        <ThemeProvider attribute="class" defaultTheme="system" disableTransitionOnChange>
+          <div className="flex h-full">
+            <Sidebar
+              pendingProposalCount={pendingCount}
+              userName={session?.user?.name ?? null}
+              userEmail={session?.user?.email ?? null}
+              signOutAction={handleSignOut}
+            />
+            <main className="flex-1 overflow-y-auto px-6 py-6">{children}</main>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -15,27 +15,51 @@ export default function SettingsPage() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [newToken, setNewToken] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<{ created: number; updated: number; errors: string[] } | null>(null);
 
   useEffect(() => {
-    fetch("/api/tokens").then((r) => r.json()).then(setTokens);
+    fetch("/api/tokens")
+      .then((r) => (r.ok ? r.json() : []))
+      .then(setTokens);
   }, []);
 
   async function handleCreate() {
     setCreating(true);
-    const res = await fetch("/api/tokens", { method: "POST" });
-    const data = await res.json();
-    setNewToken(data.token);
-    setCreating(false);
-    const updated = await fetch("/api/tokens").then((r) => r.json());
-    setTokens(updated);
+    try {
+      const res = await fetch("/api/tokens", { method: "POST" });
+      if (!res.ok) throw new Error("Failed to create token");
+      const data = await res.json();
+      setNewToken(data.token);
+      setTokens((prev) => [
+        ...prev,
+        { id: data.id, createdAt: data.createdAt, lastUsedAt: null },
+      ]);
+    } catch (e) {
+      console.error("Token creation failed:", e);
+    } finally {
+      setCreating(false);
+    }
   }
 
   async function handleRevoke(id: string) {
-    await fetch(`/api/tokens/${id}`, { method: "DELETE" });
-    const updated = await fetch("/api/tokens").then((r) => r.json());
-    setTokens(updated);
+    setTokens((prev) => prev.filter((t) => t.id !== id));
+    try {
+      const res = await fetch(`/api/tokens/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        // Revert on failure
+        const refreshed = await fetch("/api/tokens").then((r) =>
+          r.ok ? r.json() : []
+        );
+        setTokens(refreshed);
+      }
+    } catch {
+      const refreshed = await fetch("/api/tokens").then((r) =>
+        r.ok ? r.json() : []
+      );
+      setTokens(refreshed);
+    }
   }
 
   return (
@@ -75,8 +99,9 @@ export default function SettingsPage() {
 
       <h2 className="mb-2 text-lg font-medium">API Tokens</h2>
       <p className="mb-4 text-sm text-muted-foreground">
-        Personal access tokens for the Claude Code skill. Store in Azure Key
-        Vault and set as ROADMAP_API_TOKEN.
+        Personal access tokens for the Claude Code skill. Add to your{" "}
+        <code className="rounded bg-muted px-1 py-0.5 text-xs">.env.local</code>{" "}
+        as <code className="rounded bg-muted px-1 py-0.5 text-xs">ROADMAP_API_TOKEN</code>.
       </p>
 
       {newToken && (
@@ -85,7 +110,21 @@ export default function SettingsPage() {
             <p className="mb-2 text-sm font-medium text-green-800">
               Token created. Copy it now — it won&apos;t be shown again.
             </p>
-            <Input value={newToken} readOnly className="font-mono text-xs" />
+            <div className="flex gap-2">
+              <Input value={newToken} readOnly className="font-mono text-xs" />
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0"
+                onClick={() => {
+                  navigator.clipboard.writeText(newToken);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+              >
+                {copied ? "Copied!" : "Copy"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

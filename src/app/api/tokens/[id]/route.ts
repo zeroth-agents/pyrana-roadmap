@@ -1,22 +1,16 @@
 import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
-import { auth } from "../../../../../auth";
 import { db } from "@/db";
 import { personalAccessTokens } from "@/db/schema";
+import { getUser } from "@/lib/auth-utils";
 import { unauthorized, notFound } from "@/lib/errors";
 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  let userId: string;
-  if (!process.env.AUTH_MICROSOFT_ENTRA_ID_ID) {
-    userId = "dev-user";
-  } else {
-    const session = await auth();
-    if (!session?.user?.id) return unauthorized();
-    userId = session.user.id;
-  }
+  const user = await getUser(request.headers);
+  if (!user) return unauthorized();
 
   const { id } = await params;
   const [deleted] = await db
@@ -24,7 +18,7 @@ export async function DELETE(
     .where(
       and(
         eq(personalAccessTokens.id, id),
-        eq(personalAccessTokens.userOid, userId)
+        eq(personalAccessTokens.userOid, user.oid)
       )
     )
     .returning();

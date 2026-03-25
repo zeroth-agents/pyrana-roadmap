@@ -3,10 +3,12 @@ import { z } from "zod";
 // Enums
 export const Lane = z.enum(["now", "next", "backlog", "done"]);
 export const Size = z.enum(["S", "M", "L"]);
-export const CommentTarget = z.enum(["initiative", "pillar"]);
+export const IdeaStatus = z.enum(["open", "promoted", "archived"]);
+export const CommentTarget = z.enum(["initiative", "pillar", "idea"]);
 
 export type Lane = z.infer<typeof Lane>;
 export type Size = z.infer<typeof Size>;
+export type IdeaStatus = z.infer<typeof IdeaStatus>;
 export type CommentTarget = z.infer<typeof CommentTarget>;
 
 // Request schemas
@@ -48,4 +50,24 @@ export const CreateCommentSchema = z.object({
   targetType: CommentTarget,
   targetId: z.string().uuid(),
   body: z.string().min(1).max(2000),
+});
+
+// Idea schemas
+export const CreateIdeaSchema = z.object({
+  title: z.string().min(1).max(200),
+  body: z.string().min(1),
+  pillarId: z.string().uuid().optional(),
+});
+
+export const UpdateIdeaSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  body: z.string().min(1).optional(),
+  pillarId: z.string().uuid().nullable().optional(),
+  priorityScore: z.number().int().nullable().optional(),
+  status: IdeaStatus.optional(),
+});
+
+export const PromoteIdeaSchema = z.object({
+  pillarId: z.string().uuid(),
+  lane: Lane.optional().default("backlog"),
 });

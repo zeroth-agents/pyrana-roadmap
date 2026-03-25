@@ -16,6 +16,10 @@ export function badRequest(message: string) {
   return errorResponse(message, "BAD_REQUEST", 400);
 }
 
+export function forbidden(message = "Forbidden") {
+  return errorResponse(message, "FORBIDDEN", 403);
+}
+
 export function notFound(message = "Not found") {
   return errorResponse(message, "NOT_FOUND", 404);
 }

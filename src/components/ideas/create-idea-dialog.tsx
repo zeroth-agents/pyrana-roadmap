@@ -90,7 +90,9 @@ export function CreateIdeaDialog({
             <label className="text-sm font-medium">Pillar (optional)</label>
             <Select value={pillarId} onValueChange={(v) => v && setPillarId(v)}>
               <SelectTrigger className="mt-1">
-                <SelectValue placeholder="No pillar" />
+                <SelectValue placeholder="No pillar">
+                  {(value: string) => pillars.find((p) => p.id === value)?.name ?? "No pillar"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {pillars.map((p) => (

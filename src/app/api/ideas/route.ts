@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     .as("user_votes");
 
   const voteCountSq = db
-    .select({ ideaId: ideaVotes.ideaId, count: sql<number>`count(*)`.as("count") })
+    .select({ ideaId: ideaVotes.ideaId, count: sql<number>`count(*)`.as("vote_count") })
     .from(ideaVotes)
     .groupBy(ideaVotes.ideaId)
     .as("vote_counts");
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
   const commentCountSq = db
     .select({
       targetId: comments.targetId,
-      count: sql<number>`count(*)`.as("count"),
+      count: sql<number>`count(*)`.as("comment_count"),
     })
     .from(comments)
     .where(eq(comments.targetType, "idea"))

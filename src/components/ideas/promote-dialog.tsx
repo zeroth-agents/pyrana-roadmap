@@ -69,7 +69,9 @@ export function PromoteDialog({
             <label className="text-sm font-medium">Pillar</label>
             <Select value={pillarId} onValueChange={(v) => v && setPillarId(v)}>
               <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Select pillar..." />
+                <SelectValue placeholder="Select pillar...">
+                  {(value: string) => pillars.find((p) => p.id === value)?.name ?? "Select pillar..."}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {pillars.map((p) => (
@@ -84,7 +86,9 @@ export function PromoteDialog({
             <label className="text-sm font-medium">Lane</label>
             <Select value={lane} onValueChange={(v) => v && setLane(v)}>
               <SelectTrigger className="mt-1">
-                <SelectValue />
+                <SelectValue placeholder="Backlog">
+                  {(value: string) => LANE_OPTIONS.find((o) => o.value === value)?.label ?? value}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {LANE_OPTIONS.map((opt) => (

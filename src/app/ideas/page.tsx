@@ -123,7 +123,9 @@ export default function IdeasPage() {
         {/* Filters */}
         <Select value={pillarFilter} onValueChange={(v) => v && setPillarFilter(v)}>
           <SelectTrigger className="h-8 w-[160px] text-xs">
-            <SelectValue placeholder="All Pillars" />
+            <SelectValue placeholder="All Pillars">
+              {(value: string) => value === "all" ? "All Pillars" : pillars.find((p) => p.id === value)?.name ?? "All Pillars"}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Pillars</SelectItem>
@@ -137,7 +139,9 @@ export default function IdeasPage() {
 
         <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
           <SelectTrigger className="h-8 w-[120px] text-xs">
-            <SelectValue />
+            <SelectValue placeholder="All">
+              {(value: string) => STATUS_OPTIONS.find((o) => o.value === value)?.label ?? "All"}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {STATUS_OPTIONS.map((opt) => (
@@ -153,7 +157,9 @@ export default function IdeasPage() {
           <span className="text-xs text-muted-foreground">Sort:</span>
           <Select value={sort} onValueChange={(v) => v && setSort(v as SortMode)}>
             <SelectTrigger className="h-8 w-[150px] text-xs">
-              <SelectValue />
+              <SelectValue placeholder="Most Voted">
+                {(value: string) => SORT_OPTIONS.find((o) => o.value === value)?.label ?? "Most Voted"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {SORT_OPTIONS.map((opt) => (

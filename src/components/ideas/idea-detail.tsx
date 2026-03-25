@@ -93,6 +93,19 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
     onUpdate();
   }
 
+  async function handleStatusChange(newStatus: "open" | "archived") {
+    if (!idea) return;
+    const res = await fetch(`/api/ideas/${idea.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus }),
+    });
+    if (res.ok) {
+      setIdea((prev) => prev ? { ...prev, status: newStatus } : prev);
+      onUpdate();
+    }
+  }
+
   async function handlePromote(pillarId: string, lane: string) {
     if (!idea) return;
     const res = await fetch(`/api/ideas/${idea.id}/promote`, {
@@ -190,7 +203,9 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
                     onValueChange={handlePriorityChange}
                   >
                     <SelectTrigger className="h-7 w-20 text-xs">
-                      <SelectValue placeholder="—" />
+                      <SelectValue placeholder="—">
+                        {(value: string) => value === "none" ? "—" : `P${value}`}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">—</SelectItem>
@@ -236,13 +251,31 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
 
               <Separator />
 
-              {/* Promote button */}
+              {/* Actions */}
               {idea.status === "open" && (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setPromoteOpen(true)}
+                    className="flex-1"
+                  >
+                    🚀 Promote to Linear Project
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleStatusChange("archived")}
+                  >
+                    Archive
+                  </Button>
+                </div>
+              )}
+
+              {idea.status === "archived" && (
                 <Button
-                  onClick={() => setPromoteOpen(true)}
+                  variant="outline"
+                  onClick={() => handleStatusChange("open")}
                   className="w-full"
                 >
-                  🚀 Promote to Linear Project
+                  Reopen Idea
                 </Button>
               )}
 

@@ -5,7 +5,7 @@ import { ideas, initiatives, pillars } from "@/db/schema";
 import { getUser } from "@/lib/auth-utils";
 import { unauthorized, badRequest, notFound } from "@/lib/errors";
 import { PromoteIdeaSchema } from "@/types";
-import { createLinearProject } from "@/lib/linear";
+import { createLinearProject, updateProjectStatus } from "@/lib/linear";
 
 export async function POST(
   request: Request,
@@ -45,6 +45,12 @@ export async function POST(
     );
     linearProjectId = linearProject.id;
     linearProjectUrl = linearProject.url;
+
+    // Set the Linear project status to match the selected lane
+    const selectedLane = parsed.data.lane ?? "backlog";
+    if (selectedLane !== "backlog") {
+      await updateProjectStatus(linearProject.id, selectedLane);
+    }
   } catch (err) {
     console.error("Failed to create Linear project:", err);
     // Continue without Linear — still create initiative locally

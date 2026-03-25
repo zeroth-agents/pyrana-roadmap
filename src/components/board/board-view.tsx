@@ -53,9 +53,13 @@ interface BoardViewProps {
   onCardClick: (initiative: Initiative) => void;
 }
 
-const LANES = [
+const ALWAYS_VISIBLE_LANES = [
   { id: "now", label: "Now", droppable: true },
   { id: "next", label: "Next", droppable: true },
+] as const;
+
+const OPTIONAL_LANES = [
+  { id: "backlog", label: "Backlog", droppable: true },
   { id: "done", label: "Done", droppable: false },
 ] as const;
 
@@ -66,6 +70,8 @@ export function BoardView({
   onCardClick,
 }: BoardViewProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [showBacklog, setShowBacklog] = useState(false);
+  const [showDone, setShowDone] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -83,12 +89,10 @@ export function BoardView({
     let targetPillarId = initiative.pillarId;
     let targetLane = initiative.lane;
 
-    if (overId.endsWith("-now")) {
-      targetPillarId = overId.replace(/-now$/, "");
-      targetLane = "now";
-    } else if (overId.endsWith("-next")) {
-      targetPillarId = overId.replace(/-next$/, "");
-      targetLane = "next";
+    const laneMatch = overId.match(/^(.+)-(now|next|backlog|done)$/);
+    if (laneMatch) {
+      targetPillarId = laneMatch[1];
+      targetLane = laneMatch[2];
     }
 
     if (targetPillarId === initiative.pillarId && targetLane === initiative.lane) {
@@ -119,13 +123,47 @@ export function BoardView({
     initiatives.some((i) => i.pillarId === p.id && i.lane === "now")
   ).length;
 
-  const boardInitiatives = initiatives.filter(
-    (i) => i.lane !== "backlog"
-  );
+  const visibleLaneIds = new Set(["now", "next"]);
+  if (showBacklog) visibleLaneIds.add("backlog");
+  if (showDone) visibleLaneIds.add("done");
+
+  const visibleLanes = [
+    ...ALWAYS_VISIBLE_LANES,
+    ...OPTIONAL_LANES.filter((l) => visibleLaneIds.has(l.id)),
+  ];
+
+  const boardInitiatives = initiatives.filter((i) => visibleLaneIds.has(i.lane));
+
+  const backlogCount = initiatives.filter((i) => i.lane === "backlog").length;
+  const doneCount = initiatives.filter((i) => i.lane === "done").length;
 
   return (
     <TooltipProvider>
-      <CapacityIndicator activePillarCount={activePillarCount} />
+      <div className="mb-3 flex items-center gap-2">
+        <CapacityIndicator activePillarCount={activePillarCount} />
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => setShowBacklog(!showBacklog)}
+            className={`rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+              showBacklog
+                ? "border-primary/30 bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Backlog{backlogCount > 0 ? ` (${backlogCount})` : ""}
+          </button>
+          <button
+            onClick={() => setShowDone(!showDone)}
+            className={`rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+              showDone
+                ? "border-primary/30 bg-primary/10 text-primary"
+                : "border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Done{doneCount > 0 ? ` (${doneCount})` : ""}
+          </button>
+        </div>
+      </div>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -150,11 +188,11 @@ export function BoardView({
           ))}
 
           {/* Lane rows */}
-          {LANES.map((lane) => {
+          {visibleLanes.map((lane) => {
             const hasAnyItems = pillars.some((p) =>
               boardInitiatives.some((i) => i.pillarId === p.id && i.lane === lane.id)
             );
-            if (lane.id === "done" && !hasAnyItems) return null;
+            if ((lane.id === "done" || lane.id === "backlog") && !hasAnyItems) return null;
 
             return [
               // Lane header row

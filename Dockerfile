@@ -22,10 +22,14 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/drizzle ./drizzle
+COPY --from=builder --chown=nextjs:nodejs /app/src/db/migrate.mjs ./src/db/migrate.mjs
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/postgres ./node_modules/postgres
+COPY --from=builder --chown=nextjs:nodejs /app/entrypoint.sh ./entrypoint.sh
 
 USER nextjs
 
 EXPOSE 3000
 ENV PORT=3000
 
-CMD ["node", "server.js"]
+ENTRYPOINT ["./entrypoint.sh"]

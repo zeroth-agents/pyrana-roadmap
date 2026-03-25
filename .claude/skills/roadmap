@@ -50,9 +50,7 @@ Uses name matching (see Name Matching section below).
 INITIATIVES=$(curl -sf "$ROADMAP_API_URL/api/initiatives" -H "Authorization: Bearer $ROADMAP_API_TOKEN")
 ```
 
-Display: title, pillar, lane, size, why, Linear URL, issue progress, description, milestones, created by, updated at.
-
-If multiple matches, list them and ask the user to be more specific.
+Display: title, pillar, lane, size, why, Linear URL, issue progress, description, milestones, created by name, updated at.
 
 ### `/roadmap move <name> <lane>`
 
@@ -108,7 +106,8 @@ Then create:
 curl -sf -X POST "$ROADMAP_API_URL/api/ideas" \
   -H "Authorization: Bearer $ROADMAP_API_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"title": "<TITLE>", "body": "<BODY>", "pillarId": "<PILLAR_ID or omit>"}'
+  -d '{"title": "<TITLE>", "body": "<BODY>"}'
+# If user selected a pillar, add "pillarId": "<PILLAR_ID>" to the JSON body
 ```
 
 Confirm: "Idea '<title>' created successfully." Show the idea ID.
@@ -162,7 +161,7 @@ Guide the user through generating and saving a personal access token. The `POST 
 2. Tell them to click "Generate Token" and copy the token (shown only once).
 3. Tell them to add it to `.env.local` in the project root: `ROADMAP_API_TOKEN=<the-token>`
 4. Tell them to start a new Claude Code session so the env var is loaded.
-5. Verify by calling `GET $ROADMAP_API_URL/api/pillars` with the token. If it returns data, confirm success. If 401, the token may be wrong — ask them to try again.
+5. After the user starts a new session, verify by calling `GET $ROADMAP_API_URL/api/pillars` with the token. If it returns data, confirm success. If 401, the token may be wrong — ask them to try again.
 
 ## Name Matching
 

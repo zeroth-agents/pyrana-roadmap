@@ -46,6 +46,9 @@ async function refreshAccessToken(token: Record<string, unknown>) {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  pages: {
+    signIn: "/login",
+  },
   providers: [
     MicrosoftEntraID({
       clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID!,

@@ -26,7 +26,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const pendingCount = 0; // TODO: wire to API via server-side fetch
-  const session = await auth();
+  const session = await auth().catch(() => null);
 
   return (
     <html
@@ -40,14 +40,18 @@ export default async function RootLayout({
       </head>
       <body className="h-full">
         <ThemeProvider attribute="class" defaultTheme="system" disableTransitionOnChange>
-          <div className="flex h-full">
-            <Sidebar
-              pendingProposalCount={pendingCount}
-              userName={session?.user?.name ?? null}
-              userEmail={session?.user?.email ?? null}
-            />
-            <main className="flex-1 overflow-y-auto px-6 py-6">{children}</main>
-          </div>
+          {session ? (
+            <div className="flex h-full">
+              <Sidebar
+                pendingProposalCount={pendingCount}
+                userName={session?.user?.name ?? null}
+                userEmail={session?.user?.email ?? null}
+              />
+              <main className="flex-1 overflow-y-auto px-6 py-6">{children}</main>
+            </div>
+          ) : (
+            children
+          )}
         </ThemeProvider>
       </body>
     </html>

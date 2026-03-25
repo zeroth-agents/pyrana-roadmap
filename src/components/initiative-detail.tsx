@@ -111,6 +111,7 @@ export function InitiativeDetail({
   onClose,
   onUpdate,
 }: InitiativeDetailProps) {
+  const [lane, setLane] = useState(initiative.lane);
   const [rationale, setRationale] = useState(initiative.why);
   const [saving, setSaving] = useState(false);
   const [issues, setIssues] = useState<LinearIssue[]>([]);
@@ -198,9 +199,28 @@ export function InitiativeDetail({
         <div className="mt-2 space-y-6 px-7 pb-7">
           {/* Status badges + progress */}
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="outline" className="bg-primary/10 text-primary border-0">
-              {LANE_LABELS[initiative.lane] ?? initiative.lane}
-            </Badge>
+            <Select
+              value={lane}
+              onValueChange={async (newLane: string | null) => {
+                if (!newLane) return;
+                setLane(newLane);
+                await fetch(`/api/initiatives/${initiative.id}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ lane: newLane }),
+                });
+                onUpdate();
+              }}
+            >
+              <SelectTrigger className="h-7 w-auto gap-1 rounded-full bg-primary/10 text-primary border-0 px-3 text-xs font-medium">
+                <span>{LANE_LABELS[lane] ?? lane}</span>
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(LANE_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Badge variant="outline">{pillarName}</Badge>
             <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-0">
               {initiative.size} · {total} issues

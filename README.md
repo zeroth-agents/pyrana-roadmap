@@ -114,6 +114,78 @@ src/
     └── index.ts      # Zod schemas for request validation
 ```
 
+## Guides
+
+### Database
+
+The schema is managed with [Drizzle ORM](https://orm.drizzle.team/). The source of truth is `src/db/schema.ts` — four tables: `pillars`, `initiatives`, `proposals`, and `comments`.
+
+For **local dev**, `docker compose up -d` gives you Postgres 16 on `localhost:5432`. Use `pnpm db:push` to apply the schema directly.
+
+For **production**, point `DATABASE_URL` at any PostgreSQL 16+ instance (Neon, Supabase, Railway, AWS RDS, etc.). Use migrations instead of push:
+
+```bash
+pnpm db:generate   # Generate a migration from schema changes
+pnpm db:migrate    # Apply pending migrations
+```
+
+Migrations live in `drizzle/` and are committed to the repo. Run `pnpm db:studio` to browse your data with Drizzle Studio.
+
+### Authentication
+
+Auth is handled by [NextAuth v5](https://authjs.dev/) in `auth.ts`. The app ships with Microsoft Entra ID (Azure AD), but NextAuth supports [dozens of providers](https://authjs.dev/getting-started/providers) — GitHub, Google, Okta, Auth0, credentials, etc.
+
+**Using the default (Entra ID):**
+
+1. Register an app in [Microsoft Entra ID](https://entra.microsoft.com/) → App registrations → New registration
+2. Set the redirect URI to `https://your-domain/api/auth/callback/microsoft-entra-id`
+3. Create a client secret under Certificates & secrets
+4. Set the three env vars: `AUTH_MICROSOFT_ENTRA_ID_ID`, `AUTH_MICROSOFT_ENTRA_ID_SECRET`, `AUTH_MICROSOFT_ENTRA_ID_ISSUER` (format: `https://login.microsoftonline.com/<tenant-id>/v2.0/`)
+
+**Swapping to a different provider (e.g., GitHub):**
+
+1. Install the provider if needed (most are built into `next-auth`)
+2. In `auth.ts`, replace the `MicrosoftEntraID` provider:
+   ```ts
+   import GitHub from "next-auth/providers/github";
+
+   // In the providers array:
+   GitHub({
+     clientId: process.env.AUTH_GITHUB_ID!,
+     clientSecret: process.env.AUTH_GITHUB_SECRET!,
+   })
+   ```
+3. Update the `profile()` callback to map the provider's user fields to `{ id, name, email }`
+4. Simplify or remove `refreshAccessToken()` if the new provider doesn't need token refresh
+5. Update `AUTH_*` env vars in `.env` and production
+
+The `jwt` and `session` callbacks in `auth.ts` expect `token.oid` as the user ID. If your provider uses a different field, update those callbacks and `src/lib/auth-utils.ts` accordingly.
+
+**No auth (dev mode):** When no `AUTH_MICROSOFT_ENTRA_ID_ID` is set, `getUser()` in `src/lib/auth-utils.ts` returns a hardcoded dev user, so you can develop without any OAuth setup.
+
+### Linear Integration
+
+The app syncs with [Linear](https://linear.app/) to pull project status, issues, and milestones into the roadmap. This is optional — the app works fully without it.
+
+**Setup:**
+
+1. Create a Linear API key at Settings → API → Personal API keys
+2. Set `LINEAR_API_KEY` in your environment
+
+**How sync works:**
+
+The sync (`src/lib/linear-sync.ts`) matches Linear initiatives to roadmap pillars by name. For each pillar, it fetches all projects under the matching Linear initiative, then creates or updates roadmap initiatives with:
+
+- Project status → lane mapping (In Progress → now, Planned → next, Backlog → backlog, Completed/Canceled → done)
+- Issue count → size mapping (< 5 issues → S, 5–15 → M, > 15 → L)
+- Milestones, description, project lead, and issue counts
+
+Trigger a sync manually via `POST /api/sync/linear` or set up a cron. For your own pillars, update the `PILLAR_NAMES` array in `src/lib/linear-sync.ts` to match your Linear initiative names.
+
+**Webhooks (optional):**
+
+For real-time updates, configure a Linear webhook pointing at `https://your-domain/api/webhooks/linear`. Set `LINEAR_WEBHOOK_SECRET` to the signing secret Linear provides. The webhook handler validates signatures via HMAC-SHA256.
+
 ## Deployment
 
 The app builds as a standalone Docker image. On push to `main`, the CI workflow tags the release from `package.json` and deploys.

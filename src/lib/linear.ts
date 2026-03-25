@@ -252,6 +252,35 @@ export async function updateIssue(
   await linear.updateIssue(issueId, updates);
 }
 
+// --- Project creation (for idea promotion) ---
+
+export async function createLinearProject(
+  title: string,
+  description: string,
+  teamKey = "PYR"
+): Promise<{ id: string; url: string }> {
+  if (!process.env.LINEAR_API_KEY) {
+    throw new Error("LINEAR_API_KEY not configured");
+  }
+
+  // Get team
+  const teams = await linear.teams({ filter: { key: { eq: teamKey } } });
+  const team = teams.nodes[0];
+  if (!team) throw new Error(`Team "${teamKey}" not found`);
+
+  // Create project
+  const result = await linear.createProject({
+    name: title,
+    description,
+    teamIds: [team.id],
+  });
+
+  const project = await result.project;
+  if (!project) throw new Error("Failed to create Linear project");
+
+  return { id: project.id, url: project.url };
+}
+
 // --- Team data (for dropdowns) ---
 
 export interface TeamState {

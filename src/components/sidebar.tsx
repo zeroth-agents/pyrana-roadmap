@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutGrid,
   Table,
+  Lightbulb,
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatarPopover } from "@/components/user-avatar-popover";
 
 interface SidebarProps {
+  openIdeaCount: number;
   userName: string | null;
   userEmail: string | null;
 }
@@ -19,10 +21,11 @@ interface SidebarProps {
 const NAV_ITEMS = [
   { href: "/", label: "Board", icon: LayoutGrid },
   { href: "/table", label: "Table", icon: Table },
+  { href: "/ideas", label: "Ideas", icon: Lightbulb },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function Sidebar({ userName, userEmail }: SidebarProps) {
+export function Sidebar({ openIdeaCount, userName, userEmail }: SidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -74,6 +77,11 @@ export function Sidebar({ userName, userEmail }: SidebarProps) {
             >
               <Icon className="h-4 w-4" />
               <span className="text-[6px] font-semibold">{item.label}</span>
+              {item.label === "Ideas" && openIdeaCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold text-primary-foreground">
+                  {openIdeaCount}
+                </span>
+              )}
             </Link>
           );
         })}

@@ -12,7 +12,7 @@ interface Comment {
 }
 
 interface CommentThreadProps {
-  targetType: "initiative" | "pillar";
+  targetType: "initiative" | "pillar" | "idea";
   targetId: string;
 }
 

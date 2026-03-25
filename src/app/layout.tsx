@@ -42,6 +42,7 @@ export default async function RootLayout({
           {session ? (
             <div className="flex h-full">
               <Sidebar
+                openIdeaCount={0}
                 userName={session?.user?.name ?? null}
                 userEmail={session?.user?.email ?? null}
               />

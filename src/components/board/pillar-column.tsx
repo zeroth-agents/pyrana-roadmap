@@ -5,7 +5,6 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Badge } from "@/components/ui/badge";
 import { InitiativeCard } from "./initiative-card";
 
 interface Pillar {
@@ -30,7 +29,6 @@ interface PillarColumnProps {
   pillar: Pillar;
   initiatives: Initiative[];
   allInitiatives: Initiative[];
-  pendingProposalCount: number;
   onCardClick: (initiative: Initiative) => void;
 }
 
@@ -38,7 +36,6 @@ export function PillarColumn({
   pillar,
   initiatives,
   allInitiatives,
-  pendingProposalCount,
   onCardClick,
 }: PillarColumnProps) {
   const nowItems = initiatives.filter((i) => i.lane === "now");
@@ -57,9 +54,6 @@ export function PillarColumn({
         <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/60">
           {pillar.name}
         </h3>
-        {pendingProposalCount > 0 && (
-          <Badge variant="secondary">{pendingProposalCount}</Badge>
-        )}
       </div>
 
       {/* Now section */}

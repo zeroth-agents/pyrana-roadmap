@@ -25,7 +25,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pendingCount = 0; // TODO: wire to API via server-side fetch
   const session = await auth().catch(() => null);
 
   return (
@@ -43,7 +42,6 @@ export default async function RootLayout({
           {session ? (
             <div className="flex h-full">
               <Sidebar
-                pendingProposalCount={pendingCount}
                 userName={session?.user?.name ?? null}
                 userEmail={session?.user?.email ?? null}
               />

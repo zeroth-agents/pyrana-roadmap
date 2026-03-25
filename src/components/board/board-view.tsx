@@ -12,7 +12,6 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
 import { CapacityIndicator } from "./capacity-indicator";
 import { InitiativeCard } from "./initiative-card";
 import { LaneCell } from "./lane-cells";
@@ -45,7 +44,6 @@ interface Initiative {
 interface BoardViewProps {
   pillars: Pillar[];
   initiatives: Initiative[];
-  proposalCounts: Record<string, number>;
   onReorder: (updates: Array<{
     id: string;
     sortOrder: number;
@@ -64,7 +62,6 @@ const LANES = [
 export function BoardView({
   pillars,
   initiatives,
-  proposalCounts,
   onReorder,
   onCardClick,
 }: BoardViewProps) {
@@ -149,9 +146,6 @@ export function BoardView({
               <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/60">
                 {pillar.name}
               </h3>
-              {(proposalCounts[pillar.id] ?? 0) > 0 && (
-                <Badge variant="secondary">{proposalCounts[pillar.id]}</Badge>
-              )}
             </div>
           ))}
 

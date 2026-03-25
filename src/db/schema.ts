@@ -10,11 +10,6 @@ import {
 // Enums
 export const laneEnum = pgEnum("lane", ["now", "next", "backlog", "done"]);
 export const sizeEnum = pgEnum("size", ["S", "M", "L"]);
-export const proposalStatusEnum = pgEnum("proposal_status", [
-  "pending",
-  "accepted",
-  "rejected",
-]);
 export const commentTargetEnum = pgEnum("comment_target", [
   "initiative",
   "pillar",
@@ -58,28 +53,6 @@ export const initiatives = pgTable("initiatives", {
   sortOrder: integer("sort_order").notNull().default(0),
   createdBy: text("created_by").notNull(),
   createdByName: text("created_by_name").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
-
-export const proposals = pgTable("proposals", {
-  id: uuid().defaultRandom().primaryKey(),
-  pillarId: uuid("pillar_id")
-    .notNull()
-    .references(() => pillars.id, { onDelete: "cascade" }),
-  title: text().notNull(),
-  size: sizeEnum().notNull().default("M"),
-  why: text().notNull().default(""),
-  proposedBy: text("proposed_by").notNull(),
-  proposedByName: text("proposed_by_name").notNull(),
-  status: proposalStatusEnum().notNull().default("pending"),
-  reviewerNotes: text("reviewer_notes"),
-  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
-  resolvedBy: text("resolved_by"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

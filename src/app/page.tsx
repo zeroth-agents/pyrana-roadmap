@@ -34,36 +34,26 @@ interface Pillar {
 export default function BoardPage() {
   const [pillars, setPillars] = useState<Pillar[]>([]);
   const [initiatives, setInitiatives] = useState<Initiative[]>([]);
-  const [proposalCounts, setProposalCounts] = useState<Record<string, number>>({});
   const [selectedInitiative, setSelectedInitiative] = useState<Initiative | null>(null);
 
   useEffect(() => {
     async function load() {
-      const [pillarsRes, initiativesRes, proposalsRes] = await Promise.all([
+      const [pillarsRes, initiativesRes] = await Promise.all([
         fetch("/api/pillars"),
         fetch("/api/initiatives"),
-        fetch("/api/proposals?status=pending"),
       ]);
 
       // If any request is 401, redirect to sign-in
-      if ([pillarsRes, initiativesRes, proposalsRes].some((r) => r.status === 401)) {
+      if ([pillarsRes, initiativesRes].some((r) => r.status === 401)) {
         window.location.href = "/api/auth/signin";
         return;
       }
 
       const pillarsData = await pillarsRes.json();
       const initiativesData = await initiativesRes.json();
-      const proposalsData = await proposalsRes.json();
 
       if (Array.isArray(pillarsData)) setPillars(pillarsData);
       if (Array.isArray(initiativesData)) setInitiatives(initiativesData);
-      if (Array.isArray(proposalsData)) {
-        const counts: Record<string, number> = {};
-        proposalsData.forEach((p: { pillarId: string }) => {
-          counts[p.pillarId] = (counts[p.pillarId] ?? 0) + 1;
-        });
-        setProposalCounts(counts);
-      }
     }
     load();
   }, []);
@@ -85,7 +75,6 @@ export default function BoardPage() {
       <BoardView
         pillars={pillars}
         initiatives={initiatives}
-        proposalCounts={proposalCounts}
         onReorder={handleReorder}
         onCardClick={(init) => {
           console.log("[page] onCardClick called", init.title);

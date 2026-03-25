@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutGrid,
   Table,
-  Inbox,
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -13,7 +12,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatarPopover } from "@/components/user-avatar-popover";
 
 interface SidebarProps {
-  pendingProposalCount: number;
   userName: string | null;
   userEmail: string | null;
 }
@@ -21,11 +19,10 @@ interface SidebarProps {
 const NAV_ITEMS = [
   { href: "/", label: "Board", icon: LayoutGrid },
   { href: "/table", label: "Table", icon: Table },
-  { href: "/proposals", label: "Inbox", icon: Inbox },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function Sidebar({ pendingProposalCount, userName, userEmail }: SidebarProps) {
+export function Sidebar({ userName, userEmail }: SidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -77,11 +74,6 @@ export function Sidebar({ pendingProposalCount, userName, userEmail }: SidebarPr
             >
               <Icon className="h-4 w-4" />
               <span className="text-[6px] font-semibold">{item.label}</span>
-              {item.label === "Inbox" && pendingProposalCount > 0 && (
-                <span className="absolute right-1.5 top-1 flex h-2 w-2 items-center justify-center rounded-full bg-primary text-[5px] font-bold text-white">
-                  {pendingProposalCount}
-                </span>
-              )}
             </Link>
           );
         })}

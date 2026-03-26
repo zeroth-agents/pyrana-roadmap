@@ -89,10 +89,18 @@ export function BoardView({
     let targetPillarId = initiative.pillarId;
     let targetLane = initiative.lane;
 
+    // Check if dropped on a lane container (format: "{pillarId}-{lane}")
     const laneMatch = overId.match(/^(.+)-(now|next|backlog|done)$/);
     if (laneMatch) {
       targetPillarId = laneMatch[1];
       targetLane = laneMatch[2];
+    } else {
+      // Dropped on another card — resolve that card's lane and pillar
+      const overInitiative = initiatives.find((i) => i.id === overId);
+      if (overInitiative) {
+        targetPillarId = overInitiative.pillarId;
+        targetLane = overInitiative.lane;
+      }
     }
 
     if (targetPillarId === initiative.pillarId && targetLane === initiative.lane) {

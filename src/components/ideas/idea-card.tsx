@@ -75,11 +75,18 @@ export function IdeaCard({ idea, pillars, onClick, onVoteChange }: IdeaCardProps
               {pillar.name}
             </Badge>
           )}
-          {isPromoted && (
-            <Badge className="bg-green-500/10 text-green-600 border-0 text-[10px]">
-              ✓ Promoted
-            </Badge>
-          )}
+          <Badge
+            className={cn(
+              "border-0 text-[10px]",
+              idea.status === "promoted"
+                ? "bg-green-500/10 text-green-600"
+                : idea.status === "archived"
+                  ? "bg-muted text-muted-foreground"
+                  : "bg-primary/10 text-primary"
+            )}
+          >
+            {idea.status === "promoted" ? "✓ Promoted" : idea.status}
+          </Badge>
         </div>
         <VoteButton
           ideaId={idea.id}

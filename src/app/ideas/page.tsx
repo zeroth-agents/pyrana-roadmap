@@ -57,7 +57,7 @@ export default function IdeasPage() {
   const [pillars, setPillars] = useState<Pillar[]>([]);
   const [view, setView] = useState<ViewMode>("gallery");
   const [sort, setSort] = useState<SortMode>("votes");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("open");
   const [pillarFilter, setPillarFilter] = useState("all");
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);

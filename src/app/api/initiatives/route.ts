@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { asc, eq, and, SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { initiatives } from "@/db/schema";
+import { initiatives, users } from "@/db/schema";
 import { getUser } from "@/lib/auth-utils";
 import { unauthorized, badRequest } from "@/lib/errors";
 import { CreateInitiativeSchema } from "@/types";
@@ -13,14 +13,44 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const pillarId = url.searchParams.get("pillarId");
   const lane = url.searchParams.get("lane");
+  const assigneeId = url.searchParams.get("assigneeId");
 
   const conditions: SQL[] = [];
   if (pillarId) conditions.push(eq(initiatives.pillarId, pillarId));
-  if (lane) conditions.push(eq(initiatives.lane, lane as any));
+  if (lane) conditions.push(eq(initiatives.lane, lane as "now" | "next" | "backlog" | "done"));
+  if (assigneeId) conditions.push(eq(initiatives.assigneeId, assigneeId));
 
   const rows = await db
-    .select()
+    .select({
+      id: initiatives.id,
+      pillarId: initiatives.pillarId,
+      title: initiatives.title,
+      lane: initiatives.lane,
+      size: initiatives.size,
+      why: initiatives.why,
+      dependsOn: initiatives.dependsOn,
+      linearProjectUrl: initiatives.linearProjectUrl,
+      linearProjectId: initiatives.linearProjectId,
+      linearId: initiatives.linearId,
+      linearStatus: initiatives.linearStatus,
+      description: initiatives.description,
+      content: initiatives.content,
+      milestones: initiatives.milestones,
+      linearProjectLead: initiatives.linearProjectLead,
+      linearAssignee: initiatives.linearAssignee,
+      linearSyncedAt: initiatives.linearSyncedAt,
+      assigneeId: initiatives.assigneeId,
+      issueCountTotal: initiatives.issueCountTotal,
+      issueCountDone: initiatives.issueCountDone,
+      sortOrder: initiatives.sortOrder,
+      createdBy: initiatives.createdBy,
+      createdByName: initiatives.createdByName,
+      createdAt: initiatives.createdAt,
+      updatedAt: initiatives.updatedAt,
+      assigneeName: users.name,
+    })
     .from(initiatives)
+    .leftJoin(users, eq(initiatives.assigneeId, users.id))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(asc(initiatives.sortOrder));
 

@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       await db
         .update(initiatives)
         .set({
-          lane: statusToLane(statusName) as any,
+          lane: statusToLane(statusName) as "now" | "next" | "backlog" | "done",
           linearSyncedAt: new Date(),
           updatedAt: new Date(),
         })
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
       const newSize = issueCountToSize(updated.issueCountTotal);
       await db
         .update(initiatives)
-        .set({ size: newSize as any })
+        .set({ size: newSize as "S" | "M" | "L" })
         .where(eq(initiatives.linearProjectId, projectId));
     }
   }

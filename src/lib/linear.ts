@@ -53,6 +53,7 @@ export interface LinearProjectSummary {
   status: string;
   url: string;
   leadName?: string;
+  leadId?: string;
   milestones: LinearMilestone[];
   issueCountTotal: number;
   issueCountDone: number;
@@ -105,6 +106,7 @@ export async function fetchInitiativeProjects(
       status,
       url: project.url,
       leadName: lead?.name ?? undefined,
+      leadId: lead?.id ?? undefined,
       milestones,
       issueCountTotal: totalCount,
       issueCountDone: doneCount,
@@ -123,7 +125,6 @@ export async function updateProjectStatus(
   const targetStatusName = laneToStatus(lane);
 
   // Find the project status that matches the target name
-  const project = await linear.project(projectId);
   const statuses = await linear.projectStatuses();
   const targetStatus = statuses.nodes.find(
     (s) => s.name === targetStatusName
@@ -257,6 +258,7 @@ export async function updateIssue(
 export async function createLinearProject(
   title: string,
   description: string,
+  leadId?: string,
   teamKey = "PYR"
 ): Promise<{ id: string; url: string }> {
   if (!process.env.LINEAR_API_KEY) {
@@ -273,6 +275,7 @@ export async function createLinearProject(
     name: title,
     description,
     teamIds: [team.id],
+    ...(leadId ? { leadId } : {}),
   });
 
   const project = await result.project;
@@ -292,6 +295,7 @@ export interface TeamState {
 export interface TeamMember {
   id: string;
   name: string;
+  email?: string;
 }
 
 let cachedStates: TeamState[] | null = null;
@@ -324,6 +328,7 @@ export async function getTeamMembers(teamKey = "PYR"): Promise<TeamMember[]> {
   cachedMembers = members.nodes.map((m) => ({
     id: m.id,
     name: m.name,
+    email: m.email ?? undefined,
   }));
   return cachedMembers;
 }

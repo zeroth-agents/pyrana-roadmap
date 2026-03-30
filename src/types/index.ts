@@ -20,6 +20,7 @@ export const CreateInitiativeSchema = z.object({
   why: z.string().max(500).optional().default(""),
   dependsOn: z.array(z.string().uuid()).optional().default([]),
   linearProjectUrl: z.string().url().optional(),
+  assigneeId: z.string().uuid().optional(),
 });
 
 export const UpdateInitiativeSchema = z.object({
@@ -30,6 +31,7 @@ export const UpdateInitiativeSchema = z.object({
   why: z.string().max(500).optional(),
   dependsOn: z.array(z.string().uuid()).optional(),
   linearProjectUrl: z.string().url().nullable().optional(),
+  assigneeId: z.string().uuid().nullable().optional(),
 });
 
 export const ReorderSchema = z.array(
@@ -57,6 +59,7 @@ export const CreateIdeaSchema = z.object({
   title: z.string().min(1).max(200),
   body: z.string().min(1),
   pillarId: z.string().uuid().optional(),
+  assigneeId: z.string().uuid().optional(),
 });
 
 export const UpdateIdeaSchema = z.object({
@@ -65,6 +68,7 @@ export const UpdateIdeaSchema = z.object({
   pillarId: z.string().uuid().nullable().optional(),
   priorityScore: z.number().int().nullable().optional(),
   status: IdeaStatus.optional(),
+  assigneeId: z.string().uuid().nullable().optional(),
 });
 
 export const PromoteIdeaSchema = z.object({

@@ -22,6 +22,8 @@ interface Initiative {
   linearProjectId?: string | null;
   issueCountTotal?: number;
   issueCountDone?: number;
+  assigneeId?: string | null;
+  assigneeName?: string | null;
 }
 
 interface InitiativeCardProps {
@@ -35,6 +37,15 @@ const SIZE_COLORS: Record<string, string> = {
   M: "bg-yellow-100 text-yellow-700",
   L: "bg-red-100 text-red-700",
 };
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
 
 export function InitiativeCard({
   initiative,
@@ -122,6 +133,18 @@ export function InitiativeCard({
                   Depends on: {depNames.join(", ")}
                 </TooltipContent>
               </Tooltip>
+            </div>
+          )}
+
+          {/* Assignee avatar */}
+          {initiative.assigneeName && (
+            <div className="mt-2 flex items-center gap-1.5">
+              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[7px] font-semibold text-primary-foreground">
+                {getInitials(initiative.assigneeName)}
+              </div>
+              <span className="text-[10px] text-muted-foreground truncate">
+                {initiative.assigneeName}
+              </span>
             </div>
           )}
         </div>

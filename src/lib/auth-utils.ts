@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { auth } from "../../auth";
 import { db } from "@/db";
 import { personalAccessTokens } from "@/db/schema";
+import { upsertUser } from "./user-utils";
 
 export interface AuthUser {
   oid: string;
@@ -42,6 +43,9 @@ export async function getUser(
         .where(eq(personalAccessTokens.tokenHash, hash))
         .catch(console.error);
 
+      // Capture PAT user in users table (fire-and-forget)
+      upsertUser(rows[0].userOid, rows[0].userName).catch(console.error);
+
       return { oid: rows[0].userOid, name: rows[0].userName };
     }
   }
@@ -49,6 +53,9 @@ export async function getUser(
   // Fall back to session auth (Entra SSO)
   const session = await auth();
   if (session?.user?.id && session.user.name) {
+    // Capture Entra user in users table (fire-and-forget)
+    upsertUser(session.user.id, session.user.name, session.user.email ?? undefined).catch(console.error);
+
     return { oid: session.user.id, name: session.user.name };
   }
 

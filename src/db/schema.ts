@@ -23,6 +23,20 @@ export const commentTargetEnum = pgEnum("comment_target", [
 ]);
 
 // Tables
+export const users = pgTable("users", {
+  id: uuid().defaultRandom().primaryKey(),
+  entraOid: text("entra_oid").notNull().unique(),
+  name: text().notNull(),
+  email: text(),
+  linearUserId: text("linear_user_id").unique(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const pillars = pgTable("pillars", {
   id: uuid().defaultRandom().primaryKey(),
   name: text().notNull(),
@@ -55,6 +69,9 @@ export const initiatives = pgTable("initiatives", {
   linearProjectLead: text("linear_project_lead"),
   linearAssignee: text("linear_assignee"),
   linearSyncedAt: timestamp("linear_synced_at", { withTimezone: true }),
+  assigneeId: uuid("assignee_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
   issueCountTotal: integer("issue_count_total").notNull().default(0),
   issueCountDone: integer("issue_count_done").notNull().default(0),
   sortOrder: integer("sort_order").notNull().default(0),
@@ -84,6 +101,9 @@ export const ideas = pgTable("ideas", {
     { onDelete: "set null" }
   ),
   linearProjectId: text("linear_project_id"),
+  assigneeId: uuid("assignee_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

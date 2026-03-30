@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BoardView } from "@/components/board/board-view";
 import { InitiativeDetail } from "@/components/initiative-detail";
+import { AssigneeSelect } from "@/components/assignee-select";
 
 interface Initiative {
   id: string;
@@ -23,6 +24,8 @@ interface Initiative {
   linearProjectId?: string | null;
   issueCountTotal?: number;
   issueCountDone?: number;
+  assigneeId?: string | null;
+  assigneeName?: string | null;
 }
 
 interface Pillar {
@@ -35,12 +38,13 @@ export default function BoardPage() {
   const [pillars, setPillars] = useState<Pillar[]>([]);
   const [initiatives, setInitiatives] = useState<Initiative[]>([]);
   const [selectedInitiative, setSelectedInitiative] = useState<Initiative | null>(null);
+  const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       const [pillarsRes, initiativesRes] = await Promise.all([
         fetch("/api/pillars"),
-        fetch("/api/initiatives"),
+        fetch(`/api/initiatives${assigneeFilter ? `?assigneeId=${assigneeFilter}` : ""}`),
       ]);
 
       // If any request is 401, redirect to sign-in
@@ -56,7 +60,7 @@ export default function BoardPage() {
       if (Array.isArray(initiativesData)) setInitiatives(initiativesData);
     }
     load();
-  }, []);
+  }, [assigneeFilter]);
 
   async function handleReorder(
     updates: Array<{ id: string; sortOrder: number; lane?: string; pillarId?: string }>
@@ -72,6 +76,14 @@ export default function BoardPage() {
 
   return (
     <>
+      <div className="mb-4 flex items-center gap-2 px-4">
+        <span className="text-xs text-muted-foreground">Assignee:</span>
+        <AssigneeSelect
+          value={assigneeFilter}
+          onChange={setAssigneeFilter}
+          className="h-7 w-[180px] text-xs"
+        />
+      </div>
       <BoardView
         pillars={pillars}
         initiatives={initiatives}

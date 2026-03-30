@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { desc, eq, and, sql, SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { ideas, ideaVotes, comments } from "@/db/schema";
+import { ideas, ideaVotes, comments, users } from "@/db/schema";
 import { getUser } from "@/lib/auth-utils";
 import { unauthorized, badRequest } from "@/lib/errors";
 import { CreateIdeaSchema } from "@/types";
@@ -13,11 +13,13 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const status = url.searchParams.get("status");
   const pillarId = url.searchParams.get("pillarId");
+  const assigneeId = url.searchParams.get("assigneeId");
   const sort = url.searchParams.get("sort") ?? "votes";
 
   const conditions: SQL[] = [];
-  if (status) conditions.push(eq(ideas.status, status as any));
+  if (status) conditions.push(eq(ideas.status, status as "open" | "promoted" | "archived"));
   if (pillarId) conditions.push(eq(ideas.pillarId, pillarId));
+  if (assigneeId) conditions.push(eq(ideas.assigneeId, assigneeId));
 
   // Subquery: has current user voted on each idea?
   const userVoteSq = db
@@ -71,6 +73,8 @@ export async function GET(request: Request) {
       status: ideas.status,
       promotedInitiativeId: ideas.promotedInitiativeId,
       linearProjectId: ideas.linearProjectId,
+      assigneeId: ideas.assigneeId,
+      assigneeName: users.name,
       createdAt: ideas.createdAt,
       updatedAt: ideas.updatedAt,
       voteCount: sql<number>`coalesce(${voteCountSq.count}, 0)`.as("vote_count"),
@@ -81,6 +85,7 @@ export async function GET(request: Request) {
     .leftJoin(voteCountSq, eq(ideas.id, voteCountSq.ideaId))
     .leftJoin(commentCountSq, eq(ideas.id, commentCountSq.targetId))
     .leftJoin(userVoteSq, eq(ideas.id, userVoteSq.ideaId))
+    .leftJoin(users, eq(ideas.assigneeId, users.id))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(orderBy);
 

@@ -28,8 +28,10 @@ describe("GET /api/initiatives", () => {
     ];
     (db.select as any).mockReturnValue({
       from: vi.fn().mockReturnValue({
-        where: vi.fn().mockReturnValue({
-          orderBy: vi.fn().mockResolvedValue(mockInitiatives),
+        leftJoin: vi.fn().mockReturnValue({
+          where: vi.fn().mockReturnValue({
+            orderBy: vi.fn().mockResolvedValue(mockInitiatives),
+          }),
         }),
       }),
     });

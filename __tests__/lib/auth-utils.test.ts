@@ -16,6 +16,7 @@ vi.mock("../../auth", () => ({
 describe("getUser", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv("AUTH_MICROSOFT_ENTRA_ID_ID", "fake-entra-id");
   });
 
   it("returns null when no session and no bearer token", async () => {

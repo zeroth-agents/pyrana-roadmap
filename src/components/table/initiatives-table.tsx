@@ -42,11 +42,6 @@ export function InitiativesTable({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null);
 
-  const pillarMap = useMemo(
-    () => Object.fromEntries(pillars.map((p) => [p.id, p.name])),
-    [pillars]
-  );
-
   const filtered = useMemo(() => {
     return initiatives.filter((i) => {
       if (filters.pillar && i.pillarId !== filters.pillar) return false;
@@ -59,7 +54,7 @@ export function InitiativesTable({
   function toggleSelect(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
       return next;
     });
   }

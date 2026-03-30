@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AssigneeSelect } from "@/components/assignee-select";
 import { IdeasGallery } from "@/components/ideas/ideas-gallery";
 import { IdeasList } from "@/components/ideas/ideas-list";
 import { IdeaDetail } from "@/components/ideas/idea-detail";
@@ -33,6 +34,8 @@ interface IdeaData {
   commentCount: number;
   userVoted: boolean;
   createdAt: string;
+  assigneeId?: string | null;
+  assigneeName?: string | null;
 }
 
 type ViewMode = "gallery" | "list";
@@ -61,16 +64,18 @@ export default function IdeasPage() {
   const [pillarFilter, setPillarFilter] = useState("all");
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
 
   const fetchIdeas = useCallback(() => {
     const params = new URLSearchParams({ sort });
     if (statusFilter !== "all") params.set("status", statusFilter);
     if (pillarFilter !== "all") params.set("pillarId", pillarFilter);
+    if (assigneeFilter) params.set("assigneeId", assigneeFilter);
 
     fetch(`/api/ideas?${params}`)
       .then((r) => r.json())
       .then(setIdeas);
-  }, [sort, statusFilter, pillarFilter]);
+  }, [sort, statusFilter, pillarFilter, assigneeFilter]);
 
   useEffect(() => {
     fetchIdeas();
@@ -151,6 +156,12 @@ export default function IdeasPage() {
             ))}
           </SelectContent>
         </Select>
+
+        <AssigneeSelect
+          value={assigneeFilter}
+          onChange={setAssigneeFilter}
+          className="h-8 w-[160px] text-xs"
+        />
 
         {/* Sort */}
         <div className="ml-auto flex items-center gap-2">

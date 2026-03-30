@@ -15,6 +15,7 @@ import { IdeasList } from "@/components/ideas/ideas-list";
 import { IdeaDetail } from "@/components/ideas/idea-detail";
 import { CreateIdeaDialog } from "@/components/ideas/create-idea-dialog";
 import { LayoutGrid, List, Plus } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 interface Pillar {
@@ -65,6 +66,7 @@ export default function IdeasPage() {
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const fetchIdeas = useCallback(() => {
     const params = new URLSearchParams({ sort });
@@ -72,17 +74,58 @@ export default function IdeasPage() {
     if (pillarFilter !== "all") params.set("pillarId", pillarFilter);
     if (assigneeFilter) params.set("assigneeId", assigneeFilter);
 
-    fetch(`/api/ideas?${params}`)
+    return fetch(`/api/ideas?${params}`)
       .then((r) => r.json())
       .then(setIdeas);
   }, [sort, statusFilter, pillarFilter, assigneeFilter]);
 
   useEffect(() => {
-    fetchIdeas();
-    fetch("/api/pillars")
-      .then((r) => r.json())
-      .then(setPillars);
+    Promise.all([
+      fetchIdeas(),
+      fetch("/api/pillars").then((r) => r.json()).then(setPillars),
+    ]).then(() => setLoading(false));
   }, [fetchIdeas]);
+
+  if (loading) {
+    return (
+      <div>
+        {/* Header skeleton */}
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-xl font-semibold">Ideas</h1>
+          <Skeleton className="h-8 w-24 rounded-md" />
+        </div>
+        {/* Toolbar skeleton */}
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <Skeleton className="h-8 w-[140px] rounded-lg" />
+          <Skeleton className="h-8 w-[160px]" />
+          <Skeleton className="h-8 w-[120px]" />
+          <Skeleton className="h-8 w-[160px]" />
+          <div className="ml-auto flex items-center gap-2">
+            <Skeleton className="h-4 w-8" />
+            <Skeleton className="h-8 w-[150px]" />
+          </div>
+        </div>
+        {/* Card grid skeleton */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-lg border p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-5 w-3/5" />
+                <Skeleton className="h-5 w-10 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-4/5" />
+              <div className="flex items-center gap-3 pt-2">
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="ml-auto h-5 w-16 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>

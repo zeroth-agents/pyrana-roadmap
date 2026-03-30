@@ -21,20 +21,21 @@ pnpm db:push          # Push schema directly (dev only)
 pnpm db:studio        # Open Drizzle Studio GUI
 pnpm db:seed          # Seed database (npx tsx src/db/seed.ts)
 
-# Local Postgres via Docker
-docker compose up -d  # Start Postgres 16 on localhost:5432 (user/pass: postgres/postgres, db: roadmap)
+# Local Postgres via Podman
+# Container "postgres" on localhost:5432 (user/pass: postgres/postgres, db: roadmap)
 ```
 
 ## Architecture
 
-**Pyrana Roadmap** is an internal product roadmap tool. Next.js 16 app with React 19, Tailwind CSS 4, and a Postgres database via Drizzle ORM. Deployed as a Docker standalone build to Coolify — auto-deploys on push to `main`.
+**Pyrana Roadmap** is a product roadmap tool (open source repo). Next.js 16 app with React 19, Tailwind CSS 4, and a Postgres database via Drizzle ORM.
 
 ### Data Model
 
 Four core tables in `src/db/schema.ts`:
 - **pillars** — strategic categories (e.g. "Agent Intelligence", "Data & Compute")
 - **initiatives** — roadmap items within pillars, organized by lane (now/next/backlog/done) and size (S/M/L). Linked to Linear projects via `linearProjectId`
-- **proposals** — user-submitted initiative ideas, with pending/accepted/rejected workflow
+- **ideas** — user-submitted initiative ideas, with open/promoted/archived workflow
+- **users** — team members synced from Entra ID and Linear, referenced by `assigneeId` on initiatives and ideas
 - **comments** — threaded comments on initiatives or pillars
 
 Plus `personalAccessTokens` for API bearer auth.
@@ -57,7 +58,7 @@ Request validation uses Zod schemas from `src/types/index.ts`. Error responses u
 
 - **Board view** (`/`) — Kanban board with pillars as rows, lanes as columns. Uses `@dnd-kit` for drag-and-drop reordering. Main page is a client component that fetches from API routes.
 - **Table view** (`/table`) — Tabular initiative list
-- **Proposals** (`/proposals`) — Submit and review proposals
+- **Ideas** (`/ideas`) — Submit and browse ideas
 - **Settings** (`/settings`) — Personal access tokens
 - **Login** (`/login`) — Custom login page with Microsoft Entra ID
 
@@ -73,9 +74,27 @@ Tests live in `__tests__/` (not colocated). Vitest with jsdom environment. Tests
 
 Microsoft Entra ID via NextAuth v5 (beta). `auth.ts` at project root configures the provider with token refresh. `middleware.ts` protects all pages (redirects to `/login`), while API routes handle their own auth. `proxy.ts` re-exports auth for middleware.
 
+### Database Migrations
+
+**Only use `drizzle-kit generate`** to create migrations — do not hand-write SQL migration files. Drizzle diffs `schema.ts` against its snapshot and emits DDL. Hand-written migrations that create objects ahead of the snapshot cause duplicate `CREATE` failures on the next generate.
+
+All generated migrations must be idempotent before committing. Wrap statements as needed:
+- `CREATE TABLE IF NOT EXISTS` instead of `CREATE TABLE`
+- `DO $$ BEGIN ... EXCEPTION WHEN duplicate_object THEN NULL; END $$` for `ADD CONSTRAINT`
+- `IF NOT EXISTS` checks for `CREATE TYPE`
+- `DROP TABLE IF EXISTS`, `DROP TYPE IF EXISTS`
+
+Test migrations locally before pushing: drop and recreate a test DB, then run `pnpm db:migrate` to verify all migrations apply cleanly from scratch.
+
 ### Versioning & Deployment
 
-Semver from `package.json`. Before opening a PR, run `pnpm bump` (patch, the default) or `pnpm bump:minor` / `pnpm bump:major` to increment the version. On push to `main`, the deploy workflow (`.github/workflows/deploy.yml`) creates a git tag from the current version and deploys to Coolify.
+Semver from `package.json`. Before opening a PR, run `pnpm bump` (patch, the default) or `pnpm bump:minor` / `pnpm bump:major` to increment the version.
+
+**CI**: `.github/workflows/ci.yml` runs lint + test on pushes to `main` and on PRs.
+
+**Deploy**: `.github/workflows/deploy.yml` is manual-only (`workflow_dispatch`). Trigger from GitHub Actions > Deploy > Run workflow, or via `gh workflow run deploy.yml`. It tags the version and deploys to Coolify. `main` is protected — all changes require a PR with passing CI.
+
+Deployed as a Docker standalone build to Coolify at `roadmap.pyrana.ai`.
 
 ### Environment Variables
 

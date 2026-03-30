@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { BoardView } from "@/components/board/board-view";
 import { InitiativeDetail } from "@/components/initiative-detail";
 import { AssigneeSelect } from "@/components/assignee-select";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Initiative {
   id: string;
@@ -39,9 +40,11 @@ export default function BoardPage() {
   const [initiatives, setInitiatives] = useState<Initiative[]>([]);
   const [selectedInitiative, setSelectedInitiative] = useState<Initiative | null>(null);
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
+      setLoading(true);
       const [pillarsRes, initiativesRes] = await Promise.all([
         fetch("/api/pillars"),
         fetch(`/api/initiatives${assigneeFilter ? `?assigneeId=${assigneeFilter}` : ""}`),
@@ -58,6 +61,7 @@ export default function BoardPage() {
 
       if (Array.isArray(pillarsData)) setPillars(pillarsData);
       if (Array.isArray(initiativesData)) setInitiatives(initiativesData);
+      setLoading(false);
     }
     load();
   }, [assigneeFilter]);
@@ -72,6 +76,47 @@ export default function BoardPage() {
     });
     const data = await fetch("/api/initiatives").then((r) => r.json());
     setInitiatives(data);
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {/* Assignee filter skeleton */}
+        <div className="flex items-center gap-2 px-4">
+          <Skeleton className="h-4 w-14" />
+          <Skeleton className="h-7 w-[180px]" />
+        </div>
+        {/* Capacity indicator + lane toggles */}
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-5 w-32" />
+          <div className="ml-auto flex gap-2">
+            <Skeleton className="h-7 w-20 rounded-md" />
+            <Skeleton className="h-7 w-16 rounded-md" />
+          </div>
+        </div>
+        {/* Board grid — 5 pillar columns, 2 lane rows */}
+        <div className="grid grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={`header-${i}`} className="h-4 w-24" />
+          ))}
+          {/* Now lane */}
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={`now-${i}`} className="space-y-2">
+              {i === 0 && <Skeleton className="h-3 w-8" />}
+              <Skeleton className="h-20 w-full rounded-lg" />
+              {i % 2 === 0 && <Skeleton className="h-20 w-full rounded-lg" />}
+            </div>
+          ))}
+          {/* Next lane */}
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={`next-${i}`} className="space-y-2">
+              {i === 0 && <Skeleton className="h-3 w-8" />}
+              <Skeleton className="h-20 w-full rounded-lg" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (

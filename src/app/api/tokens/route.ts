@@ -15,6 +15,7 @@ export async function GET(request: Request) {
   const tokens = await db
     .select({
       id: personalAccessTokens.id,
+      tokenPrefix: personalAccessTokens.tokenPrefix,
       createdAt: personalAccessTokens.createdAt,
       lastUsedAt: personalAccessTokens.lastUsedAt,
     })
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
 
   const rawToken = randomBytes(32).toString("hex");
   const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+  const tokenPrefix = rawToken.slice(0, 8);
 
   const [created] = await db
     .insert(personalAccessTokens)
@@ -37,12 +39,13 @@ export async function POST(request: Request) {
       userOid: user.oid,
       userName: user.name,
       tokenHash,
+      tokenPrefix,
     })
     .returning();
 
   // Return the unhashed token ONCE — it is never stored or retrievable again
   return NextResponse.json(
-    { id: created.id, token: rawToken, createdAt: created.createdAt },
+    { id: created.id, token: rawToken, tokenPrefix, createdAt: created.createdAt },
     { status: 201 }
   );
 }

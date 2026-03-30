@@ -22,6 +22,7 @@ import { AssigneeSelect } from "@/components/assignee-select";
 import { VoteButton } from "./vote-button";
 import { PromoteDialog } from "./promote-dialog";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Voter {
   userId: string;
@@ -266,7 +267,18 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
 
               {/* Markdown body */}
               <div className="prose prose-sm prose-muted max-w-none dark:prose-invert [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm [&_h4]:text-sm [&_p]:text-sm [&_li]:text-sm">
-                <Markdown>{idea.body}</Markdown>
+                <Markdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    a: ({ children, href, ...props }) => (
+                      <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+                        {children}
+                      </a>
+                    ),
+                  }}
+                >
+                  {idea.body}
+                </Markdown>
               </div>
 
               <Separator />

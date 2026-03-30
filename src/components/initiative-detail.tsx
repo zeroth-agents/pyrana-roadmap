@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { CommentThread } from "./comment-thread";
 import { AssigneeSelect } from "./assignee-select";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface Milestone {
   name: string;
@@ -406,7 +407,18 @@ export function InitiativeDetail({
                         <div className="ml-6 mr-2 mb-2 mt-1 rounded-md border bg-card p-3 space-y-3">
                           {issue.description && (
                             <div className="prose prose-xs prose-muted max-w-none text-xs text-muted-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-xs [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:my-1 [&_ul]:my-1 [&_ul]:pl-4 [&_li]:my-0.5 [&_strong]:text-foreground/70">
-                              <Markdown>{issue.description}</Markdown>
+                              <Markdown
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                  a: ({ children, href, ...props }) => (
+                                    <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+                                      {children}
+                                    </a>
+                                  ),
+                                }}
+                              >
+                                {issue.description}
+                              </Markdown>
                             </div>
                           )}
                           <div className="flex gap-3">

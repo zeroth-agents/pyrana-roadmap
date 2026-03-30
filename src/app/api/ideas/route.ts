@@ -13,11 +13,13 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const status = url.searchParams.get("status");
   const pillarId = url.searchParams.get("pillarId");
+  const assigneeId = url.searchParams.get("assigneeId");
   const sort = url.searchParams.get("sort") ?? "votes";
 
   const conditions: SQL[] = [];
   if (status) conditions.push(eq(ideas.status, status as any));
   if (pillarId) conditions.push(eq(ideas.pillarId, pillarId));
+  if (assigneeId) conditions.push(eq(ideas.assigneeId, assigneeId));
 
   // Subquery: has current user voted on each idea?
   const userVoteSq = db

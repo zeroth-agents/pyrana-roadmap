@@ -13,10 +13,12 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const pillarId = url.searchParams.get("pillarId");
   const lane = url.searchParams.get("lane");
+  const assigneeId = url.searchParams.get("assigneeId");
 
   const conditions: SQL[] = [];
   if (pillarId) conditions.push(eq(initiatives.pillarId, pillarId));
   if (lane) conditions.push(eq(initiatives.lane, lane as any));
+  if (assigneeId) conditions.push(eq(initiatives.assigneeId, assigneeId));
 
   const rows = await db
     .select({

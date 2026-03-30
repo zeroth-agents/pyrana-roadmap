@@ -68,6 +68,7 @@ export async function POST(
       linearProjectUrl,
       createdBy: user.oid,
       createdByName: user.name,
+      assigneeId: idea.assigneeId ?? null,
     })
     .returning();
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { ideas, ideaVotes } from "@/db/schema";
+import { ideas, ideaVotes, users } from "@/db/schema";
 import { getUser } from "@/lib/auth-utils";
 import { unauthorized, badRequest, notFound, forbidden } from "@/lib/errors";
 import { UpdateIdeaSchema } from "@/types";
@@ -15,7 +15,26 @@ export async function GET(
 
   const { id } = await params;
 
-  const [idea] = await db.select().from(ideas).where(eq(ideas.id, id));
+  const [idea] = await db
+    .select({
+      id: ideas.id,
+      title: ideas.title,
+      body: ideas.body,
+      authorId: ideas.authorId,
+      authorName: ideas.authorName,
+      pillarId: ideas.pillarId,
+      status: ideas.status,
+      priorityScore: ideas.priorityScore,
+      promotedInitiativeId: ideas.promotedInitiativeId,
+      linearProjectId: ideas.linearProjectId,
+      assigneeId: ideas.assigneeId,
+      assigneeName: users.name,
+      createdAt: ideas.createdAt,
+      updatedAt: ideas.updatedAt,
+    })
+    .from(ideas)
+    .leftJoin(users, eq(ideas.assigneeId, users.id))
+    .where(eq(ideas.id, id));
   if (!idea) return notFound("Idea not found");
 
   // Get vote count and voter list

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { desc, eq, and, sql, SQL } from "drizzle-orm";
 import { db } from "@/db";
-import { ideas, ideaVotes, comments } from "@/db/schema";
+import { ideas, ideaVotes, comments, users } from "@/db/schema";
 import { getUser } from "@/lib/auth-utils";
 import { unauthorized, badRequest } from "@/lib/errors";
 import { CreateIdeaSchema } from "@/types";
@@ -71,6 +71,8 @@ export async function GET(request: Request) {
       status: ideas.status,
       promotedInitiativeId: ideas.promotedInitiativeId,
       linearProjectId: ideas.linearProjectId,
+      assigneeId: ideas.assigneeId,
+      assigneeName: users.name,
       createdAt: ideas.createdAt,
       updatedAt: ideas.updatedAt,
       voteCount: sql<number>`coalesce(${voteCountSq.count}, 0)`.as("vote_count"),
@@ -81,6 +83,7 @@ export async function GET(request: Request) {
     .leftJoin(voteCountSq, eq(ideas.id, voteCountSq.ideaId))
     .leftJoin(commentCountSq, eq(ideas.id, commentCountSq.targetId))
     .leftJoin(userVoteSq, eq(ideas.id, userVoteSq.ideaId))
+    .leftJoin(users, eq(ideas.assigneeId, users.id))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(orderBy);
 

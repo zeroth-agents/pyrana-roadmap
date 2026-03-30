@@ -1,6 +1,14 @@
-CREATE TYPE "public"."idea_status" AS ENUM('open', 'promoted', 'archived');--> statement-breakpoint
-ALTER TYPE "public"."comment_target" ADD VALUE 'idea';--> statement-breakpoint
-CREATE TABLE "idea_votes" (
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'idea_status') THEN
+    CREATE TYPE "public"."idea_status" AS ENUM('open', 'promoted', 'archived');
+  END IF;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'comment_target') AND enumlabel = 'idea') THEN
+    ALTER TYPE "public"."comment_target" ADD VALUE 'idea';
+  END IF;
+END $$;--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "idea_votes" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"idea_id" uuid NOT NULL,
 	"user_id" text NOT NULL,
@@ -9,7 +17,7 @@ CREATE TABLE "idea_votes" (
 	CONSTRAINT "idea_votes_idea_user_unique" UNIQUE("idea_id","user_id")
 );
 --> statement-breakpoint
-CREATE TABLE "ideas" (
+CREATE TABLE IF NOT EXISTS "ideas" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"pillar_id" uuid,
 	"title" text NOT NULL,
@@ -25,7 +33,7 @@ CREATE TABLE "ideas" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "users" (
+CREATE TABLE IF NOT EXISTS "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"entra_oid" text NOT NULL,
 	"name" text NOT NULL,
@@ -37,12 +45,27 @@ CREATE TABLE "users" (
 	CONSTRAINT "users_linear_user_id_unique" UNIQUE("linear_user_id")
 );
 --> statement-breakpoint
-ALTER TABLE "proposals" DISABLE ROW LEVEL SECURITY;--> statement-breakpoint
-DROP TABLE "proposals" CASCADE;--> statement-breakpoint
-ALTER TABLE "initiatives" ADD COLUMN "assignee_id" uuid;--> statement-breakpoint
-ALTER TABLE "idea_votes" ADD CONSTRAINT "idea_votes_idea_id_ideas_id_fk" FOREIGN KEY ("idea_id") REFERENCES "public"."ideas"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "ideas" ADD CONSTRAINT "ideas_pillar_id_pillars_id_fk" FOREIGN KEY ("pillar_id") REFERENCES "public"."pillars"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "ideas" ADD CONSTRAINT "ideas_promoted_initiative_id_initiatives_id_fk" FOREIGN KEY ("promoted_initiative_id") REFERENCES "public"."initiatives"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "ideas" ADD CONSTRAINT "ideas_assignee_id_users_id_fk" FOREIGN KEY ("assignee_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "initiatives" ADD CONSTRAINT "initiatives_assignee_id_users_id_fk" FOREIGN KEY ("assignee_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-DROP TYPE "public"."proposal_status";
+DROP TABLE IF EXISTS "proposals" CASCADE;--> statement-breakpoint
+ALTER TABLE "ideas" ADD COLUMN IF NOT EXISTS "assignee_id" uuid;--> statement-breakpoint
+ALTER TABLE "initiatives" ADD COLUMN IF NOT EXISTS "assignee_id" uuid;--> statement-breakpoint
+DO $$ BEGIN
+  ALTER TABLE "idea_votes" ADD CONSTRAINT "idea_votes_idea_id_ideas_id_fk" FOREIGN KEY ("idea_id") REFERENCES "public"."ideas"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  ALTER TABLE "ideas" ADD CONSTRAINT "ideas_pillar_id_pillars_id_fk" FOREIGN KEY ("pillar_id") REFERENCES "public"."pillars"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  ALTER TABLE "ideas" ADD CONSTRAINT "ideas_promoted_initiative_id_initiatives_id_fk" FOREIGN KEY ("promoted_initiative_id") REFERENCES "public"."initiatives"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  ALTER TABLE "ideas" ADD CONSTRAINT "ideas_assignee_id_users_id_fk" FOREIGN KEY ("assignee_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;--> statement-breakpoint
+DO $$ BEGIN
+  ALTER TABLE "initiatives" ADD CONSTRAINT "initiatives_assignee_id_users_id_fk" FOREIGN KEY ("assignee_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;--> statement-breakpoint
+DROP TYPE IF EXISTS "public"."proposal_status";

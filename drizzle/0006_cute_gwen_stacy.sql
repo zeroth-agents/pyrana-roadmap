@@ -1,0 +1,1 @@
+ALTER TABLE "personal_access_tokens" ADD COLUMN "token_prefix" text DEFAULT '' NOT NULL;

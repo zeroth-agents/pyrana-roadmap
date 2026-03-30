@@ -147,6 +147,7 @@ export const personalAccessTokens = pgTable("personal_access_tokens", {
   userOid: text("user_oid").notNull(),
   userName: text("user_name").notNull(),
   tokenHash: text("token_hash").notNull().unique(),
+  tokenPrefix: text("token_prefix").notNull().default(""),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

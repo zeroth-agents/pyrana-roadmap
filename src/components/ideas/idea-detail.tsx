@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CommentThread } from "@/components/comment-thread";
+import { AssigneeSelect } from "@/components/assignee-select";
 import { VoteButton } from "./vote-button";
 import { PromoteDialog } from "./promote-dialog";
 import Markdown from "react-markdown";
@@ -42,6 +43,8 @@ interface IdeaDetailData {
   voters: Voter[];
   userVoted: boolean;
   createdAt: string;
+  assigneeId?: string | null;
+  assigneeName?: string | null;
 }
 
 interface Pillar {
@@ -217,6 +220,23 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Assignee */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Assignee:</span>
+                <AssigneeSelect
+                  value={idea.assigneeId ?? null}
+                  onChange={async (userId) => {
+                    await fetch(`/api/ideas/${idea.id}`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ assigneeId: userId }),
+                    });
+                    setIdea((prev) => prev ? { ...prev, assigneeId: userId } : prev);
+                    onUpdate();
+                  }}
+                />
               </div>
 
               {/* Voters */}

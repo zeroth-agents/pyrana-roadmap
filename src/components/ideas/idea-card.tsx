@@ -21,6 +21,8 @@ interface IdeaCardData {
   commentCount: number;
   userVoted: boolean;
   createdAt: string;
+  assigneeId?: string | null;
+  assigneeName?: string | null;
 }
 
 interface IdeaCardProps {
@@ -114,6 +116,16 @@ export function IdeaCard({ idea, pillars, onClick, onVoteChange }: IdeaCardProps
           <span className="text-[11px] text-muted-foreground">
             {idea.authorName} · {timeAgo(idea.createdAt)}
           </span>
+          {idea.assigneeName && (
+            <div className="flex items-center gap-1 ml-1 pl-1 border-l border-border">
+              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary text-[7px] font-semibold text-secondary-foreground">
+                {getInitials(idea.assigneeName)}
+              </div>
+              <span className="text-[10px] text-muted-foreground">
+                {idea.assigneeName}
+              </span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[11px] text-muted-foreground">

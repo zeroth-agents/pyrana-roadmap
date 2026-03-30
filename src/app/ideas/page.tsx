@@ -33,6 +33,8 @@ interface IdeaData {
   commentCount: number;
   userVoted: boolean;
   createdAt: string;
+  assigneeId?: string | null;
+  assigneeName?: string | null;
 }
 
 type ViewMode = "gallery" | "list";

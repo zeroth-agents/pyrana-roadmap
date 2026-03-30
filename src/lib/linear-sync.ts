@@ -120,8 +120,8 @@ export async function runFullSync(): Promise<SyncResult> {
             content: project.content,
             milestones: JSON.stringify(project.milestones),
             pillarId: pillar.id,
-            lane: lane as any,
-            size: size as any,
+            lane: lane as "now" | "next" | "backlog" | "done",
+            size: size as "S" | "M" | "L",
             issueCountTotal: project.issueCountTotal,
             issueCountDone: project.issueCountDone,
             linearProjectUrl: project.url,
@@ -146,8 +146,8 @@ export async function runFullSync(): Promise<SyncResult> {
           content: project.content,
           milestones: JSON.stringify(project.milestones),
           pillarId: pillar.id,
-          lane: lane as any,
-          size: size as any,
+          lane: lane as "now" | "next" | "backlog" | "done",
+          size: size as "S" | "M" | "L",
           why: "",
           issueCountTotal: project.issueCountTotal,
           issueCountDone: project.issueCountDone,
@@ -179,7 +179,7 @@ export async function runFullSync(): Promise<SyncResult> {
     if (init.linearProjectId && !seenProjectIds.has(init.linearProjectId) && init.lane !== "backlog") {
       await db
         .update(initiatives)
-        .set({ lane: "backlog" as any, updatedAt: new Date() })
+        .set({ lane: "backlog" as "now" | "next" | "backlog" | "done", updatedAt: new Date() })
         .where(eq(initiatives.id, init.id));
       result.orphaned++;
     }

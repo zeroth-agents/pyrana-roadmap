@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     .from(comments)
     .where(
       and(
-        eq(comments.targetType, targetType as any),
+        eq(comments.targetType, targetType as "initiative" | "pillar" | "idea"),
         eq(comments.targetId, targetId)
       )
     )

@@ -74,7 +74,7 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
   const [promoteOpen, setPromoteOpen] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
     fetch(`/api/ideas/${ideaId}`)
       .then((r) => r.json())
       .then((data) => {

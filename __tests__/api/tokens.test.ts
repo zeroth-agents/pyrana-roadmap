@@ -30,7 +30,7 @@ describe("POST /api/tokens", () => {
     const request = new Request("http://localhost/api/tokens", {
       method: "POST",
     });
-    const response = await POST();
+    const response = await POST(request);
     const data = await response.json();
 
     expect(response.status).toBe(201);

@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const sort = url.searchParams.get("sort") ?? "votes";
 
   const conditions: SQL[] = [];
-  if (status) conditions.push(eq(ideas.status, status as any));
+  if (status) conditions.push(eq(ideas.status, status as "open" | "promoted" | "archived"));
   if (pillarId) conditions.push(eq(ideas.pillarId, pillarId));
   if (assigneeId) conditions.push(eq(ideas.assigneeId, assigneeId));
 

@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
   const conditions: SQL[] = [];
   if (pillarId) conditions.push(eq(initiatives.pillarId, pillarId));
-  if (lane) conditions.push(eq(initiatives.lane, lane as any));
+  if (lane) conditions.push(eq(initiatives.lane, lane as "now" | "next" | "backlog" | "done"));
   if (assigneeId) conditions.push(eq(initiatives.assigneeId, assigneeId));
 
   const rows = await db

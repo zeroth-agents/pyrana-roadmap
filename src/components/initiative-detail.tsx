@@ -135,7 +135,7 @@ export function InitiativeDetail({
   useEffect(() => {
     if (!initiative.linearProjectId) return;
 
-    setLoading(true);
+    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
     fetch(`/api/projects/${initiative.linearProjectId}/issues`)
       .then((r) => r.json())
       .then(setIssues)

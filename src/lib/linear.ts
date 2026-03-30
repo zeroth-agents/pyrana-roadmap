@@ -125,7 +125,6 @@ export async function updateProjectStatus(
   const targetStatusName = laneToStatus(lane);
 
   // Find the project status that matches the target name
-  const project = await linear.project(projectId);
   const statuses = await linear.projectStatuses();
   const targetStatus = statuses.nodes.find(
     (s) => s.name === targetStatusName

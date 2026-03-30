@@ -1,8 +1,9 @@
-import { eq } from "drizzle-orm";
+import { eq, ilike } from "drizzle-orm";
 import { db } from "@/db";
-import { initiatives, pillars } from "@/db/schema";
+import { initiatives, pillars, users } from "@/db/schema";
 import {
   fetchInitiativeProjects,
+  getTeamMembers,
   statusToLane,
   issueCountToSize,
   type LinearProjectSummary,
@@ -24,8 +25,53 @@ export interface SyncResult {
   errors: string[];
 }
 
+export interface UserSyncResult {
+  linked: number;
+  unmatched: string[];
+  collisions: string[];
+}
+
+export async function syncLinearUsers(): Promise<UserSyncResult> {
+  const result: UserSyncResult = { linked: 0, unmatched: [], collisions: [] };
+
+  const members = await getTeamMembers();
+  if (members.length === 0) return result;
+
+  for (const member of members) {
+    // Find matching users by name (case-insensitive)
+    const matches = await db
+      .select()
+      .from(users)
+      .where(ilike(users.name, member.name));
+
+    // Filter to unlinked or already-linked-to-this-member
+    const unlinked = matches.filter((u) => !u.linearUserId);
+    const alreadyLinked = matches.some((u) => u.linearUserId === member.id);
+
+    if (alreadyLinked) continue;
+
+    if (unlinked.length === 1) {
+      await db
+        .update(users)
+        .set({ linearUserId: member.id, updatedAt: new Date() })
+        .where(eq(users.id, unlinked[0].id));
+      result.linked++;
+    } else if (unlinked.length > 1) {
+      result.collisions.push(member.name);
+      console.warn(`[linear-sync] Name collision for "${member.name}" — ${unlinked.length} matching users, skipping`);
+    } else {
+      result.unmatched.push(member.name);
+    }
+  }
+
+  return result;
+}
+
 export async function runFullSync(): Promise<SyncResult> {
   const result: SyncResult = { created: 0, updated: 0, orphaned: 0, errors: [] };
+
+  // Step 1: Match Linear team members to Entra users
+  await syncLinearUsers();
 
   // Fetch all pillars from DB
   const dbPillars = await db.select().from(pillars);
@@ -78,6 +124,13 @@ export async function runFullSync(): Promise<SyncResult> {
             issueCountDone: project.issueCountDone,
             linearProjectUrl: project.url,
             linearProjectLead: project.leadName ?? null,
+            assigneeId: project.leadId
+              ? (await db
+                  .select({ id: users.id })
+                  .from(users)
+                  .where(eq(users.linearUserId, project.leadId))
+                  .then((rows) => rows[0]?.id ?? undefined))
+              : undefined,
             linearSyncedAt: new Date(),
             updatedAt: new Date(),
           })
@@ -99,6 +152,13 @@ export async function runFullSync(): Promise<SyncResult> {
           linearProjectId: project.id,
           linearProjectUrl: project.url,
           linearProjectLead: project.leadName ?? null,
+          assigneeId: project.leadId
+            ? (await db
+                .select({ id: users.id })
+                .from(users)
+                .where(eq(users.linearUserId, project.leadId))
+                .then((rows) => rows[0]?.id ?? null))
+            : null,
           linearSyncedAt: new Date(),
           createdBy: "sync",
           createdByName: "Linear Sync",

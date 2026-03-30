@@ -53,6 +53,7 @@ export interface LinearProjectSummary {
   status: string;
   url: string;
   leadName?: string;
+  leadId?: string;
   milestones: LinearMilestone[];
   issueCountTotal: number;
   issueCountDone: number;
@@ -105,6 +106,7 @@ export async function fetchInitiativeProjects(
       status,
       url: project.url,
       leadName: lead?.name ?? undefined,
+      leadId: lead?.id ?? undefined,
       milestones,
       issueCountTotal: totalCount,
       issueCountDone: doneCount,

@@ -1,4 +1,4 @@
-import { eq, ilike } from "drizzle-orm";
+import { eq, or, ilike } from "drizzle-orm";
 import { db } from "@/db";
 import { initiatives, pillars, users } from "@/db/schema";
 import {
@@ -38,11 +38,13 @@ export async function syncLinearUsers(): Promise<UserSyncResult> {
   if (members.length === 0) return result;
 
   for (const member of members) {
-    // Find matching users by name (case-insensitive)
+    // Find matching users by name (case-insensitive) or email
+    const conditions = [ilike(users.name, member.name)];
+    if (member.email) conditions.push(eq(users.email, member.email));
     const matches = await db
       .select()
       .from(users)
-      .where(ilike(users.name, member.name));
+      .where(or(...conditions));
 
     // Filter to unlinked or already-linked-to-this-member
     const unlinked = matches.filter((u) => !u.linearUserId);

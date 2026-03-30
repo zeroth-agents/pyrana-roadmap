@@ -259,6 +259,7 @@ export async function updateIssue(
 export async function createLinearProject(
   title: string,
   description: string,
+  leadId?: string,
   teamKey = "PYR"
 ): Promise<{ id: string; url: string }> {
   if (!process.env.LINEAR_API_KEY) {
@@ -275,6 +276,7 @@ export async function createLinearProject(
     name: title,
     description,
     teamIds: [team.id],
+    ...(leadId ? { leadId } : {}),
   });
 
   const project = await result.project;
@@ -294,6 +296,7 @@ export interface TeamState {
 export interface TeamMember {
   id: string;
   name: string;
+  email?: string;
 }
 
 let cachedStates: TeamState[] | null = null;
@@ -326,6 +329,7 @@ export async function getTeamMembers(teamKey = "PYR"): Promise<TeamMember[]> {
   cachedMembers = members.nodes.map((m) => ({
     id: m.id,
     name: m.name,
+    email: m.email ?? undefined,
   }));
   return cachedMembers;
 }

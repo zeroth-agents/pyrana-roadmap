@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { ideas, initiatives, pillars } from "@/db/schema";
+import { ideas, initiatives, pillars, users } from "@/db/schema";
 import { getUser } from "@/lib/auth-utils";
 import { unauthorized, badRequest, notFound } from "@/lib/errors";
 import { PromoteIdeaSchema } from "@/types";
@@ -35,13 +35,24 @@ export async function POST(
     .where(eq(pillars.id, parsed.data.pillarId));
   if (!pillar) return badRequest("Pillar not found");
 
+  // Resolve assignee's Linear user ID for project lead
+  let linearLeadId: string | undefined;
+  if (idea.assigneeId) {
+    const [assignee] = await db
+      .select({ linearUserId: users.linearUserId })
+      .from(users)
+      .where(eq(users.id, idea.assigneeId));
+    linearLeadId = assignee?.linearUserId ?? undefined;
+  }
+
   // Create Linear project
   let linearProjectId: string | null = null;
   let linearProjectUrl: string | null = null;
   try {
     const linearProject = await createLinearProject(
       idea.title,
-      idea.body
+      idea.body,
+      linearLeadId
     );
     linearProjectId = linearProject.id;
     linearProjectUrl = linearProject.url;

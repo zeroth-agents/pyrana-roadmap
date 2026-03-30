@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CommentThread } from "./comment-thread";
+import { AssigneeSelect } from "./assignee-select";
 import Markdown from "react-markdown";
 
 interface Milestone {
@@ -40,6 +41,8 @@ interface Initiative {
   issueCountTotal?: number;
   issueCountDone?: number;
   dependsOn: string[];
+  assigneeId?: string | null;
+  assigneeName?: string | null;
 }
 
 interface Pillar {
@@ -225,11 +228,17 @@ export function InitiativeDetail({
             <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-0">
               {initiative.size} · {total} issues
             </Badge>
-            {initiative.linearProjectLead && (
-              <Badge variant="outline" className="bg-muted border-0">
-                Lead: {initiative.linearProjectLead}
-              </Badge>
-            )}
+            <AssigneeSelect
+              value={initiative.assigneeId ?? null}
+              onChange={async (userId) => {
+                await fetch(`/api/initiatives/${initiative.id}`, {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ assigneeId: userId }),
+                });
+                onUpdate();
+              }}
+            />
           </div>
 
           {/* Progress bar */}

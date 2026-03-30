@@ -39,6 +39,8 @@ interface Initiative {
   linearProjectLead?: string | null;
   issueCountTotal?: number;
   issueCountDone?: number;
+  assigneeId?: string | null;
+  assigneeName?: string | null;
 }
 
 interface BoardViewProps {

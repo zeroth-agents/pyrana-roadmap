@@ -115,6 +115,7 @@ export function InitiativeDetail({
   onUpdate,
 }: InitiativeDetailProps) {
   const [lane, setLane] = useState(initiative.lane);
+  const [assigneeId, setAssigneeId] = useState(initiative.assigneeId ?? null);
   const [rationale, setRationale] = useState(initiative.why);
   const [saving, setSaving] = useState(false);
   const [issues, setIssues] = useState<LinearIssue[]>([]);
@@ -229,8 +230,9 @@ export function InitiativeDetail({
               {initiative.size} · {total} issues
             </Badge>
             <AssigneeSelect
-              value={initiative.assigneeId ?? null}
+              value={assigneeId}
               onChange={async (userId) => {
+                setAssigneeId(userId);
                 await fetch(`/api/initiatives/${initiative.id}`, {
                   method: "PATCH",
                   headers: { "Content-Type": "application/json" },

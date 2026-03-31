@@ -75,3 +75,18 @@ export const PromoteIdeaSchema = z.object({
   pillarId: z.string().uuid(),
   lane: Lane.optional().default("backlog"),
 });
+
+// Attachment schemas
+export const AttachmentTarget = z.enum(["idea", "initiative"]);
+export type AttachmentTarget = z.infer<typeof AttachmentTarget>;
+
+export const CreateAttachmentLinkSchema = z.object({
+  targetType: AttachmentTarget,
+  targetId: z.string().uuid(),
+  driveUrl: z.string().url(),
+});
+
+export const ListAttachmentsSchema = z.object({
+  target_type: AttachmentTarget,
+  target_id: z.string().uuid(),
+});

@@ -82,7 +82,7 @@ export async function POST(request: Request) {
       .where(eq(ideas.id, targetId));
     if (!idea) return notFound("Idea not found");
     if (idea.status !== "open") {
-      return badRequest("Cannot attach files to a non-open idea");
+      return badRequest("Cannot attach files to a promoted/archived idea");
     }
   } else {
     const [initiative] = await db
@@ -99,13 +99,18 @@ export async function POST(request: Request) {
   const entityFolderId = await ensureFolder(categoryFolderId, targetId);
 
   // Upload file to Drive
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const { fileId, webViewLink } = await uploadFile(
-    entityFolderId,
-    buffer,
-    file.name,
-    file.type
-  );
+  let driveResult: { fileId: string; webViewLink: string };
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    driveResult = await uploadFile(entityFolderId, buffer, file.name, file.type);
+  } catch (err) {
+    console.error("Failed to upload to Drive:", err);
+    return NextResponse.json(
+      { error: "Failed to upload file to Google Drive" },
+      { status: 502 }
+    );
+  }
+  const { fileId, webViewLink } = driveResult;
 
   // Insert attachment row
   const [created] = await db

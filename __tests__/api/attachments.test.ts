@@ -142,7 +142,7 @@ describe("POST /api/attachments/link", () => {
     const response = await POST(request);
     expect(response.status).toBe(400);
     const data = await response.json();
-    expect(data.error).toContain("Could not extract");
+    expect(data.error).toContain("Unrecognized Google Drive URL format");
   });
 
   it("returns 201 for valid Drive URL", async () => {

@@ -23,13 +23,13 @@ export async function POST(request: Request) {
   // Parse Drive file ID from URL
   const driveFileId = parseDriveFileId(driveUrl);
   if (!driveFileId) {
-    return badRequest("Could not extract Drive file ID from URL");
+    return badRequest("Unrecognized Google Drive URL format");
   }
 
   // Get file metadata from Drive
   const metadata = await getFileMetadata(driveFileId);
   if (!metadata) {
-    return badRequest("Drive file is inaccessible or does not exist");
+    return badRequest("Unable to access this Drive file — ensure it is shared with the service account");
   }
 
   // Validate target entity exists
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       .where(eq(ideas.id, targetId));
     if (!idea) return notFound("Idea not found");
     if (idea.status !== "open") {
-      return badRequest("Cannot attach files to a non-open idea");
+      return badRequest("Cannot attach files to a promoted/archived idea");
     }
   } else {
     const [initiative] = await db

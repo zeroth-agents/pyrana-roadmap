@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CommentThread } from "./comment-thread";
+import { AttachmentSection } from "./attachments/attachment-section";
 import { AssigneeSelect } from "./assignee-select";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -482,6 +483,14 @@ export function InitiativeDetail({
               </div>
             )}
           </div>
+
+          <Separator />
+
+          {/* Attachments */}
+          <AttachmentSection
+            targetType="initiative"
+            targetId={initiative.id}
+          />
 
           <Separator />
 

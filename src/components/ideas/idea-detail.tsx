@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CommentThread } from "@/components/comment-thread";
+import { AttachmentSection } from "@/components/attachments/attachment-section";
 import { AssigneeSelect } from "@/components/assignee-select";
 import { VoteButton } from "./vote-button";
 import { PromoteDialog } from "./promote-dialog";
@@ -280,6 +281,15 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
                   {idea.body}
                 </Markdown>
               </div>
+
+              <Separator />
+
+              {/* Attachments */}
+              <AttachmentSection
+                targetType="idea"
+                targetId={idea.id}
+                readOnly={idea.status !== "open"}
+              />
 
               <Separator />
 

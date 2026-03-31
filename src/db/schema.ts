@@ -21,6 +21,10 @@ export const commentTargetEnum = pgEnum("comment_target", [
   "pillar",
   "idea",
 ]);
+export const attachmentTargetEnum = pgEnum("attachment_target", [
+  "idea",
+  "initiative",
+]);
 
 // Tables
 export const users = pgTable("users", {
@@ -138,6 +142,25 @@ export const comments = pgTable("comments", {
   author: text().notNull(),
   authorName: text("author_name").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const attachments = pgTable("attachments", {
+  id: uuid().defaultRandom().primaryKey(),
+  targetType: attachmentTargetEnum("target_type").notNull(),
+  targetId: uuid("target_id").notNull(),
+  fileName: text("file_name").notNull(),
+  mimeType: text("mime_type").notNull(),
+  driveFileId: text("drive_file_id").notNull(),
+  driveUrl: text("drive_url").notNull(),
+  driveFolderId: text("drive_folder_id"),
+  uploadedBy: text("uploaded_by").notNull(),
+  uploadedByName: text("uploaded_by_name").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
 });

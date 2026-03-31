@@ -411,7 +411,7 @@ export function InitiativeDetail({
                                 remarkPlugins={[remarkGfm]}
                                 components={{
                                   a: ({ children, href, ...props }) => (
-                                    <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+                                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline decoration-primary/40 hover:decoration-primary" {...props}>
                                       {children}
                                     </a>
                                   ),

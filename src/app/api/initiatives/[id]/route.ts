@@ -5,6 +5,8 @@ import { initiatives } from "@/db/schema";
 import { getUser } from "@/lib/auth-utils";
 import { unauthorized, badRequest, notFound } from "@/lib/errors";
 import { updateProjectStatus } from "@/lib/linear";
+import { cleanupAttachments } from "@/lib/attachment-utils";
+import { deleteFile } from "@/lib/google-drive";
 import { UpdateInitiativeSchema } from "@/types";
 
 export async function PATCH(
@@ -47,6 +49,9 @@ export async function DELETE(
   if (!user) return unauthorized();
 
   const { id } = await params;
+
+  await cleanupAttachments("initiative", id, deleteFile);
+
   const [deleted] = await db
     .delete(initiatives)
     .where(eq(initiatives.id, id))

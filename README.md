@@ -7,8 +7,9 @@ A product roadmap management tool built with Next.js 16. Organize initiatives in
 - **Kanban board** — Drag-and-drop initiatives across lanes and pillars
 - **Table view** — Sortable, filterable list of all initiatives
 - **Linear integration** — Two-way sync with Linear projects, issues, and milestones
-- **Proposals** — Team members submit ideas; reviewers accept or reject them into the roadmap
-- **Comments** — Threaded discussions on initiatives and pillars
+- **Ideas** — Team members submit ideas; vote, discuss, and promote them into the roadmap
+- **Attachments** — Upload documents to Google Drive or link existing files to ideas and projects
+- **Comments** — Threaded discussions on initiatives, pillars, and ideas
 - **Auth** — Microsoft Entra ID (Azure AD) with session + bearer token support
 - **Dark mode** — System-aware theme switching
 
@@ -65,6 +66,8 @@ Open [http://localhost:3000](http://localhost:3000). Without Entra ID credential
 | `AUTH_MICROSOFT_ENTRA_ID_ISSUER` | No* | Entra issuer URL |
 | `LINEAR_API_KEY` | No | Enables Linear sync |
 | `LINEAR_WEBHOOK_SECRET` | No | Validates inbound Linear webhooks |
+| `GOOGLE_SERVICE_ACCOUNT_KEY` | No | Base64-encoded GCP service account JSON key (enables attachments) |
+| `GOOGLE_DRIVE_ROOT_FOLDER_ID` | No | Google Drive folder ID for the `attachments/` root folder |
 
 *Auth is bypassed in dev when Entra ID variables are not set.
 
@@ -92,23 +95,26 @@ pnpm bump:major    # Bump major version
 ```
 src/
 ├── app/
-│   ├── api/          # REST API routes (initiatives, pillars, proposals, comments, etc.)
+│   ├── api/          # REST API routes (initiatives, pillars, ideas, attachments, comments, etc.)
 │   ├── login/        # Custom login page
-│   ├── proposals/    # Proposal management page
+│   ├── ideas/        # Ideas submission page
 │   ├── settings/     # Personal access tokens
 │   └── table/        # Table view page
 ├── components/
 │   ├── board/        # Kanban board components
-│   ├── proposals/    # Proposal list and review
+│   ├── attachments/  # File attachment UI (upload, link, list)
+│   ├── ideas/        # Idea submission and review
 │   ├── table/        # Table view components
 │   └── ui/           # shadcn/ui primitives
 ├── db/
-│   ├── schema.ts     # Drizzle schema (pillars, initiatives, proposals, comments)
+│   ├── schema.ts     # Drizzle schema (pillars, initiatives, ideas, comments, attachments)
 │   └── seed.ts       # Database seeder
 ├── lib/
 │   ├── auth-utils.ts # Session + bearer token auth
 │   ├── linear.ts     # Linear SDK client
 │   ├── linear-sync.ts# Full sync from Linear
+│   ├── google-drive.ts# Google Drive v3 client (upload, move, delete)
+│   ├── attachment-utils.ts # URL parser, MIME allowlist, cleanup
 │   └── errors.ts     # API error helpers
 └── types/
     └── index.ts      # Zod schemas for request validation
@@ -118,7 +124,7 @@ src/
 
 ### Database
 
-The schema is managed with [Drizzle ORM](https://orm.drizzle.team/). The source of truth is `src/db/schema.ts` — four tables: `pillars`, `initiatives`, `proposals`, and `comments`.
+The schema is managed with [Drizzle ORM](https://orm.drizzle.team/). The source of truth is `src/db/schema.ts` — core tables: `pillars`, `initiatives`, `ideas`, `comments`, and `attachments`.
 
 For **local dev**, `docker compose up -d` gives you Postgres 16 on `localhost:5432`. Use `pnpm db:push` to apply the schema directly.
 
@@ -162,6 +168,43 @@ Auth is handled by [NextAuth v5](https://authjs.dev/) in `auth.ts`. The app ship
 The `jwt` and `session` callbacks in `auth.ts` expect `token.oid` as the user ID. If your provider uses a different field, update those callbacks and `src/lib/auth-utils.ts` accordingly.
 
 **No auth (dev mode):** When no `AUTH_MICROSOFT_ENTRA_ID_ID` is set, `getUser()` in `src/lib/auth-utils.ts` returns a hardcoded dev user, so you can develop without any OAuth setup.
+
+### Google Drive Attachments
+
+The app supports attaching documents to ideas and projects via Google Drive. Files are uploaded to a shared folder managed by a GCP service account. When an idea is promoted to a project, its attachments transfer automatically.
+
+**Setup:**
+
+1. Create a GCP project and enable the Drive API
+2. Create a service account and download the JSON key
+3. Create a shared folder in Google Drive (e.g. `attachments/` inside a Shared Drive)
+4. Add the service account email as an Editor on the Shared Drive
+5. Base64-encode the key: `base64 -i key.json | tr -d '\n'`
+6. Set `GOOGLE_SERVICE_ACCOUNT_KEY` (the base64 string) and `GOOGLE_DRIVE_ROOT_FOLDER_ID` (the folder ID from the URL)
+
+**Folder structure** (created automatically):
+
+```
+attachments/
+  ideas/
+    My-Idea-550e8400/
+      uploaded-doc.pdf
+  projects/
+    My-Project-a1b2c3d4/
+      promoted-doc.pdf
+      new-upload.md
+```
+
+**API endpoints:**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/attachments` | Upload a file (multipart form data) |
+| `POST` | `/api/attachments/link` | Link an existing Drive URL |
+| `GET` | `/api/attachments?target_type=idea&target_id=<id>` | List attachments |
+| `DELETE` | `/api/attachments/<id>` | Remove an attachment |
+
+Supported file types: PDF, Word, Excel, PowerPoint, Markdown, plain text, CSV, PNG, JPEG, GIF, WebP. Max upload size: 25MB.
 
 ### Linear Integration
 

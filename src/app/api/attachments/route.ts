@@ -75,28 +75,34 @@ export async function POST(request: Request) {
   }
 
   // Validate target entity exists
+  let entityTitle: string;
   if (targetType === "idea") {
     const [idea] = await db
-      .select()
+      .select({ id: ideas.id, title: ideas.title, status: ideas.status })
       .from(ideas)
       .where(eq(ideas.id, targetId));
     if (!idea) return notFound("Idea not found");
     if (idea.status !== "open") {
       return badRequest("Cannot attach files to a promoted/archived idea");
     }
+    entityTitle = idea.title;
   } else {
     const [initiative] = await db
-      .select()
+      .select({ id: initiatives.id, title: initiatives.title })
       .from(initiatives)
       .where(eq(initiatives.id, targetId));
     if (!initiative) return notFound("Initiative not found");
+    entityTitle = initiative.title;
   }
 
   // Create Drive folder hierarchy: root → category folder → entity subfolder
   const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID!;
-  const categoryFolderName = targetType === "idea" ? "Ideas" : "Initiatives";
+  const categoryFolderName = targetType === "idea" ? "ideas" : "projects";
   const categoryFolderId = await ensureFolder(rootFolderId, categoryFolderName);
-  const entityFolderId = await ensureFolder(categoryFolderId, targetId);
+  const shortId = targetId.slice(0, 8);
+  const safeName = entityTitle.slice(0, 60).replace(/[^a-zA-Z0-9-_ ]/g, "").replace(/\s+/g, "-");
+  const folderName = `${safeName}-${shortId}`;
+  const entityFolderId = await ensureFolder(categoryFolderId, folderName);
 
   // Upload file to Drive
   let driveResult: { fileId: string; webViewLink: string };

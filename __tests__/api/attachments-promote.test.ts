@@ -212,7 +212,7 @@ describe("POST /api/ideas/[id]/promote — attachment transfer", () => {
     // Verify ensureFolder was called for the projects category and project folder
     expect(ensureFolder).toHaveBeenCalledTimes(2);
     expect(ensureFolder).toHaveBeenCalledWith("root-folder-id", "projects");
-    expect(ensureFolder).toHaveBeenCalledWith("projects-folder-id", INITIATIVE_ID);
+    expect(ensureFolder).toHaveBeenCalledWith("projects-folder-id", `Test-Idea-${INITIATIVE_ID.slice(0, 8)}`);
 
     // Verify moveFile was called for the uploaded file
     expect(moveFile).toHaveBeenCalledTimes(1);

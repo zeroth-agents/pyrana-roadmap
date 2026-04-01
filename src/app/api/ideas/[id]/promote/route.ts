@@ -97,7 +97,10 @@ export async function POST(
       if (ROOT_FOLDER_ID) {
         try {
           const projectsCategoryId = await ensureFolder(ROOT_FOLDER_ID, "projects");
-          projectFolderId = await ensureFolder(projectsCategoryId, newInitiative.id);
+          const shortId = newInitiative.id.slice(0, 8);
+          const safeName = idea.title.slice(0, 60).replace(/[^a-zA-Z0-9-_ ]/g, "").replace(/\s+/g, "-");
+          const folderName = `${safeName}-${shortId}`;
+          projectFolderId = await ensureFolder(projectsCategoryId, folderName);
         } catch (err) {
           console.error("Failed to create project folder in Drive:", err);
           // Continue without Drive folder — DB rows will still transfer

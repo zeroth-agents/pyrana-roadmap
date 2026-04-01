@@ -16,6 +16,8 @@ interface Pillar {
 interface Initiative {
   id: string;
   title: string;
+  description: string;
+  content: string;
   size: string;
   why: string;
   dependsOn: string[];

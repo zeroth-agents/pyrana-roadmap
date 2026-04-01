@@ -12,7 +12,6 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { CapacityIndicator } from "./capacity-indicator";
 import { InitiativeCard } from "./initiative-card";
 import { LaneCell } from "./lane-cells";
 
@@ -129,9 +128,6 @@ export function BoardView({
     ? initiatives.find((i) => i.id === activeId)
     : null;
 
-  const activePillarCount = pillars.filter((p) =>
-    initiatives.some((i) => i.pillarId === p.id && i.lane === "now")
-  ).length;
 
   const visibleLaneIds = new Set(["now", "next"]);
   if (showBacklog) visibleLaneIds.add("backlog");
@@ -150,7 +146,6 @@ export function BoardView({
   return (
     <TooltipProvider>
       <div className="mb-3 flex items-center gap-2">
-        <CapacityIndicator activePillarCount={activePillarCount} />
         <div className="ml-auto flex items-center gap-2">
           <button
             onClick={() => setShowBacklog(!showBacklog)}

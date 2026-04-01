@@ -64,7 +64,13 @@ export function CommentThread({ targetType, targetId }: CommentThreadProps) {
         <Textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Add a comment..."
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.metaKey || e.shiftKey)) {
+              e.preventDefault();
+              handleSubmit();
+            }
+          }}
+          placeholder="Add a comment… (⇧/⌘+Enter to post)"
           className="min-h-[60px]"
         />
         <Button onClick={handleSubmit} disabled={submitting} size="sm">

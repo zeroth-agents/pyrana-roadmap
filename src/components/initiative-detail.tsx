@@ -326,6 +326,12 @@ export function InitiativeDetail({
             <Textarea
               value={rationale}
               onChange={(e) => setRationale(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.shiftKey) && rationale !== initiative.why) {
+                  e.preventDefault();
+                  handleSaveRationale();
+                }
+              }}
               className="mt-1"
               rows={2}
             />

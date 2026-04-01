@@ -47,6 +47,8 @@ Replace `<path-to-this-skill-directory>` with the actual path where this skill i
 | `idea-create --title "X" --body "X" [--pillar "X"]` | Create a new idea |
 | `vote "<name-or-id>"` | Toggle vote on an idea |
 | `promote "<name-or-id>" --pillar "X" [--lane X]` | Promote idea to initiative |
+| `attachments <idea\|initiative> "<name>"` | List attachments on an idea or initiative |
+| `attach --idea\|--initiative "<name>" --file <path>` | Upload a file attachment to an idea or initiative |
 
 ### Name Matching
 
@@ -88,6 +90,8 @@ Parse the first argument to determine the action. Default to `board` if no argum
 | `/roadmap idea create <title>` | Ask for body and pillar, then run `idea-create` |
 | `/roadmap vote <name>` | Run `vote` command |
 | `/roadmap promote <name>` | Ask for pillar/lane, then run `promote` |
+| `/roadmap attachments <idea\|initiative> <name>` | Run `attachments` command |
+| `/roadmap attach <idea\|initiative> <name> <file>` | Run `attach` command |
 | `/roadmap token` | Show setup instructions (no API call) |
 
 ## Codebase Research Mode

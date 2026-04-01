@@ -285,6 +285,78 @@ def cmd_vote(query: str):
     print(f"{action} '{idea['title']}'. Total votes: {result.get('voteCount', '?')}")
 
 
+def cmd_attachments(target_type: str, query: str):
+    """List attachments for an idea or initiative."""
+    if target_type == "idea":
+        item = _match_one(_ideas(), query, "idea")
+    else:
+        item = _match_one(_initiatives(), query, "initiative")
+
+    atts = _get(f"/api/attachments?target_type={target_type}&target_id={item['id']}")
+    if not atts:
+        print(f"No attachments on '{item['title']}'.")
+        return
+
+    print(f"Attachments for '{item['title']}':")
+    for a in atts:
+        linked = " (linked)" if not a.get("driveFolderId") else ""
+        print(f"  - {a['fileName']}{linked}")
+        print(f"    {a['driveUrl']}")
+        print(f"    Uploaded by {a.get('uploadedByName', '?')} on {_fmt_date(a.get('createdAt'))}")
+
+
+def cmd_attach(target_type: str, query: str, file_path: str):
+    """Upload a file attachment to an idea or initiative."""
+    import mimetypes
+
+    if target_type == "idea":
+        item = _match_one(_ideas(), query, "idea")
+    else:
+        item = _match_one(_initiatives(), query, "initiative")
+
+    if not os.path.isfile(file_path):
+        _die(f"File not found: {file_path}")
+
+    file_name = os.path.basename(file_path)
+    mime_type = mimetypes.guess_type(file_path)[0] or "application/octet-stream"
+
+    # Build multipart form data manually (no external deps)
+    boundary = "----PyranaUploadBoundary"
+    body_parts = []
+
+    # targetType field
+    body_parts.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"targetType\"\r\n\r\n{target_type}")
+    # targetId field
+    body_parts.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"targetId\"\r\n\r\n{item['id']}")
+
+    # File field
+    with open(file_path, "rb") as f:
+        file_data = f.read()
+
+    file_header = (
+        f"--{boundary}\r\n"
+        f"Content-Disposition: form-data; name=\"file\"; filename=\"{file_name}\"\r\n"
+        f"Content-Type: {mime_type}\r\n\r\n"
+    )
+
+    # Assemble body as bytes
+    body_bytes = "\r\n".join(body_parts).encode() + b"\r\n" + file_header.encode() + file_data + f"\r\n--{boundary}--\r\n".encode()
+
+    url = f"{API_URL}/api/attachments"
+    req = urllib.request.Request(url, data=body_bytes, method="POST")
+    req.add_header("Authorization", f"Bearer {TOKEN}")
+    req.add_header("Content-Type", f"multipart/form-data; boundary={boundary}")
+
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            result = json.loads(resp.read().decode())
+            print(f"Attached '{result.get('fileName', file_name)}' to '{item['title']}'")
+            print(f"  Drive URL: {result.get('driveUrl', '?')}")
+    except urllib.error.HTTPError as e:
+        body_text = e.read().decode() if e.fp else ""
+        _die(f"Upload failed — HTTP {e.code}: {body_text}")
+
+
 def cmd_promote(query: str, pillar: str, lane: str = "backlog"):
     idea = _match_one(_ideas(), query, "idea")
     if idea.get("status") != "open":
@@ -386,6 +458,28 @@ def main():
         if not query or not pillar:
             _die("Usage: roadmap_cli.py promote <name-or-id> --pillar '...' [--lane backlog]")
         cmd_promote(query, pillar, lane)
+
+    elif cmd == "attachments":
+        if len(args) < 3:
+            _die("Usage: roadmap_cli.py attachments <idea|initiative> <name-or-id>")
+        cmd_attachments(args[1], args[2])
+
+    elif cmd == "attach":
+        target_type = "initiative"
+        query = file_path = None
+        i = 1
+        while i < len(args):
+            if args[i] == "--idea" and i + 1 < len(args):
+                target_type = "idea"; query = args[i + 1]; i += 2
+            elif args[i] == "--initiative" and i + 1 < len(args):
+                target_type = "initiative"; query = args[i + 1]; i += 2
+            elif args[i] == "--file" and i + 1 < len(args):
+                file_path = args[i + 1]; i += 2
+            else:
+                i += 1
+        if not query or not file_path:
+            _die("Usage: roadmap_cli.py attach --idea|--initiative <name> --file <path>")
+        cmd_attach(target_type, query, file_path)
 
     else:
         _die(f"Unknown command '{cmd}'. Run with --help for usage.")

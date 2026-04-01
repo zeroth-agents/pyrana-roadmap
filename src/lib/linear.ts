@@ -137,6 +137,84 @@ export async function updateProjectStatus(
   }
 }
 
+// --- Project snapshot (for webhook refresh) ---
+
+interface ProjectSnapshotResponse {
+  project: {
+    issues: {
+      nodes: Array<{ state: { type: string } | null }>;
+    };
+    projectMilestones: {
+      nodes: Array<{
+        name: string;
+        description: string | null;
+        progress: number;
+        sortOrder: number;
+      }>;
+    };
+  };
+}
+
+const PROJECT_SNAPSHOT_QUERY = `
+  query ProjectSnapshot($id: String!) {
+    project(id: $id) {
+      issues {
+        nodes {
+          state { type }
+        }
+      }
+      projectMilestones {
+        nodes {
+          name
+          description
+          progress
+          sortOrder
+        }
+      }
+    }
+  }
+`;
+
+export interface ProjectSnapshot {
+  issueCountTotal: number;
+  issueCountDone: number;
+  milestones: LinearMilestone[];
+}
+
+export async function fetchProjectSnapshot(
+  projectId: string
+): Promise<ProjectSnapshot | null> {
+  if (!process.env.LINEAR_API_KEY) return null;
+
+  const data = await linear.client.request<ProjectSnapshotResponse, { id: string }>(
+    PROJECT_SNAPSHOT_QUERY,
+    { id: projectId }
+  );
+
+  const issues = data.project.issues.nodes;
+  let doneCount = 0;
+  for (const issue of issues) {
+    if (issue.state?.type === "completed" || issue.state?.type === "canceled") {
+      doneCount++;
+    }
+  }
+
+  const milestones = data.project.projectMilestones.nodes
+    .map((m) => ({
+      name: m.name,
+      description: m.description ?? "",
+      progress: m.progress,
+      sortOrder: m.sortOrder,
+    }))
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+
+  return {
+    issueCountTotal: issues.length,
+    issueCountDone: doneCount,
+    milestones,
+  };
+}
+
 // --- Issue operations ---
 
 export interface LinearIssue {

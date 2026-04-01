@@ -15,6 +15,7 @@ interface Initiative {
   id: string;
   title: string;
   description: string;
+  content: string;
   size: string;
   why: string;
   dependsOn: string[];
@@ -102,9 +103,9 @@ export function InitiativeCard({
 
         {/* Card body */}
         <div className="px-2.5 py-2">
-          {initiative.description && (
+          {(initiative.description || initiative.content || initiative.why) && (
             <p className="text-xs text-muted-foreground line-clamp-2">
-              {initiative.description}
+              {initiative.description || initiative.content || initiative.why}
             </p>
           )}
 

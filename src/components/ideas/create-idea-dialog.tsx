@@ -108,6 +108,12 @@ export function CreateIdeaDialog({
             <Textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.shiftKey)) {
+                  e.preventDefault();
+                  handleCreate();
+                }
+              }}
               placeholder="Describe the idea, the problem it solves, and how you'd approach it..."
               className="mt-1 min-h-[200px] font-mono text-sm"
             />

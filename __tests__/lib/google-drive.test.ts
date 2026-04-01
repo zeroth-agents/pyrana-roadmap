@@ -17,7 +17,9 @@ vi.mock("@googleapis/drive", () => ({
       list: mockList,
     },
   })),
-  AuthPlus: class MockAuthPlus {},
+  auth: {
+    GoogleAuth: class MockGoogleAuth {},
+  },
 }));
 
 // Must import after mock setup
@@ -55,6 +57,7 @@ describe("ensureFolder", () => {
         parents: ["parent-id"],
       },
       fields: "id",
+      supportsAllDrives: true,
     });
   });
 });
@@ -106,6 +109,7 @@ describe("moveFile", () => {
       addParents: "new-parent",
       removeParents: "old-parent",
       fields: "id, webViewLink",
+      supportsAllDrives: true,
     });
   });
 });

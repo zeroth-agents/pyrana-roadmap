@@ -1,4 +1,4 @@
-import { drive, AuthPlus } from "@googleapis/drive";
+import { drive, auth as googleAuth } from "@googleapis/drive";
 import { Readable } from "stream";
 
 // Module-level singleton — same pattern as src/lib/linear.ts
@@ -8,7 +8,7 @@ const credentials = process.env.GOOGLE_SERVICE_ACCOUNT_KEY
     )
   : undefined;
 
-const auth = new AuthPlus({
+const auth = new googleAuth.GoogleAuth({
   credentials,
   scopes: ["https://www.googleapis.com/auth/drive"],
 });
@@ -27,6 +27,8 @@ export async function ensureFolder(
     q: `name = '${name}' and '${parentId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
     fields: "files(id)",
     spaces: "drive",
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
   });
 
   const existing = res.data.files;
@@ -46,6 +48,7 @@ export async function ensureFolder(
       parents: [parentId],
     },
     fields: "id",
+    supportsAllDrives: true,
   });
 
   return created.data.id!;
@@ -70,6 +73,7 @@ export async function uploadFile(
       body: Readable.from(fileBuffer),
     },
     fields: "id, webViewLink",
+    supportsAllDrives: true,
   });
 
   return {
@@ -91,6 +95,7 @@ export async function moveFile(
     addParents: newParentId,
     removeParents: oldParentId,
     fields: "id, webViewLink",
+    supportsAllDrives: true,
   });
 
   return {
@@ -104,7 +109,7 @@ export async function moveFile(
  */
 export async function deleteFile(fileId: string): Promise<boolean> {
   try {
-    await driveClient.files.delete({ fileId });
+    await driveClient.files.delete({ fileId, supportsAllDrives: true });
     return true;
   } catch (err) {
     console.warn(`Failed to delete Drive file ${fileId}:`, err);
@@ -127,6 +132,7 @@ export async function getFileMetadata(
     const res = await driveClient.files.get({
       fileId,
       fields: "id, name, mimeType, webViewLink",
+      supportsAllDrives: true,
     });
     return {
       id: res.data.id!,

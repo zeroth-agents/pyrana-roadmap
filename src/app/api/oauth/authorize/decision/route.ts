@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "../../../../../../auth";
+import { getSessionUser } from "@/lib/oauth/session";
 import { getClientByClientId, matchRedirectUri } from "@/lib/oauth/clients";
 import { parseScopes, isScopeSubset } from "@/lib/oauth/scopes";
 import { createAuthCode } from "@/lib/oauth/codes";
@@ -19,8 +19,8 @@ function redirectTo(
 }
 
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user?.id || !session.user.name) return unauthorized();
+  const user = await getSessionUser();
+  if (!user) return unauthorized();
 
   const text = await request.text();
   const form = new URLSearchParams(text);
@@ -59,8 +59,8 @@ export async function POST(request: Request) {
 
   const code = await createAuthCode({
     clientId: client.clientId,
-    userOid: session.user.id,
-    userName: session.user.name,
+    userOid: user.id,
+    userName: user.name,
     redirectUri,
     scopes,
     resource: resource ?? null,

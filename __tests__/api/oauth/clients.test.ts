@@ -4,8 +4,8 @@ vi.mock("@/db", () => ({
   db: { select: vi.fn(), insert: vi.fn(), delete: vi.fn(), update: vi.fn() },
 }));
 
-vi.mock("../../../auth", () => ({
-  auth: vi.fn(),
+vi.mock("@/lib/oauth/session", () => ({
+  getSessionUser: vi.fn(),
 }));
 
 describe("OAuth clients management", () => {
@@ -16,8 +16,8 @@ describe("OAuth clients management", () => {
 
   describe("POST /api/oauth/clients", () => {
     it("requires session", async () => {
-      const { auth } = await import("../../../auth");
-      (auth as any).mockResolvedValue(null);
+      const { getSessionUser } = await import("@/lib/oauth/session");
+      (getSessionUser as any).mockResolvedValue(null);
       const { POST } = await import("@/app/api/oauth/clients/route");
       const res = await POST(
         new Request("http://localhost/api/oauth/clients", {
@@ -30,8 +30,8 @@ describe("OAuth clients management", () => {
     });
 
     it("creates a manual confidential client and returns client_secret once", async () => {
-      const { auth } = await import("../../../auth");
-      (auth as any).mockResolvedValue({ user: { id: "u1", name: "U" } });
+      const { getSessionUser } = await import("@/lib/oauth/session");
+      (getSessionUser as any).mockResolvedValue({ id: "u1", name: "U" });
       const { db } = await import("@/db");
       (db.insert as any).mockReturnValue({
         values: vi.fn().mockReturnValue({

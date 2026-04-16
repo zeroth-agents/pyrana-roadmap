@@ -150,8 +150,11 @@ function makeDb() {
 const fakeDb = makeDb();
 
 vi.mock("@/db", () => ({ db: fakeDb }));
+vi.mock("@/lib/oauth/session", () => ({
+  getSessionUser: vi.fn().mockResolvedValue({ id: "u1", name: "User One" }),
+}));
 vi.mock("../../../auth", () => ({
-  auth: vi.fn().mockResolvedValue({ user: { id: "u1", name: "User One" } }),
+  auth: vi.fn().mockResolvedValue(null),
 }));
 
 // PKCE pair from RFC 7636 Appendix B.

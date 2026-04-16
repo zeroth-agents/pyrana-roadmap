@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { auth } from "../../../../auth";
+import { getSessionUser } from "@/lib/oauth/session";
 
 const SCOPE_DESCRIPTIONS: Record<string, string> = {
   read: "View pillars, initiatives, ideas, and comments",
@@ -12,9 +12,9 @@ export default async function ConsentPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
-  const session = await auth();
+  const sessionUser = await getSessionUser();
 
-  if (!session?.user) {
+  if (!sessionUser) {
     const qs = new URLSearchParams(params as Record<string, string>).toString();
     redirect(`/login?callbackUrl=${encodeURIComponent(`/oauth/consent?${qs}`)}`);
   }
@@ -46,7 +46,7 @@ export default async function ConsentPage({
 
         <div className="mb-4">
           <p className="text-xs text-muted-foreground">Signed in as</p>
-          <p className="text-sm font-medium">{session.user.name}</p>
+          <p className="text-sm font-medium">{sessionUser.name}</p>
         </div>
 
         <div className="mb-4">

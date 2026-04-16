@@ -4,8 +4,8 @@ vi.mock("@/db", () => ({
   db: { select: vi.fn() },
 }));
 
-vi.mock("../../../auth", () => ({
-  auth: vi.fn(),
+vi.mock("@/lib/oauth/session", () => ({
+  getSessionUser: vi.fn(),
 }));
 
 describe("GET /api/oauth/authorize", () => {
@@ -21,8 +21,8 @@ describe("GET /api/oauth/authorize", () => {
   }
 
   it("redirects to /login when no session", async () => {
-    const { auth } = await import("../../../auth");
-    (auth as any).mockResolvedValue(null);
+    const { getSessionUser } = await import("@/lib/oauth/session");
+    (getSessionUser as any).mockResolvedValue(null);
     const { db } = await import("@/db");
     (db.select as any).mockReturnValue({
       from: vi.fn().mockReturnValue({
@@ -46,8 +46,8 @@ describe("GET /api/oauth/authorize", () => {
   });
 
   it("returns 400 when client_id is unknown", async () => {
-    const { auth } = await import("../../../auth");
-    (auth as any).mockResolvedValue({ user: { id: "u", name: "U" } });
+    const { getSessionUser } = await import("@/lib/oauth/session");
+    (getSessionUser as any).mockResolvedValue({ id: "u", name: "U" });
     const { db } = await import("@/db");
     (db.select as any).mockReturnValue({
       from: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue([]) }),
@@ -66,8 +66,8 @@ describe("GET /api/oauth/authorize", () => {
   });
 
   it("returns 400 when redirect_uri is not registered", async () => {
-    const { auth } = await import("../../../auth");
-    (auth as any).mockResolvedValue({ user: { id: "u", name: "U" } });
+    const { getSessionUser } = await import("@/lib/oauth/session");
+    (getSessionUser as any).mockResolvedValue({ id: "u", name: "U" });
     const { db } = await import("@/db");
     (db.select as any).mockReturnValue({
       from: vi.fn().mockReturnValue({
@@ -90,8 +90,8 @@ describe("GET /api/oauth/authorize", () => {
   });
 
   it("redirects to consent page on valid params", async () => {
-    const { auth } = await import("../../../auth");
-    (auth as any).mockResolvedValue({ user: { id: "u", name: "U" } });
+    const { getSessionUser } = await import("@/lib/oauth/session");
+    (getSessionUser as any).mockResolvedValue({ id: "u", name: "U" });
     const { db } = await import("@/db");
     (db.select as any).mockReturnValue({
       from: vi.fn().mockReturnValue({
@@ -115,8 +115,8 @@ describe("GET /api/oauth/authorize", () => {
   });
 
   it("redirects to redirect_uri with error when scope exceeds client", async () => {
-    const { auth } = await import("../../../auth");
-    (auth as any).mockResolvedValue({ user: { id: "u", name: "U" } });
+    const { getSessionUser } = await import("@/lib/oauth/session");
+    (getSessionUser as any).mockResolvedValue({ id: "u", name: "U" });
     const { db } = await import("@/db");
     (db.select as any).mockReturnValue({
       from: vi.fn().mockReturnValue({

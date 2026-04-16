@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "../../../../../auth";
+import { getSessionUser } from "@/lib/oauth/session";
 import { getClientByClientId, matchRedirectUri } from "@/lib/oauth/clients";
 import { parseScopes, isScopeSubset } from "@/lib/oauth/scopes";
 import { badRequest } from "@/lib/errors";
@@ -40,8 +40,8 @@ export async function GET(request: Request) {
   }
 
   // From here, all errors are redirected back to redirect_uri
-  const session = await auth();
-  if (!session?.user) {
+  const sessionUser = await getSessionUser();
+  if (!sessionUser) {
     const callbackUrl = encodeURIComponent(url.pathname + url.search);
     // Use a raw Response so the Location header is a relative URL — the browser
     // will resolve against the current origin. NextResponse.redirect rejects

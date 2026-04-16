@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { and, eq, inArray, isNull } from "drizzle-orm";
-import { auth } from "../../../../../auth";
 import { db } from "@/db";
 import { oauthClients, oauthTokens } from "@/db/schema";
 import { createManualClient } from "@/lib/oauth/clients";
+import { getSessionUser } from "@/lib/oauth/session";
 import { badRequest, unauthorized } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
 
 async function requireSession() {
-  const session = await auth();
-  if (!session?.user?.id) return null;
-  return { oid: session.user.id, name: session.user.name ?? "" };
+  const user = await getSessionUser();
+  if (!user) return null;
+  return { oid: user.id, name: user.name };
 }
 
 const createSchema = z.object({

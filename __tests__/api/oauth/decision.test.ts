@@ -4,8 +4,8 @@ vi.mock("@/db", () => ({
   db: { select: vi.fn(), insert: vi.fn() },
 }));
 
-vi.mock("../../../auth", () => ({
-  auth: vi.fn(),
+vi.mock("@/lib/oauth/session", () => ({
+  getSessionUser: vi.fn(),
 }));
 
 describe("POST /api/oauth/authorize/decision", () => {
@@ -26,15 +26,15 @@ describe("POST /api/oauth/authorize/decision", () => {
   }
 
   it("returns 401 when no session", async () => {
-    const { auth } = await import("../../../auth");
-    (auth as any).mockResolvedValue(null);
+    const { getSessionUser } = await import("@/lib/oauth/session");
+    (getSessionUser as any).mockResolvedValue(null);
     const res = await post({ decision: "allow" });
     expect(res.status).toBe(401);
   });
 
   it("redirects with access_denied on deny", async () => {
-    const { auth } = await import("../../../auth");
-    (auth as any).mockResolvedValue({ user: { id: "u1", name: "U" } });
+    const { getSessionUser } = await import("@/lib/oauth/session");
+    (getSessionUser as any).mockResolvedValue({ id: "u1", name: "U" });
     const { db } = await import("@/db");
     (db.select as any).mockReturnValue({
       from: vi.fn().mockReturnValue({
@@ -61,8 +61,8 @@ describe("POST /api/oauth/authorize/decision", () => {
   });
 
   it("issues a code and redirects on allow", async () => {
-    const { auth } = await import("../../../auth");
-    (auth as any).mockResolvedValue({ user: { id: "u1", name: "U" } });
+    const { getSessionUser } = await import("@/lib/oauth/session");
+    (getSessionUser as any).mockResolvedValue({ id: "u1", name: "U" });
     const { db } = await import("@/db");
     (db.select as any).mockReturnValue({
       from: vi.fn().mockReturnValue({

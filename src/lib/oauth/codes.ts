@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, gt, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { oauthAuthCodes } from "@/db/schema";
 import { generateToken, hashToken } from "./crypto";
@@ -35,19 +35,16 @@ export type AuthCodeRow = typeof oauthAuthCodes.$inferSelect;
 
 export async function consumeAuthCode(code: string): Promise<AuthCodeRow | null> {
   const hash = hashToken(code);
-  return await db.transaction(async (tx) => {
-    const rows = await tx
-      .select()
-      .from(oauthAuthCodes)
-      .where(eq(oauthAuthCodes.codeHash, hash));
-    const row = rows[0];
-    if (!row) return null;
-    if (row.consumedAt) return null;
-    if (row.expiresAt.getTime() < Date.now()) return null;
-    await tx
-      .update(oauthAuthCodes)
-      .set({ consumedAt: new Date() })
-      .where(eq(oauthAuthCodes.codeHash, hash));
-    return row;
-  });
+  const updated = await db
+    .update(oauthAuthCodes)
+    .set({ consumedAt: new Date() })
+    .where(
+      and(
+        eq(oauthAuthCodes.codeHash, hash),
+        isNull(oauthAuthCodes.consumedAt),
+        gt(oauthAuthCodes.expiresAt, new Date())
+      )
+    )
+    .returning();
+  return updated[0] ?? null;
 }

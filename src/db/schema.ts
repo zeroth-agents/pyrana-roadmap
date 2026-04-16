@@ -176,3 +176,68 @@ export const personalAccessTokens = pgTable("personal_access_tokens", {
     .defaultNow(),
   lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
 });
+
+// OAuth 2.1 authorization server tables
+
+export const oauthClientTypeEnum = pgEnum("oauth_client_type", [
+  "public",
+  "confidential",
+]);
+
+export const oauthTokenTypeEnum = pgEnum("oauth_token_type", [
+  "access",
+  "refresh",
+]);
+
+export const oauthClients = pgTable("oauth_clients", {
+  id: uuid().defaultRandom().primaryKey(),
+  clientId: text("client_id").notNull().unique(),
+  clientSecretHash: text("client_secret_hash"),
+  clientSecretPrefix: text("client_secret_prefix"),
+  clientType: oauthClientTypeEnum("client_type").notNull(),
+  name: text().notNull(),
+  redirectUris: text("redirect_uris").array().notNull(),
+  scopes: text().array().notNull().default(["read"]),
+  registrationType: text("registration_type").notNull(),
+  ownerOid: text("owner_oid"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+});
+
+export const oauthAuthCodes = pgTable("oauth_auth_codes", {
+  id: uuid().defaultRandom().primaryKey(),
+  codeHash: text("code_hash").notNull().unique(),
+  clientId: text("client_id").notNull(),
+  userOid: text("user_oid").notNull(),
+  userName: text("user_name").notNull(),
+  redirectUri: text("redirect_uri").notNull(),
+  scopes: text().array().notNull(),
+  resource: text(),
+  codeChallenge: text("code_challenge").notNull(),
+  codeChallengeMethod: text("code_challenge_method").notNull().default("S256"),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  consumedAt: timestamp("consumed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const oauthTokens = pgTable("oauth_tokens", {
+  id: uuid().defaultRandom().primaryKey(),
+  tokenHash: text("token_hash").notNull().unique(),
+  tokenType: oauthTokenTypeEnum("token_type").notNull(),
+  clientId: text("client_id").notNull(),
+  userOid: text("user_oid").notNull(),
+  userName: text("user_name").notNull(),
+  scopes: text().array().notNull(),
+  resource: text(),
+  parentTokenId: uuid("parent_token_id"),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+});

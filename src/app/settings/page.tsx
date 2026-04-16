@@ -13,6 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ConnectedApps } from "@/components/settings/connected-apps";
+import { OauthApps } from "@/components/settings/oauth-apps";
 
 const SYNC_STEPS = [
   { label: "Matching Linear team members…", progress: 10 },
@@ -135,9 +137,13 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-xl">
+    <div className="max-w-xl space-y-6">
       <h1 className="mb-4 text-xl font-semibold">Settings</h1>
 
+      <ConnectedApps />
+      <OauthApps />
+
+      <div>
       <h2 className="mb-2 text-lg font-medium">Linear Sync</h2>
       <p className="mb-4 text-sm text-muted-foreground">
         Pull latest project data from Linear — descriptions, leads, issue counts, and statuses.
@@ -305,6 +311,7 @@ export default function SettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 }

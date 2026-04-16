@@ -57,6 +57,13 @@
       "when": 1774975507672,
       "tag": "0007_worthless_alex_wilder",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1776310732000,
+      "tag": "0008_greedy_smasher",
+      "breakpoints": true
     }
   ]
 }

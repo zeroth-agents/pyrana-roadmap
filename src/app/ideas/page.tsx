@@ -105,7 +105,7 @@ export default function IdeasPage() {
     Promise.all([
       fetchIdeas(0, false),
       fetch("/api/pillars").then((r) => r.json()).then(setPillars),
-    ]).then(() => setLoading(false));
+    ]).finally(() => setLoading(false));
   }, [fetchIdeas]);
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -116,8 +116,11 @@ export default function IdeasPage() {
       async (entries) => {
         if (entries[0].isIntersecting && ideas.length < total && !loadingMore) {
           setLoadingMore(true);
-          await fetchIdeas(ideas.length, true);
-          setLoadingMore(false);
+          try {
+            await fetchIdeas(ideas.length, true);
+          } finally {
+            setLoadingMore(false);
+          }
         }
       },
       { rootMargin: "200px" }

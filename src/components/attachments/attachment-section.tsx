@@ -313,9 +313,10 @@ export function AttachmentSection({
                   <button
                     onClick={() => handleDelete(att.id)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive flex-shrink-0"
+                    aria-label={`Delete attachment: ${att.fileName}`}
                     title="Delete attachment"
                   >
-                    <Trash2 className="size-3.5" />
+                    <Trash2 className="size-3.5" aria-hidden />
                   </button>
                 )}
               </div>

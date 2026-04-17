@@ -444,7 +444,8 @@ export function InitiativeDetail({
                 return (
                   <div key={issue.id}>
                     <button
-                      className="w-full grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center py-2 px-0.5 border-b-2 border-border text-left hover:bg-muted"
+                      className="w-full grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center py-2 px-0.5 border-b-2 border-border text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+                      aria-expanded={isExpanded}
                       onClick={() => setExpandedIssueId(isExpanded ? null : issue.id)}
                     >
                       <span className={cn("h-3 w-3 border-2 border-border", statusBg)} aria-hidden />

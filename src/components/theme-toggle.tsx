@@ -41,9 +41,10 @@ export function ThemeToggle() {
       ]
         .filter(Boolean)
         .join(" ")}
+      aria-label={`Theme: ${config.label}. Click to switch.`}
       title={`Theme: ${config.label}. Click to switch.`}
     >
-      <Icon />
+      <Icon aria-hidden />
     </button>
   );
 }

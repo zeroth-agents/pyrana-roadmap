@@ -28,6 +28,7 @@ export function UserAvatarPopover({ name, email }: UserAvatarPopoverProps) {
     <Popover>
       <PopoverTrigger
         className="flex h-10 w-10 items-center justify-center border-2 border-sidebar-foreground bg-pillar-pf text-ink font-display text-[12px] tracking-[-0.02em] hover:shadow-[2px_2px_0_var(--sidebar-foreground)] transition-shadow"
+        aria-label={`User menu: ${name}`}
         title={name}
       >
         <span className="font-display text-[12px]">{getMonogram(name)}</span>

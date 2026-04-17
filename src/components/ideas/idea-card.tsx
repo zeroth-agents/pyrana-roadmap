@@ -56,6 +56,7 @@ export function IdeaCard({ idea, pillars, onClick, onVoteChange }: IdeaCardProps
       onClick={onClick}
       className={cn(
         "cursor-pointer border-2 border-border shadow-brut-sm transition-transform hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[4px_4px_0_var(--shadow-color)] grid grid-cols-[auto_1fr] gap-2.5 p-3 relative",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
         isPromoted ? "bg-pillar-bx" : "bg-muted"
       )}
     >

@@ -186,8 +186,10 @@ export function BoardView({
         </span>
         <button
           onClick={() => setShowBacklog(!showBacklog)}
+          aria-pressed={showBacklog}
           className={cn(
             "border-2 border-foreground px-3 py-1 font-sans text-[11px] font-bold uppercase tracking-[0.1em] flex items-center gap-1.5 transition-colors",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
             showBacklog ? "bg-ink text-cream" : "bg-transparent text-foreground"
           )}
         >
@@ -200,8 +202,10 @@ export function BoardView({
         </button>
         <button
           onClick={() => setShowDone(!showDone)}
+          aria-pressed={showDone}
           className={cn(
             "border-2 border-foreground px-3 py-1 font-sans text-[11px] font-bold uppercase tracking-[0.1em] flex items-center gap-1.5 transition-colors",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
             showDone ? "bg-ink text-cream" : "bg-transparent text-foreground"
           )}
         >

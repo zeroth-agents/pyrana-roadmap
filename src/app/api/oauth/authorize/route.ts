@@ -36,6 +36,7 @@ export async function GET(request: Request) {
   if (!client) return badRequest("unknown client_id");
 
   if (!matchRedirectUri(redirectUri, client.redirectUris)) {
+    console.log("[oauth/authorize] redirect_uri mismatch:", redirectUri, "registered:", client.redirectUris);
     return badRequest("redirect_uri not registered");
   }
 
@@ -71,7 +72,8 @@ export async function GET(request: Request) {
 
   // Defer actual code issuance to the consent decision endpoint.
   // Build a consent URL with all validated params passed through (server still re-validates on decision).
-  const consent = new URL("/oauth/consent", url.origin);
+  const appOrigin = process.env.APP_URL ?? url.origin;
+  const consent = new URL("/oauth/consent", appOrigin);
   consent.searchParams.set("client_id", clientId);
   consent.searchParams.set("client_name", client.name);
   consent.searchParams.set("registration_type", client.registrationType);

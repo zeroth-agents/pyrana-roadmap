@@ -4,8 +4,10 @@ import { NextResponse } from "next/server";
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
-  // Let API routes through — they handle their own auth (session + bearer token)
+  // Let API routes and well-known discovery docs through — they handle their own auth
   if (pathname.startsWith("/api/")) return;
+  if (pathname.startsWith("/.well-known/")) return;
+  if (pathname.startsWith("/oauth/")) return;
 
   // Login page: allow unauthenticated, redirect authenticated users home
   if (pathname === "/login") {

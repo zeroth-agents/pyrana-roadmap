@@ -34,7 +34,7 @@ function jsonRpcError(id: string | number | null, code: number, message: string)
 }
 
 export async function POST(request: Request) {
-  const origin = new URL(request.url).origin;
+  const origin = process.env.APP_URL ?? new URL(request.url).origin;
   const user = await getUser(request.headers);
   if (!user) return unauthorizedWithDiscovery(origin);
 

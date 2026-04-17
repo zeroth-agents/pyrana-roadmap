@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 function origin(req: Request): string {
-  return process.env.NEXT_PUBLIC_APP_URL ?? new URL(req.url).origin;
+  return process.env.APP_URL ?? new URL(req.url).origin;
 }
 
 export async function GET(request: Request) {

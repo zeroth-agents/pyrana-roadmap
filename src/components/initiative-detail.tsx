@@ -11,14 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { CommentThread } from "./comment-thread";
 import { AttachmentSection } from "./attachments/attachment-section";
 import { AssigneeSelect } from "./assignee-select";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { getPillarSlug } from "@/lib/pillar-utils";
+import { getPillarSlug, getMonogram } from "@/lib/pillar-utils";
 import { cn } from "@/lib/utils";
 
 interface Milestone {
@@ -87,30 +85,12 @@ interface InitiativeDetailProps {
   onUpdate: () => void;
 }
 
-const STATUS_DOT_COLORS: Record<string, string> = {
-  backlog: "#94a3b8",
-  triage: "#94a3b8",
-  unstarted: "#f59e0b",
-  started: "#3399FF",
-  completed: "#16a34a",
-  canceled: "#ef4444",
-};
-
 const LANE_LABELS: Record<string, string> = {
   now: "Now",
   next: "Next",
   backlog: "Backlog",
   done: "Done",
 };
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
 
 function SectionHeader({
   num,
@@ -429,148 +409,131 @@ export function InitiativeDetail({
             );
           })()}
 
-          {/* Issues list */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground/60">
-                Issues ({issues.length})
-              </span>
+          {/* §04 Issues */}
+          <SectionHeader num="04" label="Issues" detail={`${issues.length} · LINEAR`} />
+
+          {initiative.linearProjectId && (
+            <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+              <Input
+                value={newIssueTitle}
+                onChange={(e) => setNewIssueTitle(e.target.value)}
+                placeholder="New issue title…"
+                onKeyDown={(e) => e.key === "Enter" && handleCreateIssue()}
+              />
+              <Button onClick={handleCreateIssue} disabled={creatingIssue || !newIssueTitle.trim()}>
+                + Create
+              </Button>
             </div>
+          )}
 
-            {/* New issue form */}
-            {initiative.linearProjectId && (
-              <div className="flex gap-2 mb-3">
-                <Input
-                  value={newIssueTitle}
-                  onChange={(e) => setNewIssueTitle(e.target.value)}
-                  placeholder="New issue title..."
-                  className="text-sm"
-                  onKeyDown={(e) => e.key === "Enter" && handleCreateIssue()}
-                />
-                <Button
-                  size="sm"
-                  onClick={handleCreateIssue}
-                  disabled={creatingIssue || !newIssueTitle.trim()}
-                >
-                  Create
-                </Button>
-              </div>
-            )}
-
-            {loading ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">Loading issues from Linear...</p>
-            ) : issues.length === 0 && initiative.linearProjectId ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No issues yet</p>
-            ) : !initiative.linearProjectId ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">Not linked to a Linear project</p>
-            ) : (
-              <div className="flex flex-col gap-1">
-                {issues.map((issue) => {
-                  const isExpanded = expandedIssueId === issue.id;
-                  const dotColor = STATUS_DOT_COLORS[issue.statusType] ?? "#94a3b8";
-
-                  return (
-                    <div key={issue.id}>
-                      {/* Issue row */}
-                      <button
-                        className="w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-left hover:bg-muted/50 transition-colors"
-                        onClick={() => setExpandedIssueId(isExpanded ? null : issue.id)}
-                      >
-                        <div
-                          className="h-2 w-2 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: dotColor }}
-                        />
-                        <span className="text-sm flex-1 truncate">{issue.title}</span>
-                        <span className="text-xs text-muted-foreground">{issue.identifier}</span>
-                        {issue.assigneeName && (
-                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[8px] font-semibold text-primary-foreground flex-shrink-0">
-                            {getInitials(issue.assigneeName)}
+          {loading ? (
+            <p className="text-sm text-ink-soft py-4 text-center mt-3">Loading issues from Linear…</p>
+          ) : issues.length === 0 && initiative.linearProjectId ? (
+            <p className="text-sm text-ink-soft py-4 text-center mt-3">No issues yet</p>
+          ) : !initiative.linearProjectId ? (
+            <p className="text-sm text-ink-soft py-4 text-center mt-3">Not linked to a Linear project</p>
+          ) : (
+            <div className="mt-3 border-t-2 border-ink">
+              {issues.map((issue) => {
+                const isExpanded = expandedIssueId === issue.id;
+                const statusBg =
+                  issue.statusType === "completed" ? "bg-pillar-bx" :
+                  issue.statusType === "started"   ? "bg-pillar-dc" :
+                  issue.statusType === "unstarted" ? "bg-pillar-ai" :
+                                                     "bg-cream-2";
+                return (
+                  <div key={issue.id}>
+                    <button
+                      className="w-full grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center py-2 px-0.5 border-b-2 border-ink text-left hover:bg-cream-2"
+                      onClick={() => setExpandedIssueId(isExpanded ? null : issue.id)}
+                    >
+                      <span className={cn("h-3 w-3 border-2 border-ink", statusBg)} aria-hidden />
+                      <span className="text-[12px] font-semibold truncate">{issue.title}</span>
+                      <span className="font-mono text-[10px] tracking-[0.04em] opacity-70">{issue.identifier}</span>
+                      {issue.assigneeName && (
+                        <span className="h-[18px] w-[18px] border-[1.5px] border-ink bg-pillar-pf font-display text-[9px] flex items-center justify-center">
+                          {getMonogram(issue.assigneeName)}
+                        </span>
+                      )}
+                    </button>
+                    {isExpanded && (
+                      <div className="ml-6 mr-2 mb-2 mt-1 border-2 border-ink bg-cream p-3 space-y-3">
+                        {issue.description && (
+                          <div className="prose prose-xs prose-muted max-w-none text-xs text-muted-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-xs [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:my-1 [&_ul]:my-1 [&_ul]:pl-4 [&_li]:my-0.5 [&_strong]:text-foreground/70">
+                            <Markdown
+                              remarkPlugins={[remarkGfm]}
+                              components={{
+                                a: ({ children, href, ...props }) => (
+                                  <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline decoration-primary/40 hover:decoration-primary" {...props}>
+                                    {children}
+                                  </a>
+                                ),
+                              }}
+                            >
+                              {issue.description}
+                            </Markdown>
                           </div>
                         )}
-                      </button>
-
-                      {/* Expanded detail */}
-                      {isExpanded && (
-                        <div className="ml-6 mr-2 mb-2 mt-1 rounded-md border bg-card p-3 space-y-3">
-                          {issue.description && (
-                            <div className="prose prose-xs prose-muted max-w-none text-xs text-muted-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-xs [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:my-1 [&_ul]:my-1 [&_ul]:pl-4 [&_li]:my-0.5 [&_strong]:text-foreground/70">
-                              <Markdown
-                                remarkPlugins={[remarkGfm]}
-                                components={{
-                                  a: ({ children, href, ...props }) => (
-                                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline decoration-primary/40 hover:decoration-primary" {...props}>
-                                      {children}
-                                    </a>
-                                  ),
-                                }}
-                              >
-                                {issue.description}
-                              </Markdown>
-                            </div>
-                          )}
-                          <div className="flex gap-3">
-                            {/* Status dropdown */}
-                            <div className="flex-1">
-                              <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Status</label>
-                              <Select
-                                value={issue.status}
-                                onValueChange={(name) => {
-                                  const state = teamStates.find((s) => s.name === name);
-                                  if (state) handleUpdateIssue(issue.id, { stateId: state.id });
-                                }}
-                              >
-                                <SelectTrigger className="h-8 text-xs mt-1">
-                                  <SelectValue placeholder={issue.status} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {teamStates.map((s) => (
-                                    <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            {/* Assignee dropdown */}
-                            <div className="flex-1">
-                              <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Assignee</label>
-                              <Select
-                                value={issue.assigneeName ?? "Unassigned"}
-                                onValueChange={(name) => {
-                                  if (name === "Unassigned") {
-                                    handleUpdateIssue(issue.id, { assigneeId: null });
-                                  } else {
-                                    const member = teamMembers.find((m) => m.name === name);
-                                    if (member) handleUpdateIssue(issue.id, { assigneeId: member.id });
-                                  }
-                                }}
-                              >
-                                <SelectTrigger className="h-8 text-xs mt-1">
-                                  <SelectValue placeholder={issue.assigneeName ?? "Unassigned"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Unassigned">Unassigned</SelectItem>
-                                  {teamMembers.map((m) => (
-                                    <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
+                        <div className="flex gap-3">
+                          {/* Status dropdown */}
+                          <div className="flex-1">
+                            <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Status</label>
+                            <Select
+                              value={issue.status}
+                              onValueChange={(name) => {
+                                const state = teamStates.find((s) => s.name === name);
+                                if (state) handleUpdateIssue(issue.id, { stateId: state.id });
+                              }}
+                            >
+                              <SelectTrigger className="h-8 text-xs mt-1">
+                                <SelectValue placeholder={issue.status} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {teamStates.map((s) => (
+                                  <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-[10px]">{issue.priorityLabel}</Badge>
-                            {issue.labels.map((label) => (
-                              <Badge key={label} variant="secondary" className="text-[10px]">{label}</Badge>
-                            ))}
+                          {/* Assignee dropdown */}
+                          <div className="flex-1">
+                            <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Assignee</label>
+                            <Select
+                              value={issue.assigneeName ?? "Unassigned"}
+                              onValueChange={(name) => {
+                                if (name === "Unassigned") {
+                                  handleUpdateIssue(issue.id, { assigneeId: null });
+                                } else {
+                                  const member = teamMembers.find((m) => m.name === name);
+                                  if (member) handleUpdateIssue(issue.id, { assigneeId: member.id });
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="h-8 text-xs mt-1">
+                                <SelectValue placeholder={issue.assigneeName ?? "Unassigned"} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Unassigned">Unassigned</SelectItem>
+                                {teamMembers.map((m) => (
+                                  <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <Separator />
+                        <div className="flex items-center gap-2 font-mono text-[10px]">
+                          <span className="border-2 border-ink px-1.5 py-0.5">{issue.priorityLabel}</span>
+                          {issue.labels.map((label) => (
+                            <span key={label} className="border border-ink px-1.5 py-0.5 opacity-70">{label}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Attachments */}
           <AttachmentSection
@@ -578,9 +541,24 @@ export function InitiativeDetail({
             targetId={initiative.id}
           />
 
-          <Separator />
-
           <CommentThread targetType="initiative" targetId={initiative.id} />
+
+          {/* Footer actions */}
+          <div className="mt-8 flex gap-2.5">
+            <Button onClick={handleSaveRationale} className="shadow-brut-accent">
+              SAVE CHANGES
+            </Button>
+            {initiative.linearProjectUrl && (
+              <a
+                href={initiative.linearProjectUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center border-2 border-ink bg-transparent text-ink px-4 py-2 font-display uppercase tracking-[0.08em] text-sm shadow-brut-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_var(--shadow-color)] transition-transform"
+              >
+                OPEN IN LINEAR ↗
+              </a>
+            )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>

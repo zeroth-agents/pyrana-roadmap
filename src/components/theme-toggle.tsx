@@ -3,7 +3,6 @@
 import { useTheme } from "next-themes";
 import { Sun, Moon, Monitor } from "lucide-react";
 import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
 
 const THEMES = ["system", "light", "dark"] as const;
 
@@ -22,8 +21,8 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <div className="flex h-[42px] w-[42px] items-center justify-center">
-        <Monitor className="h-4 w-4 text-white/35" />
+      <div className="flex h-10 w-10 items-center justify-center border-2 border-sidebar-foreground/30">
+        <Monitor className="h-4 w-4 text-sidebar-foreground/30" />
       </div>
     );
   }
@@ -36,16 +35,16 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(THEMES[nextIndex])}
-      className={cn(
-        "flex h-[42px] w-[42px] flex-col items-center justify-center gap-0.5 rounded-lg transition-colors",
-        current !== "system"
-          ? "bg-sidebar-active text-primary"
-          : "text-white/35 hover:text-white/60"
-      )}
+      className={[
+        "flex h-10 w-10 items-center justify-center border-2 border-sidebar-foreground bg-transparent text-sidebar-foreground hover:bg-sidebar-foreground hover:text-sidebar transition-colors [&_svg]:h-4 [&_svg]:w-4",
+        current !== "system" ? "shadow-[2px_2px_0_var(--pillar-ai)]" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      aria-label={`Theme: ${config.label}. Click to switch.`}
       title={`Theme: ${config.label}. Click to switch.`}
     >
-      <Icon className="h-4 w-4" />
-      <span className="text-[6px] font-semibold">{config.label}</span>
+      <Icon aria-hidden />
     </button>
   );
 }

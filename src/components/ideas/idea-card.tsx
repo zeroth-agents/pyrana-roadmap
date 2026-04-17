@@ -1,8 +1,8 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { VoteButton } from "./vote-button";
 import { cn } from "@/lib/utils";
+import { getPillarSlug, getMonogram } from "@/lib/pillar-utils";
 
 interface Pillar {
   id: string;
@@ -32,112 +32,80 @@ interface IdeaCardProps {
   onVoteChange?: (voted: boolean, count: number) => void;
 }
 
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
-
 function timeAgo(dateStr: string): string {
-  const seconds = Math.floor(
-    (Date.now() - new Date(dateStr).getTime()) / 1000
-  );
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
   if (seconds < 60) return "just now";
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return `${minutes}M AGO`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return `${hours}H AGO`;
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
+  if (days < 7) return `${days}D AGO`;
   const weeks = Math.floor(days / 7);
-  return `${weeks}w ago`;
+  return `${weeks}W AGO`;
 }
 
 export function IdeaCard({ idea, pillars, onClick, onVoteChange }: IdeaCardProps) {
   const pillar = pillars.find((p) => p.id === idea.pillarId);
+  const pillarSlug = getPillarSlug(pillar?.name);
   const isPromoted = idea.status === "promoted";
-  const bodyPreview = idea.body.slice(0, 120).replace(/[#*_`>\n]/g, "") + (idea.body.length > 120 ? "..." : "");
+  const bodyPreview = idea.body.slice(0, 140).replace(/[#*_`>\n]/g, "") + (idea.body.length > 140 ? "..." : "");
 
   return (
     <div
       onClick={onClick}
       className={cn(
-        "group cursor-pointer rounded-xl border bg-card p-4 transition-colors hover:border-primary/40",
-        isPromoted && "opacity-60"
+        "cursor-pointer border-2 border-border shadow-brut-sm transition-transform hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[4px_4px_0_var(--shadow-color)] grid grid-cols-[auto_1fr] gap-2.5 p-3 relative",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
+        isPromoted ? "bg-pillar-bx" : "bg-muted"
       )}
     >
-      {/* Top row: pillar tag + vote */}
-      <div className="mb-3 flex items-start justify-between">
-        <div className="flex items-center gap-2">
-          {pillar && (
-            <Badge variant="outline" className="text-[10px]">
-              {pillar.name}
-            </Badge>
-          )}
-          <Badge
+      {/* Vote stack */}
+      <VoteButton
+        ideaId={idea.id}
+        initialVoted={idea.userVoted}
+        initialCount={idea.voteCount}
+        onVoteChange={onVoteChange}
+      />
+
+      {/* Body */}
+      <div>
+        {pillar && (
+          <span
             className={cn(
-              "border-0 text-[10px]",
-              idea.status === "promoted"
-                ? "bg-green-500/10 text-green-600"
-                : idea.status === "archived"
-                  ? "bg-muted text-muted-foreground"
-                  : "bg-primary/10 text-primary"
+              "inline-block border-[1.5px] border-border font-display text-[8px] tracking-[0.18em] uppercase px-1 py-0.5 mb-1",
+              `bg-pillar-${pillarSlug}`
             )}
           >
-            {idea.status === "promoted" ? "✓ Promoted" : idea.status}
-          </Badge>
-        </div>
-        <VoteButton
-          ideaId={idea.id}
-          initialVoted={idea.userVoted}
-          initialCount={idea.voteCount}
-          compact
-          onVoteChange={onVoteChange}
-        />
-      </div>
-
-      {/* Title */}
-      <h3 className="mb-2 text-sm font-semibold leading-tight">{idea.title}</h3>
-
-      {/* Body preview */}
-      <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
-        {bodyPreview}
-      </p>
-
-      {/* Footer: author + meta */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[8px] font-semibold text-primary-foreground">
-            {getInitials(idea.authorName)}
-          </div>
-          <span className="text-[11px] text-muted-foreground">
-            {idea.authorName} · {timeAgo(idea.createdAt)}
+            {pillar.name}
           </span>
-          {idea.assigneeName && (
-            <div className="flex items-center gap-1 ml-1 pl-1 border-l border-border">
-              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-secondary text-[7px] font-semibold text-secondary-foreground">
-                {getInitials(idea.assigneeName)}
-              </div>
-              <span className="text-[10px] text-muted-foreground">
-                {idea.assigneeName}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] text-muted-foreground">
-            💬 {idea.commentCount}
-          </span>
-          {idea.priorityScore && (
-            <Badge variant="outline" className="text-[10px] bg-amber-500/10 text-amber-600 border-0">
+        )}
+        <h3 className="font-display text-[13px] leading-[1.2] tracking-[-0.01em] uppercase">
+          {idea.title}
+        </h3>
+        <p className="text-[10px] leading-[1.3] opacity-70 mt-1">{bodyPreview}</p>
+        <div className="flex items-center gap-1.5 mt-1.5 font-mono text-[9px] opacity-65">
+          <span>{getMonogram(idea.authorName)} · {timeAgo(idea.createdAt)}</span>
+          <span>·</span>
+          <span>💬 {idea.commentCount}</span>
+          {idea.priorityScore != null && (
+            <span className="border-[1.5px] border-ink bg-pillar-ai font-display text-[9px] tracking-[0.1em] uppercase px-1 py-0 ml-auto text-ink">
               P{idea.priorityScore}
-            </Badge>
+            </span>
           )}
         </div>
       </div>
+
+      {/* Promoted stamp */}
+      {isPromoted && (
+        <span
+          aria-hidden
+          className="absolute top-1 right-0 font-display text-[9px] tracking-[0.16em] bg-ink text-cream px-1.5 py-0.5"
+          style={{ transform: "rotate(2deg)" }}
+        >
+          PROMOTED
+        </span>
+      )}
     </div>
   );
 }

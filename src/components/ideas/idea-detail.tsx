@@ -7,9 +7,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -24,6 +22,8 @@ import { VoteButton } from "./vote-button";
 import { PromoteDialog } from "./promote-dialog";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { getPillarSlug, getMonogram } from "@/lib/pillar-utils";
+import { cn } from "@/lib/utils";
 
 interface Voter {
   userId: string;
@@ -61,13 +61,33 @@ interface IdeaDetailProps {
   onUpdate: () => void;
 }
 
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+function SectionHeader({
+  num,
+  label,
+  detail,
+}: {
+  num: string;
+  label: string;
+  detail?: string;
+}) {
+  return (
+    <div className="mt-7">
+      <div className="flex items-baseline gap-2.5">
+        <span className="font-display text-[11px] tracking-[0.08em] bg-ink text-cream px-1.5 py-0.5">
+          §{num}
+        </span>
+        <span className="font-display text-[16px] tracking-[-0.02em] uppercase">
+          {label}
+        </span>
+        {detail && (
+          <span className="ml-auto text-[9px] tracking-[0.18em] opacity-60 uppercase">
+            {detail}
+          </span>
+        )}
+      </div>
+      <div className="h-[2px] bg-ink mt-1" />
+    </div>
+  );
 }
 
 export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailProps) {
@@ -134,9 +154,7 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
     }
   }
 
-  const pillarName = idea
-    ? pillars.find((p) => p.id === idea.pillarId)?.name
-    : null;
+  const pillar = idea ? pillars.find((p) => p.id === idea.pillarId) : null;
 
   return (
     <Sheet open onOpenChange={onClose}>
@@ -147,68 +165,80 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
           </div>
         ) : (
           <>
-            <SheetHeader className="px-7 pt-5 pb-0">
-              <div className="mb-2 flex items-center gap-2">
-                {pillarName && (
-                  <Badge variant="outline" className="text-[10px]">
-                    {pillarName}
-                  </Badge>
-                )}
-                <Badge
-                  variant="outline"
-                  className={
-                    idea.status === "promoted"
-                      ? "bg-green-500/10 text-green-600 border-0 text-[10px]"
-                      : idea.status === "archived"
-                        ? "bg-muted text-muted-foreground border-0 text-[10px]"
-                        : "bg-primary/10 text-primary border-0 text-[10px]"
-                  }
-                >
-                  {idea.status === "open"
-                    ? "● Open"
-                    : idea.status === "promoted"
-                      ? "✓ Promoted"
-                      : "Archived"}
-                </Badge>
+            <SheetHeader className="px-7 pt-6 pb-0">
+              <div className="font-display text-[10px] tracking-[0.22em] uppercase bg-ink text-cream px-2 py-0.5 self-start mb-2">
+                IDEA · {idea.status.toUpperCase()}
+                {pillar && ` · ${pillar.name.toUpperCase()}`}
               </div>
-              <SheetTitle className="text-xl">{idea.title}</SheetTitle>
+              <SheetTitle className="font-display text-[32px] leading-[0.95] tracking-[-0.035em] pb-3 border-b-[3px] border-border">
+                {idea.title}
+              </SheetTitle>
             </SheetHeader>
 
-            <div className="mt-2 space-y-5 px-7 pb-7">
-              {/* Author + date */}
-              <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[9px] font-semibold text-primary-foreground">
-                  {getInitials(idea.authorName)}
+            {/* Vote row */}
+            <div className="flex items-center gap-5 mt-5 px-7">
+              <VoteButton
+                ideaId={idea.id}
+                initialVoted={idea.userVoted}
+                initialCount={idea.voteCount}
+                onVoteChange={(voted, count) =>
+                  setIdea((prev) =>
+                    prev ? { ...prev, userVoted: voted, voteCount: count } : prev
+                  )
+                }
+              />
+              <div>
+                <div className="font-display text-[10px] tracking-[0.18em] uppercase opacity-60">
+                  Author · Submitted
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  {idea.authorName}
-                </span>
-                <span className="text-sm text-muted-foreground">·</span>
-                <span className="text-sm text-muted-foreground">
-                  {new Date(idea.createdAt).toLocaleDateString()}
-                </span>
+                <div className="font-mono text-[12px] mt-0.5 flex items-center gap-1.5">
+                  <span className="inline-flex h-5 w-5 items-center justify-center border-[1.5px] border-border bg-pillar-pf font-display text-[9px]">
+                    {getMonogram(idea.authorName)}
+                  </span>
+                  {idea.authorName} · {new Date(idea.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+              {idea.priorityScore != null && (
+                <div className="ml-auto border-2 border-border bg-pillar-ai px-2.5 py-1 shadow-brut-sm">
+                  <div className="font-display text-[9px] tracking-[0.18em] uppercase opacity-60">Priority</div>
+                  <div className="font-display text-[20px] tracking-[-0.03em] leading-none">P{idea.priorityScore}</div>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-0 pb-7">
+
+              {/* §01 Body */}
+              <div className="px-7">
+                <SectionHeader num="01" label="Body" />
+                <div className="mt-3 font-serif italic text-[15px] leading-[1.35] bg-muted border-2 border-border p-3.5 shadow-brut-sm prose-neutral max-w-none">
+                  <Markdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      a: ({ children, href, ...props }) => (
+                        <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline decoration-primary/40 hover:decoration-primary" {...props}>
+                          {children}
+                        </a>
+                      ),
+                    }}
+                  >
+                    {idea.body}
+                  </Markdown>
+                </div>
               </div>
 
-              {/* Vote + Priority row */}
-              <div className="flex items-center gap-3">
-                <VoteButton
-                  ideaId={idea.id}
-                  initialVoted={idea.userVoted}
-                  initialCount={idea.voteCount}
-                  onVoteChange={(voted, count) =>
-                    setIdea((prev) =>
-                      prev ? { ...prev, userVoted: voted, voteCount: count } : prev
-                    )
-                  }
-                />
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Priority:</span>
+              {/* §02 Properties */}
+              <div className="px-7">
+                <SectionHeader num="02" label="Properties" />
+                <div className="mt-3 flex flex-wrap gap-2.5">
+                  {/* Priority select */}
                   <Select
                     value={idea.priorityScore?.toString() ?? "none"}
                     onValueChange={handlePriorityChange}
                   >
-                    <SelectTrigger className="h-7 w-20 text-xs">
-                      <SelectValue placeholder="—">
+                    <SelectTrigger className="h-auto border-2 border-border px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)] w-auto gap-1.5 bg-background">
+                      <span className="text-[8px] tracking-[0.2em] uppercase opacity-55 mr-0.5">Priority</span>
+                      <SelectValue>
                         {(value: string) => value === "none" ? "—" : `P${value}`}
                       </SelectValue>
                     </SelectTrigger>
@@ -221,119 +251,127 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
                       ))}
                     </SelectContent>
                   </Select>
+
+                  {/* Pillar select */}
+                  <Select
+                    value={idea.pillarId ?? "none"}
+                    onValueChange={async (v) => {
+                      const newPillarId = v === "none" ? null : v;
+                      await fetch(`/api/ideas/${idea.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ pillarId: newPillarId }),
+                      });
+                      setIdea((prev) => prev ? { ...prev, pillarId: newPillarId } : prev);
+                      onUpdate();
+                    }}
+                  >
+                    <SelectTrigger className={cn(
+                      "h-auto border-2 border-border px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)] w-auto gap-1.5",
+                      pillar ? `bg-pillar-${getPillarSlug(pillar.name)}` : "bg-background"
+                    )}>
+                      <span className="text-[8px] tracking-[0.2em] uppercase opacity-55 mr-0.5">Pillar</span>
+                      <SelectValue placeholder="Choose pillar" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No pillar</SelectItem>
+                      {pillars.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+
+                  <AssigneeSelect
+                    value={idea.assigneeId ?? null}
+                    onChange={async (userId) => {
+                      await fetch(`/api/ideas/${idea.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ assigneeId: userId }),
+                      });
+                      setIdea((prev) => prev ? { ...prev, assigneeId: userId } : prev);
+                      onUpdate();
+                    }}
+                  />
                 </div>
-              </div>
 
-              {/* Assignee */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Assignee:</span>
-                <AssigneeSelect
-                  value={idea.assigneeId ?? null}
-                  onChange={async (userId) => {
-                    await fetch(`/api/ideas/${idea.id}`, {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ assigneeId: userId }),
-                    });
-                    setIdea((prev) => prev ? { ...prev, assigneeId: userId } : prev);
-                    onUpdate();
-                  }}
-                />
-              </div>
-
-              {/* Voters */}
-              {idea.voters.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Voted by:</span>
-                  <div className="flex -space-x-1">
-                    {idea.voters.slice(0, 5).map((v) => (
-                      <div
-                        key={v.userId}
-                        title={v.userName}
-                        className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[7px] font-semibold text-primary-foreground ring-2 ring-background"
-                      >
-                        {getInitials(v.userName)}
-                      </div>
-                    ))}
+                {/* Voters */}
+                {idea.voters.length > 0 && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="font-display text-[9px] tracking-[0.18em] uppercase opacity-60">Voted by</span>
+                    <div className="flex -space-x-1">
+                      {idea.voters.slice(0, 5).map((v) => (
+                        <div
+                          key={v.userId}
+                          title={v.userName}
+                          className="flex h-5 w-5 items-center justify-center border-[1.5px] border-ink bg-pillar-ac font-display text-[7px]"
+                        >
+                          {getMonogram(v.userName)}
+                        </div>
+                      ))}
+                    </div>
+                    {idea.voters.length > 5 && (
+                      <span className="font-mono text-[10px] opacity-60">
+                        +{idea.voters.length - 5} more
+                      </span>
+                    )}
                   </div>
-                  {idea.voters.length > 5 && (
-                    <span className="text-xs text-muted-foreground">
-                      +{idea.voters.length - 5} more
-                    </span>
-                  )}
-                </div>
-              )}
-
-              <Separator />
-
-              {/* Markdown body */}
-              <div className="prose prose-sm prose-muted max-w-none dark:prose-invert [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm [&_h4]:text-sm [&_p]:text-sm [&_li]:text-sm">
-                <Markdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    a: ({ children, href, ...props }) => (
-                      <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline decoration-primary/40 hover:decoration-primary" {...props}>
-                        {children}
-                      </a>
-                    ),
-                  }}
-                >
-                  {idea.body}
-                </Markdown>
+                )}
               </div>
 
-              <Separator />
+              {/* §03 Attachments */}
+              <div className="px-7">
+                <SectionHeader num="03" label="Attachments" />
+                <div className="mt-3">
+                  <AttachmentSection
+                    targetType="idea"
+                    targetId={idea.id}
+                    readOnly={idea.status !== "open"}
+                  />
+                </div>
+              </div>
 
-              {/* Attachments */}
-              <AttachmentSection
-                targetType="idea"
-                targetId={idea.id}
-                readOnly={idea.status !== "open"}
-              />
-
-              <Separator />
+              {/* §04 Comments */}
+              <div className="px-7">
+                <SectionHeader num="04" label="Comments" />
+                <div className="mt-3">
+                  <CommentThread targetType="idea" targetId={idea.id} />
+                </div>
+              </div>
 
               {/* Actions */}
-              {idea.status === "open" && (
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setPromoteOpen(true)}
-                    className="flex-1"
-                  >
-                    🚀 Promote to Linear Project
-                  </Button>
+              <div className="mt-8 px-7 flex gap-2.5">
+                {idea.status === "open" && (
+                  <>
+                    <Button onClick={() => setPromoteOpen(true)} className="shadow-brut-accent">
+                      PROMOTE TO INITIATIVE →
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => handleStatusChange("archived")}
+                    >
+                      ARCHIVE
+                    </Button>
+                  </>
+                )}
+
+                {idea.status === "archived" && (
                   <Button
                     variant="outline"
-                    onClick={() => handleStatusChange("archived")}
+                    onClick={() => handleStatusChange("open")}
+                    className="w-full"
                   >
-                    Archive
+                    REOPEN IDEA
                   </Button>
-                </div>
-              )}
+                )}
 
-              {idea.status === "archived" && (
-                <Button
-                  variant="outline"
-                  onClick={() => handleStatusChange("open")}
-                  className="w-full"
-                >
-                  Reopen Idea
-                </Button>
-              )}
+                {idea.status === "promoted" && idea.linearProjectId && (
+                  <div className="border-2 border-ink bg-pillar-bx px-3 py-2 shadow-brut-sm">
+                    <p className="font-display text-[11px] tracking-[0.08em] uppercase">
+                      ✓ Promoted to Linear project
+                    </p>
+                  </div>
+                )}
+              </div>
 
-              {/* Promoted link */}
-              {idea.status === "promoted" && idea.linearProjectId && (
-                <div className="rounded-lg border bg-green-500/5 p-3">
-                  <p className="text-sm text-green-600">
-                    ✓ Promoted to Linear project
-                  </p>
-                </div>
-              )}
-
-              <Separator />
-
-              {/* Comments */}
-              <CommentThread targetType="idea" targetId={idea.id} />
             </div>
 
             <PromoteDialog

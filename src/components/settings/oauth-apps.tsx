@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -14,7 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-function CopyableSecret({ value }: { value: string }) {
+function CopyableField({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -24,18 +22,17 @@ function CopyableSecret({ value }: { value: string }) {
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <p className="flex-1 min-w-0 rounded bg-muted p-2 font-mono text-xs break-all">
-        {value}
-      </p>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={copy}
-        aria-label={copied ? "Copied" : "Copy to clipboard"}
+    <div>
+      <div className="font-display text-[10px] tracking-[0.15em] uppercase mb-1">{label}</div>
+      <div
+        className={`font-mono text-[13px] border-2 border-border px-2 py-1.5 break-all ${
+          highlight ? "bg-pillar-ai" : "bg-muted"
+        }`}
       >
-        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+        {value}
+      </div>
+      <Button size="sm" onClick={copy} className="mt-2">
+        {copied ? "✓ COPIED" : "COPY"}
       </Button>
     </div>
   );
@@ -56,6 +53,7 @@ export function OauthApps() {
   const [name, setName] = useState("");
   const [redirects, setRedirects] = useState("");
   const [newSecret, setNewSecret] = useState<{ clientId: string; clientSecret: string } | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -99,6 +97,7 @@ export function OauthApps() {
       setNewSecret({ clientId: data.client_id, clientSecret: data.client_secret });
       setName("");
       setRedirects("");
+      setCreateOpen(false);
       load();
     }
   }
@@ -110,71 +109,111 @@ export function OauthApps() {
   }
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <h2 className="mb-4 text-lg font-semibold">Your OAuth apps</h2>
-        {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
+    <section className="border-2 border-border bg-card shadow-brut-md overflow-hidden">
+      <header className="bg-ink text-cream px-3.5 py-2.5 flex justify-between items-baseline">
+        <span className="font-display text-[16px] tracking-[-0.02em]">OAUTH APPS</span>
+        <span className="font-mono text-[10px] tracking-[0.08em]">
+          {!loading && `${items.length} CLIENT${items.length === 1 ? "" : "S"}`}
+        </span>
+      </header>
+
+      <div className="p-4 flex flex-col gap-2.5">
+        {loading && (
+          <p className="font-mono text-[11px] opacity-60">LOADING…</p>
+        )}
         {!loading && items.length === 0 && (
-          <p className="mb-4 text-sm text-muted-foreground">No manual OAuth apps yet.</p>
+          <p className="font-mono text-[11px] opacity-60 mb-0">NO MANUAL OAUTH APPS YET.</p>
         )}
         {items.map((item) => (
           <div
             key={item.clientId}
-            className="flex items-center justify-between border-b border-border py-2 last:border-b-0"
+            className="border-2 border-border bg-card shadow-brut-sm p-3 grid grid-cols-[1fr_auto] gap-2 items-center"
           >
             <div>
-              <p className="text-sm font-medium">{item.name}</p>
-              <p className="font-mono text-xs text-muted-foreground">{item.clientId}</p>
-              <p className="text-xs text-muted-foreground">
-                Secret: {item.clientSecretPrefix}… · Scopes: {item.scopes.join(", ")}
-              </p>
+              <div className="font-display text-[12px]">{item.name}</div>
+              <div className="font-mono text-[10px] opacity-70 mt-0.5">
+                {item.clientId}
+              </div>
+              <div className="font-mono text-[9px] opacity-55 mt-0.5">
+                CREATED {new Date(item.createdAt).toLocaleDateString()} · SECRET: {item.clientSecretPrefix}… · SCOPES: {item.scopes.join(", ").toUpperCase()}
+              </div>
             </div>
-            <Button variant="outline" size="sm" onClick={() => remove(item.clientId)}>
-              Delete
+            <Button variant="destructive" onClick={() => remove(item.clientId)}>
+              REVOKE
             </Button>
           </div>
         ))}
 
-        <div className="mt-4 space-y-2">
-          <p className="text-sm font-medium">New OAuth app</p>
-          <Input placeholder="App name" value={name} onChange={(e) => setName(e.target.value)} />
-          <textarea
-            className="w-full rounded border border-border bg-background p-2 text-sm"
-            rows={3}
-            placeholder="Redirect URIs (one per line)"
-            value={redirects}
-            onChange={(e) => setRedirects(e.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">
-            Grants read + write access to the roadmap.
-          </p>
-          <Button onClick={create}>Create app</Button>
-        </div>
+        <button
+          onClick={() => setCreateOpen(true)}
+          className="border-2 border-dashed border-border bg-transparent p-3 font-display text-[11px] tracking-[0.12em] uppercase flex justify-center items-center gap-1.5 hover:bg-muted cursor-pointer"
+        >
+          + CREATE OAUTH APP
+        </button>
+      </div>
 
-        <Dialog open={!!newSecret} onOpenChange={(o) => !o && setNewSecret(null)}>
-          <DialogContent className="w-[min(640px,calc(100vw-2rem))] max-w-[640px]">
-            <DialogHeader>
-              <DialogTitle>Copy your client secret</DialogTitle>
-              <DialogDescription>
-                This is the only time the secret will be shown. Store it securely.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <p className="text-xs text-muted-foreground">Client ID</p>
-                {newSecret && <CopyableSecret value={newSecret.clientId} />}
-              </div>
-              <div className="space-y-1.5">
-                <p className="text-xs text-muted-foreground">Client Secret</p>
-                {newSecret && <CopyableSecret value={newSecret.clientSecret} />}
-              </div>
+      {/* Create app dialog */}
+      <Dialog open={createOpen} onOpenChange={(o) => { if (!o) setCreateOpen(false); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>CREATE OAUTH APP</DialogTitle>
+            <DialogDescription>
+              Grants read + write access to the roadmap.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <div className="font-display text-[10px] tracking-[0.15em] uppercase mb-1">App Name</div>
+              <Input
+                placeholder="My MCP client"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
-            <DialogFooter>
-              <Button onClick={() => setNewSecret(null)}>Done</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
+            <div>
+              <div className="font-display text-[10px] tracking-[0.15em] uppercase mb-1">Redirect URIs (one per line)</div>
+              <textarea
+                className="w-full border-2 border-border bg-muted p-2 font-mono text-[12px] resize-y"
+                rows={3}
+                placeholder="https://example.com/callback"
+                value={redirects}
+                onChange={(e) => setRedirects(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+              CANCEL
+            </Button>
+            <Button onClick={create} disabled={!name || !redirects.trim()}>
+              CREATE
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reveal secret dialog */}
+      <Dialog open={!!newSecret} onOpenChange={(o) => !o && setNewSecret(null)}>
+        <DialogContent className="w-[min(640px,calc(100vw-2rem))] max-w-[640px]">
+          <DialogHeader>
+            <DialogTitle>OAUTH APP CREATED</DialogTitle>
+            <DialogDescription>
+              Copy both. Secret is never shown again.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {newSecret && (
+              <>
+                <CopyableField label="Client ID" value={newSecret.clientId} />
+                <CopyableField label="Client Secret" value={newSecret.clientSecret} highlight />
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setNewSecret(null)}>DONE</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </section>
   );
 }

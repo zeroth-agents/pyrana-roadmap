@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
@@ -90,6 +89,36 @@ export default function SettingsPage() {
     }
   }
 
+  function handleCopy() {
+    if (!newToken) return;
+    navigator.clipboard.writeText(newToken);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleSync() {
+    setSyncing(true);
+    setSyncStep(0);
+    setSyncResult(null);
+
+    let step = 0;
+    stepTimerRef.current = setInterval(() => {
+      step = Math.min(step + 1, SYNC_STEPS.length - 1);
+      setSyncStep(step);
+    }, 1800);
+
+    try {
+      const res = await fetch("/api/sync/linear", { method: "POST" });
+      const data = await res.json();
+      setSyncResult(data);
+    } catch {
+      setSyncResult({ created: 0, updated: 0, errors: ["Sync request failed"] });
+    } finally {
+      if (stepTimerRef.current) clearInterval(stepTimerRef.current);
+      setSyncing(false);
+    }
+  }
+
   async function handleRevoke(id: string) {
     setTokens((prev) => prev.filter((t) => t.id !== id));
     try {
@@ -144,160 +173,190 @@ export default function SettingsPage() {
       <OauthApps />
 
       <div>
-      <h2 className="mb-2 text-lg font-medium">Linear Sync</h2>
-      <p className="mb-4 text-sm text-muted-foreground">
-        Pull latest project data from Linear — descriptions, leads, issue counts, and statuses.
-      </p>
-      <div className="mb-8 space-y-3">
-        <Button
-          onClick={async () => {
-            setSyncing(true);
-            setSyncStep(0);
-            setSyncResult(null);
+      <section className="border-2 border-border bg-card shadow-brut-md overflow-hidden mb-8">
+        <header className="bg-ink text-cream px-3.5 py-2.5 flex justify-between items-baseline">
+          <span className="font-display text-[16px] tracking-[-0.02em]">
+            LINEAR SYNC
+          </span>
+          <span className="font-mono text-[10px] tracking-[0.08em]">
+            {syncing
+              ? `TRIGGERED ${new Date().toLocaleTimeString()} · MANUAL`
+              : syncResult
+              ? `LAST SYNC COMPLETE · ${(syncResult.created ?? 0) + (syncResult.updated ?? 0)} CHANGES`
+              : "NOT YET RUN THIS SESSION"}
+          </span>
+        </header>
 
-            // Advance through steps on a timer
-            let step = 0;
-            stepTimerRef.current = setInterval(() => {
-              step = Math.min(step + 1, SYNC_STEPS.length - 1);
-              setSyncStep(step);
-            }, 1800);
-
-            try {
-              const res = await fetch("/api/sync/linear", { method: "POST" });
-              const data = await res.json();
-              setSyncResult(data);
-            } catch {
-              setSyncResult({ created: 0, updated: 0, errors: ["Sync request failed"] });
-            } finally {
-              if (stepTimerRef.current) clearInterval(stepTimerRef.current);
-              setSyncing(false);
-            }
-          }}
-          disabled={syncing}
-        >
-          {syncing ? "Syncing…" : "Sync from Linear"}
-        </Button>
-
-        {syncing && (
-          <div className="space-y-2">
-            {/* Progress bar */}
-            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
-                style={{ width: `${SYNC_STEPS[syncStep].progress}%` }}
-              />
+        <div className="p-4">
+          <div className="flex justify-between items-baseline mb-2.5">
+            <div className="font-display text-[10px] tracking-[0.16em] bg-pillar-ai border-2 border-border px-2 py-1 shadow-brut-sm flex items-center gap-1.5">
+              {syncing && (
+                <span
+                  aria-hidden
+                  className="w-2.5 h-2.5 bg-destructive border-2 border-border inline-block motion-safe:animate-[blip_1s_infinite]"
+                />
+              )}
+              {syncing ? "RUNNING…" : syncResult ? "COMPLETE" : "READY"}
             </div>
-            {/* Step label */}
-            <p className="animate-pulse text-sm text-muted-foreground">
-              {SYNC_STEPS[syncStep].label}
-            </p>
-          </div>
-        )}
-
-        {!syncing && syncResult && (
-          <p className={`text-sm ${syncResult.errors.length > 0 ? "text-destructive" : "text-muted-foreground"}`}>
-            {syncResult.errors.length > 0
-              ? `Error: ${syncResult.errors[0]}`
-              : `Done — ${syncResult.created} created, ${syncResult.updated} updated`}
-          </p>
-        )}
-      </div>
-
-      <h2 className="mb-2 text-lg font-medium">API Tokens</h2>
-      <p className="mb-4 text-sm text-muted-foreground">
-        Personal access tokens for the Claude Code skill. Add to your{" "}
-        <code className="rounded bg-muted px-1 py-0.5 text-xs">.env.local</code>{" "}
-        as <code className="rounded bg-muted px-1 py-0.5 text-xs">ROADMAP_API_TOKEN</code>.
-      </p>
-
-      {newToken && (
-        <Card className="mb-4 border-green-200 bg-green-50">
-          <CardContent className="p-4">
-            <p className="mb-2 text-sm font-medium text-green-800">
-              Token created. Copy it now — it won&apos;t be shown again.
-            </p>
-            <div className="flex gap-2">
-              <Input value={newToken} readOnly className="font-mono text-xs" />
-              <Button
-                size="sm"
-                variant="outline"
-                className="shrink-0"
-                onClick={() => {
-                  navigator.clipboard.writeText(newToken);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                }}
-              >
-                {copied ? "Copied!" : "Copy"}
+            {syncing ? (
+              <span className="font-mono text-[10px] opacity-70">
+                ETA ~{Math.max(1, Math.round((SYNC_STEPS.length - syncStep) * 1.2))}s
+              </span>
+            ) : (
+              <Button onClick={handleSync} disabled={syncing}>
+                {syncResult ? "SYNC AGAIN" : "RUN SYNC"}
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            )}
+          </div>
 
-      <div className="mb-4 space-y-3">
-        <Button onClick={handleCreate} disabled={creating}>
-          {creating ? "Generating…" : "Generate New Token"}
-        </Button>
+          {/* Hatched progress meter */}
+          <div className="h-[26px] border-2 border-border bg-muted shadow-brut-sm relative overflow-hidden">
+            <div
+              className="h-full transition-[width] ease-out duration-500"
+              style={{
+                width: `${
+                  syncing
+                    ? SYNC_STEPS[syncStep]?.progress ?? 0
+                    : syncResult
+                    ? 100
+                    : 0
+                }%`,
+                backgroundImage:
+                  "repeating-linear-gradient(45deg, var(--ink) 0 6px, oklch(0.3 0.01 60) 6px 12px)",
+              }}
+            />
+            <span
+              className="absolute right-2 top-1/2 -translate-y-1/2 font-display text-[14px] tracking-[-0.03em]"
+              style={{ color: "var(--cream)", mixBlendMode: "difference" }}
+            >
+              {syncing
+                ? SYNC_STEPS[syncStep]?.progress ?? 0
+                : syncResult
+                ? 100
+                : 0}
+              %
+            </span>
+          </div>
 
-        {creating && (
-          <div className="space-y-2">
-            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
-                style={{ width: `${TOKEN_STEPS[tokenStep].progress}%` }}
-              />
+          {/* Steps list */}
+          <ul className="mt-4">
+            {SYNC_STEPS.map((step, idx) => {
+              const isDone = syncResult != null || (syncing && idx < syncStep);
+              const isActive = syncing && idx === syncStep;
+              return (
+                <li
+                  key={step.label}
+                  className={cn(
+                    "grid grid-cols-[22px_1fr_auto] gap-2.5 items-center py-1.5 px-0.5 text-[12px] border-b-[1.5px] border-border",
+                    isDone && "opacity-65",
+                    isActive && "bg-muted px-1 font-bold"
+                  )}
+                >
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "w-4 h-4 border-2 border-border relative",
+                      isDone
+                        ? "bg-ink"
+                        : isActive
+                        ? "bg-pillar-ai motion-safe:animate-[stepPulse_0.9s_infinite]"
+                        : "bg-transparent"
+                    )}
+                  >
+                    {isDone && (
+                      <span className="absolute -top-[3px] left-[1px] font-display text-[13px] text-pillar-ai">
+                        ✓
+                      </span>
+                    )}
+                  </span>
+                  <span className={cn(isDone && "line-through")}>
+                    {step.label}
+                    {isActive && "…"}
+                  </span>
+                  <span className="font-mono text-[10px] opacity-60">
+                    {isDone ? "done" : isActive ? "↻" : "—"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+
+          {!syncing && syncResult && syncResult.errors.length > 0 && (
+            <div className="mt-3 border-2 border-border bg-muted px-3 py-2 font-mono text-[11px] text-destructive">
+              ERROR: {syncResult.errors[0]}
             </div>
-            <p className="animate-pulse text-sm text-muted-foreground">
-              {TOKEN_STEPS[tokenStep].label}
-            </p>
+          )}
+        </div>
+      </section>
+
+      <section className="border-2 border-border bg-card shadow-brut-md overflow-hidden mt-6">
+        <header className="bg-ink text-cream px-3.5 py-2.5 flex justify-between items-baseline">
+          <span className="font-display text-[16px] tracking-[-0.02em]">ACCESS TOKENS</span>
+          <span className="font-mono text-[10px] tracking-[0.08em]">
+            {tokens.length} ACTIVE
+          </span>
+        </header>
+
+        {newToken && (
+          <div className="m-4 border-2 border-border bg-pillar-ai shadow-brut-md p-4">
+            <div className="font-display text-[12px] tracking-[0.12em] mb-2">
+              NEW TOKEN — COPY IT NOW (YOU WON&apos;T SEE IT AGAIN)
+            </div>
+            <div className="font-mono text-[13px] bg-background border-2 border-border px-2 py-1.5 break-all">
+              {newToken}
+            </div>
+            <Button onClick={handleCopy} className="mt-2">
+              {copied ? "✓ COPIED" : "COPY"}
+            </Button>
           </div>
         )}
-      </div>
 
-      <div className="space-y-2">
-        {tokens.map((t) => (
-          <Card key={t.id}>
-            <CardContent className="flex items-center justify-between p-3">
-              <div className="text-sm">
-                <span className="font-mono text-xs text-muted-foreground">
+        <div className="p-4 flex flex-col gap-2.5">
+          {tokens.map((t) => (
+            <div
+              key={t.id}
+              className="border-2 border-border bg-card shadow-brut-sm p-3 grid grid-cols-[1fr_auto] gap-2 items-center"
+            >
+              <div>
+                <div className="font-display text-[12px] tracking-[-0.01em]">
                   {t.tokenPrefix || t.id.slice(0, 8)}…
-                </span>
-                <span className="ml-3 text-muted-foreground">
-                  Created {new Date(t.createdAt).toLocaleDateString()}
-                </span>
-                {t.lastUsedAt && (
-                  <span className="ml-3 text-muted-foreground">
-                    Last used {new Date(t.lastUsedAt).toLocaleDateString()}
-                  </span>
-                )}
+                </div>
+                <div className="font-mono text-[10px] opacity-65 mt-1">
+                  CREATED {new Date(t.createdAt).toLocaleDateString()} ·
+                  {t.lastUsedAt
+                    ? ` LAST USED ${new Date(t.lastUsedAt).toLocaleString()}`
+                    : " NEVER USED"}
+                </div>
               </div>
               <Button
-                size="sm"
                 variant="destructive"
                 onClick={() => setRevokeTarget(t.id)}
               >
-                Revoke
+                REVOKE
               </Button>
-            </CardContent>
-          </Card>
-        ))}
-        {tokens.length === 0 && (
-          <p className="text-sm text-muted-foreground">No tokens yet</p>
-        )}
-      </div>
+            </div>
+          ))}
+          <button
+            onClick={handleCreate}
+            disabled={creating}
+            className="border-2 border-dashed border-border bg-transparent p-3 font-display text-[11px] tracking-[0.12em] uppercase flex justify-center items-center gap-1.5 hover:bg-muted disabled:opacity-50 cursor-pointer"
+          >
+            {creating ? TOKEN_STEPS[tokenStep].label.toUpperCase() : "+ MINT NEW TOKEN"}
+          </button>
+        </div>
+      </section>
 
       <Dialog open={!!revokeTarget} onOpenChange={(open) => { if (!open) setRevokeTarget(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Revoke token</DialogTitle>
+            <DialogTitle>REVOKE TOKEN</DialogTitle>
             <DialogDescription>
               This token will stop working immediately. Any integrations using it will lose access. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRevokeTarget(null)}>
-              Cancel
+              CANCEL
             </Button>
             <Button
               variant="destructive"
@@ -306,7 +365,7 @@ export default function SettingsPage() {
                 setRevokeTarget(null);
               }}
             >
-              Revoke
+              REVOKE
             </Button>
           </DialogFooter>
         </DialogContent>

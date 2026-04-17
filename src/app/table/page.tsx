@@ -59,7 +59,9 @@ export default function TablePage() {
   if (loading) {
     return (
       <div>
-        <h1 className="mb-4 text-xl font-semibold">All Initiatives</h1>
+        <h1 className="font-display text-[32px] tracking-[-0.035em] mb-4 border-b-[3px] border-border pb-1.5">
+          TABLE VIEW
+        </h1>
         <div className="space-y-4">
           {/* Filter bar */}
           <div className="flex gap-3">
@@ -96,7 +98,9 @@ export default function TablePage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-xl font-semibold">All Initiatives</h1>
+      <h1 className="font-display text-[32px] tracking-[-0.035em] mb-4 border-b-[3px] border-border pb-1.5">
+        TABLE VIEW
+      </h1>
       <InitiativesTable
         initiatives={initiatives}
         pillars={pillars}

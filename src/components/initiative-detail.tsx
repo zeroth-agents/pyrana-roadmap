@@ -11,13 +11,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { CommentThread } from "./comment-thread";
 import { AttachmentSection } from "./attachments/attachment-section";
 import { AssigneeSelect } from "./assignee-select";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { getPillarSlug, getMonogram } from "@/lib/pillar-utils";
+import { cn } from "@/lib/utils";
 
 interface Milestone {
   name: string;
@@ -85,15 +85,6 @@ interface InitiativeDetailProps {
   onUpdate: () => void;
 }
 
-const STATUS_DOT_COLORS: Record<string, string> = {
-  backlog: "#94a3b8",
-  triage: "#94a3b8",
-  unstarted: "#f59e0b",
-  started: "#3399FF",
-  completed: "#16a34a",
-  canceled: "#ef4444",
-};
-
 const LANE_LABELS: Record<string, string> = {
   now: "Now",
   next: "Next",
@@ -101,13 +92,33 @@ const LANE_LABELS: Record<string, string> = {
   done: "Done",
 };
 
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+function SectionHeader({
+  num,
+  label,
+  detail,
+}: {
+  num: string;
+  label: string;
+  detail?: string;
+}) {
+  return (
+    <div className="mt-7">
+      <div className="flex items-baseline gap-2.5">
+        <span className="font-display text-[11px] tracking-[0.08em] bg-ink text-cream px-1.5 py-0.5">
+          §{num}
+        </span>
+        <span className="font-display text-[16px] tracking-[-0.02em] uppercase">
+          {label}
+        </span>
+        {detail && (
+          <span className="ml-auto text-[9px] tracking-[0.18em] opacity-60 uppercase">
+            {detail}
+          </span>
+        )}
+      </div>
+      <div className="h-[2px] bg-ink mt-1" />
+    </div>
+  );
 }
 
 export function InitiativeDetail({
@@ -198,13 +209,24 @@ export function InitiativeDetail({
   return (
     <Sheet open onOpenChange={onClose}>
       <SheetContent className="data-[side=right]:w-[780px] data-[side=right]:sm:max-w-none overflow-y-auto">
-        <SheetHeader className="px-7 pt-5 pb-0">
-          <SheetTitle className="text-xl">{initiative.title}</SheetTitle>
+        <SheetHeader className="px-7 pt-6 pb-0">
+          <div className="font-display text-[10px] tracking-[0.22em] uppercase bg-ink text-cream px-2 py-0.5 self-start mb-2">
+            {pillarName.toUpperCase()} · {LANE_LABELS[lane]?.toUpperCase() ?? lane.toUpperCase()}
+          </div>
+          <SheetTitle className="font-display text-[32px] leading-[0.95] tracking-[-0.035em] pb-3 border-b-[3px] border-border">
+            {initiative.title}
+          </SheetTitle>
+          {initiative.linearProjectId && (
+            <div className="mt-2 font-mono text-[11px] border-2 border-border bg-muted px-2 py-1 shadow-brut-sm self-start">
+              INIT-{initiative.id.slice(0, 6).toUpperCase()} · LIN
+            </div>
+          )}
         </SheetHeader>
 
         <div className="mt-2 space-y-6 px-7 pb-7">
-          {/* Status badges + progress */}
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Chip row */}
+          <div className="flex flex-wrap gap-2.5">
+            {/* Lane chip (ink filled) */}
             <Select
               value={lane}
               onValueChange={async (newLane: string | null) => {
@@ -218,8 +240,9 @@ export function InitiativeDetail({
                 onUpdate();
               }}
             >
-              <SelectTrigger className="h-7 w-auto gap-1 rounded-full bg-primary/10 text-primary border-0 px-3 text-xs font-medium">
-                <span>{LANE_LABELS[lane] ?? lane}</span>
+              <SelectTrigger className="h-auto border-2 border-foreground bg-ink text-cream px-2.5 py-1 shadow-[2px_2px_0_var(--foreground)] font-bold text-[11px] tracking-[0.04em] w-auto gap-1.5">
+                <span className="text-[8px] tracking-[0.2em] uppercase opacity-70 mr-0.5">Lane</span>
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(LANE_LABELS).map(([value, label]) => (
@@ -227,10 +250,25 @@ export function InitiativeDetail({
                 ))}
               </SelectContent>
             </Select>
-            <Badge variant="outline">{pillarName}</Badge>
-            <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-0">
+
+            {/* Pillar chip (color-filled) */}
+            <div
+              className={cn(
+                "flex items-center gap-1.5 border-2 border-border px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)]",
+                `bg-pillar-${getPillarSlug(pillarName)}`
+              )}
+            >
+              <span className="text-[8px] tracking-[0.2em] uppercase opacity-55 mr-0.5">Pillar</span>
+              {pillarName}
+            </div>
+
+            {/* Size + issue count chip */}
+            <div className="border-2 border-border bg-destructive px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)] text-ink flex items-center gap-1.5">
+              <span className="text-[8px] tracking-[0.2em] uppercase opacity-55 mr-0.5">Size</span>
               {initiative.size} · {total} issues
-            </Badge>
+            </div>
+
+            {/* Assignee */}
             <AssigneeSelect
               value={assigneeId}
               onChange={async (userId) => {
@@ -245,84 +283,52 @@ export function InitiativeDetail({
             />
           </div>
 
-          {/* Progress bar */}
+          {/* Progress rail */}
           {total > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-all"
-                  style={{ width: `${progress}%` }}
-                />
+            <div className="grid grid-cols-[1fr_auto] gap-5 items-center">
+              <div className="h-5 border-2 border-border bg-muted overflow-hidden relative">
+                <div className="h-full bg-foreground transition-all" style={{ width: `${progress}%` }} />
               </div>
-              <span className="text-xs text-muted-foreground">{done}/{total} done ({progress}%)</span>
+              <div className="font-display text-[44px] leading-[0.9] tracking-[-0.05em] flex items-baseline gap-1">
+                {progress}
+                <span className="text-[22px]">%</span>
+                <span className="text-[12px] tracking-[0.15em] opacity-60 ml-2">
+                  {done} / {total} DONE
+                </span>
+              </div>
             </div>
           )}
 
           {/* Metadata row */}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex gap-3.5 font-mono text-[10px] tracking-[0.04em] items-center">
             {initiative.linearProjectUrl && (
               <a
                 href={initiative.linearProjectUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-secondary hover:underline"
+                className="font-bold underline-offset-2 hover:underline"
               >
-                View in Linear ↗
+                VIEW IN LINEAR ↗
               </a>
             )}
             {initiative.linearSyncedAt && (
-              <span>Synced {new Date(initiative.linearSyncedAt).toLocaleString()}</span>
+              <>
+                <span className="opacity-30">·</span>
+                <span>
+                  SYNCED {new Date(initiative.linearSyncedAt).toLocaleTimeString()} · {new Date(initiative.linearSyncedAt).toLocaleDateString()}
+                </span>
+              </>
             )}
           </div>
 
-          {/* Project subtitle + description */}
-          {initiative.description && (
-            <p className="text-sm text-muted-foreground leading-relaxed">{initiative.description}</p>
-          )}
-          {initiative.content && (
-            <div className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{initiative.content}</div>
-          )}
-
-          {/* Milestones */}
-          {(() => {
-            const milestones: Milestone[] = (() => { try { return JSON.parse(initiative.milestones); } catch { return []; } })();
-            if (milestones.length === 0) return null;
-            return (
-              <>
-                <Separator />
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-foreground/60">
-                    Milestones ({milestones.length})
-                  </span>
-                  <div className="mt-3 flex flex-col gap-3">
-                    {milestones.map((m) => (
-                      <div key={m.name} className="rounded-md border bg-card p-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">{m.name}</span>
-                          <span className="text-xs text-muted-foreground">{Math.round(m.progress)}%</span>
-                        </div>
-                        {m.description && (
-                          <p className="mt-1 text-xs text-muted-foreground">{m.description}</p>
-                        )}
-                        <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
-                          <div
-                            className="h-full rounded-full bg-primary transition-all"
-                            style={{ width: `${Math.round(m.progress)}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
-            );
-          })()}
-
-          <Separator />
-
-          {/* Rationale (editable) */}
-          <div>
-            <label className="text-xs font-medium">Rationale</label>
+          {/* §01 Why — Rationale */}
+          <SectionHeader num="01" label="Why" detail="Rationale" />
+          {(rationale || initiative.why) ? (
+            <blockquote className="mt-3 font-serif italic text-[15px] leading-[1.35] bg-muted border-2 border-border p-3.5 shadow-brut-sm before:content-['\u201C'] before:text-[22px] before:not-italic before:opacity-60 before:mr-0.5 after:content-['\u201D'] after:text-[22px] after:not-italic after:opacity-60 after:ml-0.5">
+              {rationale || initiative.why}
+            </blockquote>
+          ) : null}
+          <div className="mt-3">
             <Textarea
               value={rationale}
               onChange={(e) => setRationale(e.target.value)}
@@ -332,8 +338,8 @@ export function InitiativeDetail({
                   handleSaveRationale();
                 }
               }}
-              className="mt-1"
               rows={2}
+              placeholder="Why are we doing this?"
             />
             {rationale !== initiative.why && (
               <Button
@@ -347,150 +353,188 @@ export function InitiativeDetail({
             )}
           </div>
 
-          <Separator />
+          {/* §02 Scope — description + content */}
+          {(initiative.description || initiative.content) && (
+            <>
+              <SectionHeader num="02" label="Scope" detail="What's in, what's out" />
+              {initiative.description && (
+                <p className="mt-3 text-[13px] leading-[1.55] text-ink-soft">
+                  {initiative.description}
+                </p>
+              )}
+              {initiative.content && (
+                <div className="mt-2 text-[13px] leading-[1.55] whitespace-pre-wrap">
+                  {initiative.content}
+                </div>
+              )}
+            </>
+          )}
 
-          {/* Issues list */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground/60">
-                Issues ({issues.length})
-              </span>
-            </div>
-
-            {/* New issue form */}
-            {initiative.linearProjectId && (
-              <div className="flex gap-2 mb-3">
-                <Input
-                  value={newIssueTitle}
-                  onChange={(e) => setNewIssueTitle(e.target.value)}
-                  placeholder="New issue title..."
-                  className="text-sm"
-                  onKeyDown={(e) => e.key === "Enter" && handleCreateIssue()}
-                />
-                <Button
-                  size="sm"
-                  onClick={handleCreateIssue}
-                  disabled={creatingIssue || !newIssueTitle.trim()}
-                >
-                  Create
-                </Button>
-              </div>
-            )}
-
-            {loading ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">Loading issues from Linear...</p>
-            ) : issues.length === 0 && initiative.linearProjectId ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">No issues yet</p>
-            ) : !initiative.linearProjectId ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">Not linked to a Linear project</p>
-            ) : (
-              <div className="flex flex-col gap-1">
-                {issues.map((issue) => {
-                  const isExpanded = expandedIssueId === issue.id;
-                  const dotColor = STATUS_DOT_COLORS[issue.statusType] ?? "#94a3b8";
-
-                  return (
-                    <div key={issue.id}>
-                      {/* Issue row */}
-                      <button
-                        className="w-full flex items-center gap-2 rounded-md px-2.5 py-2 text-left hover:bg-muted/50 transition-colors"
-                        onClick={() => setExpandedIssueId(isExpanded ? null : issue.id)}
+          {/* §03 Milestones — stamp-cards */}
+          {(() => {
+            const milestones: Milestone[] = (() => {
+              try { return JSON.parse(initiative.milestones); } catch { return []; }
+            })();
+            if (milestones.length === 0) return null;
+            return (
+              <>
+                <SectionHeader num="03" label="Milestones" detail={String(milestones.length)} />
+                <div className="mt-3 flex flex-col gap-2.5">
+                  {milestones.map((m) => {
+                    const pct = Math.round(m.progress);
+                    const done = pct >= 100;
+                    return (
+                      <div
+                        key={m.name}
+                        className={cn(
+                          "border-2 border-border shadow-brut-sm p-3 grid grid-cols-[1fr_auto] gap-1.5",
+                          done ? "bg-pillar-bx" : "bg-card"
+                        )}
                       >
-                        <div
-                          className="h-2 w-2 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: dotColor }}
-                        />
-                        <span className="text-sm flex-1 truncate">{issue.title}</span>
-                        <span className="text-xs text-muted-foreground">{issue.identifier}</span>
-                        {issue.assigneeName && (
-                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[8px] font-semibold text-primary-foreground flex-shrink-0">
-                            {getInitials(issue.assigneeName)}
+                        <div className="font-display text-[13px] tracking-[-0.01em]">{m.name}</div>
+                        <div className="font-display text-[16px] tracking-[-0.03em]">{pct}%</div>
+                        {m.description && (
+                          <p className="col-span-full text-[11px] leading-[1.4] opacity-75">
+                            {m.description}
+                          </p>
+                        )}
+                        <div className="col-span-full h-1.5 border-[1.5px] border-border bg-muted mt-1">
+                          <div className="h-full bg-foreground" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            );
+          })()}
+
+          {/* §04 Issues */}
+          <SectionHeader num="04" label="Issues" detail={`${issues.length} · LINEAR`} />
+
+          {initiative.linearProjectId && (
+            <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+              <Input
+                value={newIssueTitle}
+                onChange={(e) => setNewIssueTitle(e.target.value)}
+                placeholder="New issue title…"
+                onKeyDown={(e) => e.key === "Enter" && handleCreateIssue()}
+              />
+              <Button onClick={handleCreateIssue} disabled={creatingIssue || !newIssueTitle.trim()}>
+                + Create
+              </Button>
+            </div>
+          )}
+
+          {loading ? (
+            <p className="text-sm text-ink-soft py-4 text-center mt-3">Loading issues from Linear…</p>
+          ) : issues.length === 0 && initiative.linearProjectId ? (
+            <p className="text-sm text-ink-soft py-4 text-center mt-3">No issues yet</p>
+          ) : !initiative.linearProjectId ? (
+            <p className="text-sm text-ink-soft py-4 text-center mt-3">Not linked to a Linear project</p>
+          ) : (
+            <div className="mt-3 border-t-2 border-border">
+              {issues.map((issue) => {
+                const isExpanded = expandedIssueId === issue.id;
+                const statusBg =
+                  issue.statusType === "completed" ? "bg-pillar-bx" :
+                  issue.statusType === "started"   ? "bg-pillar-dc" :
+                  issue.statusType === "unstarted" ? "bg-pillar-ai" :
+                                                     "bg-cream-2";
+                return (
+                  <div key={issue.id}>
+                    <button
+                      className="w-full grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center py-2 px-0.5 border-b-2 border-border text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+                      aria-expanded={isExpanded}
+                      onClick={() => setExpandedIssueId(isExpanded ? null : issue.id)}
+                    >
+                      <span className={cn("h-3 w-3 border-2 border-border", statusBg)} aria-hidden />
+                      <span className="text-[12px] font-semibold truncate">{issue.title}</span>
+                      <span className="font-mono text-[10px] tracking-[0.04em] opacity-70">{issue.identifier}</span>
+                      {issue.assigneeName && (
+                        <span className="h-[18px] w-[18px] border-[1.5px] border-border bg-pillar-pf font-display text-[9px] flex items-center justify-center">
+                          {getMonogram(issue.assigneeName)}
+                        </span>
+                      )}
+                    </button>
+                    {isExpanded && (
+                      <div className="ml-6 mr-2 mb-2 mt-1 border-2 border-border bg-card p-3 space-y-3">
+                        {issue.description && (
+                          <div className="prose prose-xs prose-muted max-w-none text-xs text-muted-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-xs [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:my-1 [&_ul]:my-1 [&_ul]:pl-4 [&_li]:my-0.5 [&_strong]:text-foreground/70">
+                            <Markdown
+                              remarkPlugins={[remarkGfm]}
+                              components={{
+                                a: ({ children, href, ...props }) => (
+                                  <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline decoration-primary/40 hover:decoration-primary" {...props}>
+                                    {children}
+                                  </a>
+                                ),
+                              }}
+                            >
+                              {issue.description}
+                            </Markdown>
                           </div>
                         )}
-                      </button>
-
-                      {/* Expanded detail */}
-                      {isExpanded && (
-                        <div className="ml-6 mr-2 mb-2 mt-1 rounded-md border bg-card p-3 space-y-3">
-                          {issue.description && (
-                            <div className="prose prose-xs prose-muted max-w-none text-xs text-muted-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-xs [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:my-1 [&_ul]:my-1 [&_ul]:pl-4 [&_li]:my-0.5 [&_strong]:text-foreground/70">
-                              <Markdown
-                                remarkPlugins={[remarkGfm]}
-                                components={{
-                                  a: ({ children, href, ...props }) => (
-                                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline decoration-primary/40 hover:decoration-primary" {...props}>
-                                      {children}
-                                    </a>
-                                  ),
-                                }}
-                              >
-                                {issue.description}
-                              </Markdown>
-                            </div>
-                          )}
-                          <div className="flex gap-3">
-                            {/* Status dropdown */}
-                            <div className="flex-1">
-                              <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Status</label>
-                              <Select
-                                value={issue.status}
-                                onValueChange={(name) => {
-                                  const state = teamStates.find((s) => s.name === name);
-                                  if (state) handleUpdateIssue(issue.id, { stateId: state.id });
-                                }}
-                              >
-                                <SelectTrigger className="h-8 text-xs mt-1">
-                                  <SelectValue placeholder={issue.status} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {teamStates.map((s) => (
-                                    <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            {/* Assignee dropdown */}
-                            <div className="flex-1">
-                              <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Assignee</label>
-                              <Select
-                                value={issue.assigneeName ?? "Unassigned"}
-                                onValueChange={(name) => {
-                                  if (name === "Unassigned") {
-                                    handleUpdateIssue(issue.id, { assigneeId: null });
-                                  } else {
-                                    const member = teamMembers.find((m) => m.name === name);
-                                    if (member) handleUpdateIssue(issue.id, { assigneeId: member.id });
-                                  }
-                                }}
-                              >
-                                <SelectTrigger className="h-8 text-xs mt-1">
-                                  <SelectValue placeholder={issue.assigneeName ?? "Unassigned"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Unassigned">Unassigned</SelectItem>
-                                  {teamMembers.map((m) => (
-                                    <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
+                        <div className="flex gap-3">
+                          {/* Status dropdown */}
+                          <div className="flex-1">
+                            <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Status</label>
+                            <Select
+                              value={issue.status}
+                              onValueChange={(name) => {
+                                const state = teamStates.find((s) => s.name === name);
+                                if (state) handleUpdateIssue(issue.id, { stateId: state.id });
+                              }}
+                            >
+                              <SelectTrigger className="h-8 text-xs mt-1">
+                                <SelectValue placeholder={issue.status} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {teamStates.map((s) => (
+                                  <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-[10px]">{issue.priorityLabel}</Badge>
-                            {issue.labels.map((label) => (
-                              <Badge key={label} variant="secondary" className="text-[10px]">{label}</Badge>
-                            ))}
+                          {/* Assignee dropdown */}
+                          <div className="flex-1">
+                            <label className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Assignee</label>
+                            <Select
+                              value={issue.assigneeName ?? "Unassigned"}
+                              onValueChange={(name) => {
+                                if (name === "Unassigned") {
+                                  handleUpdateIssue(issue.id, { assigneeId: null });
+                                } else {
+                                  const member = teamMembers.find((m) => m.name === name);
+                                  if (member) handleUpdateIssue(issue.id, { assigneeId: member.id });
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="h-8 text-xs mt-1">
+                                <SelectValue placeholder={issue.assigneeName ?? "Unassigned"} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Unassigned">Unassigned</SelectItem>
+                                {teamMembers.map((m) => (
+                                  <SelectItem key={m.id} value={m.name}>{m.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <Separator />
+                        <div className="flex items-center gap-2 font-mono text-[10px]">
+                          <span className="border-2 border-border px-1.5 py-0.5">{issue.priorityLabel}</span>
+                          {issue.labels.map((label) => (
+                            <span key={label} className="border border-border px-1.5 py-0.5 opacity-70">{label}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Attachments */}
           <AttachmentSection
@@ -498,9 +542,24 @@ export function InitiativeDetail({
             targetId={initiative.id}
           />
 
-          <Separator />
-
           <CommentThread targetType="initiative" targetId={initiative.id} />
+
+          {/* Footer actions */}
+          <div className="mt-8 flex gap-2.5">
+            <Button onClick={handleSaveRationale} className="shadow-brut-accent">
+              SAVE CHANGES
+            </Button>
+            {initiative.linearProjectUrl && (
+              <a
+                href={initiative.linearProjectUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center border-2 border-border bg-transparent text-foreground px-4 py-2 font-display uppercase tracking-[0.08em] text-sm shadow-brut-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_var(--shadow-color)] transition-transform"
+              >
+                OPEN IN LINEAR ↗
+              </a>
+            )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>

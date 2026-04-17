@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { BoardView } from "@/components/board/board-view";
 import { InitiativeDetail } from "@/components/initiative-detail";
-import { AssigneeSelect } from "@/components/assignee-select";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Initiative {
@@ -121,17 +120,11 @@ export default function BoardPage() {
 
   return (
     <>
-      <div className="mb-4 flex items-center gap-2 px-4">
-        <span className="text-xs text-muted-foreground">Assignee:</span>
-        <AssigneeSelect
-          value={assigneeFilter}
-          onChange={setAssigneeFilter}
-          className="h-7 w-[180px] text-xs"
-        />
-      </div>
       <BoardView
         pillars={pillars}
         initiatives={initiatives}
+        assigneeFilter={assigneeFilter}
+        onAssigneeFilterChange={setAssigneeFilter}
         onReorder={handleReorder}
         onCardClick={(init) => {
           console.log("[page] onCardClick called", init.title);

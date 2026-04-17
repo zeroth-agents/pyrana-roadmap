@@ -2,14 +2,8 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { getPillarSlug, getMonogram } from "@/lib/pillar-utils";
 
 interface Initiative {
   id: string;
@@ -32,27 +26,19 @@ interface InitiativeCardProps {
   initiative: Initiative;
   onClick: () => void;
   allInitiatives: Initiative[];
+  pillarName?: string;
 }
 
-const SIZE_COLORS: Record<string, string> = {
-  S: "bg-green-100 text-green-700",
-  M: "bg-yellow-100 text-yellow-700",
-  L: "bg-red-100 text-red-700",
+const SIZE_BG: Record<string, string> = {
+  S: "bg-pillar-bx",
+  M: "bg-pillar-ai",
+  L: "bg-pillar-ac",
 };
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
 
 export function InitiativeCard({
   initiative,
   onClick,
-  allInitiatives,
+  pillarName,
 }: InitiativeCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: initiative.id, data: initiative });
@@ -62,91 +48,75 @@ export function InitiativeCard({
     transition,
   };
 
-  const depNames = initiative.dependsOn
-    .map((id) => allInitiatives.find((i) => i.id === id)?.title)
-    .filter(Boolean);
+  const pillarSlug = getPillarSlug(pillarName);
+  const total = initiative.issueCountTotal ?? 0;
+  const done = initiative.issueCountDone ?? 0;
+  const pct = total > 0 ? Math.round((done / total) * 100) : null;
+  const why = initiative.why || initiative.description || initiative.content;
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-    >
+    <div ref={setNodeRef} style={style}>
       <div
-        className="cursor-pointer overflow-hidden rounded-lg bg-card shadow-[0_2px_8px_rgba(57,65,80,0.08)] transition-shadow hover:shadow-md dark:border dark:border-border"
+        className={cn(
+          "cursor-pointer border-2 border-border shadow-brut-sm transition-transform",
+          "hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[4px_4px_0_var(--shadow-color)]",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
+          isDragging && "cursor-grabbing opacity-80"
+        )}
+        style={{
+          backgroundColor: `color-mix(in oklab, var(--pillar-${pillarSlug}) 22%, var(--card))`,
+        }}
         onClick={onClick}
+        {...attributes}
+        {...listeners}
       >
-        {/* Slate header — drag handle */}
-        <div
-          className={cn(
-            "flex items-center justify-between bg-card-header px-2.5 py-1.5",
-            isDragging ? "cursor-grabbing" : "cursor-grab"
-          )}
-          {...attributes}
-          {...listeners}
-        >
-          <div className="flex items-center gap-1 overflow-hidden">
-            <GripVertical className="h-3.5 w-3.5 shrink-0 text-card-header-foreground/50" />
-            <span className="truncate text-xs font-semibold text-card-header-foreground">
-              {initiative.title}
-            </span>
-          </div>
-          <Badge
-            variant="outline"
-            className={cn(
-              "ml-2 shrink-0 border-0 text-[10px]",
-              SIZE_COLORS[initiative.size]
-            )}
-          >
-            {initiative.size}
-          </Badge>
-        </div>
-
-        {/* Card body */}
         <div className="px-2.5 py-2">
-          {(initiative.description || initiative.content || initiative.why) && (
-            <p className="text-xs text-muted-foreground line-clamp-2">
-              {initiative.description || initiative.content || initiative.why}
+          {/* Top row: title + size */}
+          <div className="grid grid-cols-[1fr_auto] gap-2 items-start">
+            <h3 className="font-sans font-extrabold text-[13px] leading-[1.2] tracking-[-0.01em]">
+              {initiative.title}
+            </h3>
+            <div
+              className={cn(
+                "h-[26px] w-[26px] border-2 border-border flex items-center justify-center font-display text-[15px]",
+                SIZE_BG[initiative.size] ?? "bg-ink text-cream"
+              )}
+            >
+              {initiative.size}
+            </div>
+          </div>
+
+          {/* Why */}
+          {why && (
+            <p className="text-[10.5px] leading-[1.35] mt-1.5 text-ink-soft line-clamp-2">
+              {why}
             </p>
           )}
 
-          {/* Progress bar */}
-          {(initiative.issueCountTotal ?? 0) > 0 && (
-            <div className="mt-2 flex items-center gap-1.5">
-              <div className="h-0.5 flex-1 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-all"
-                  style={{
-                    width: `${Math.round(((initiative.issueCountDone ?? 0) / (initiative.issueCountTotal ?? 1)) * 100)}%`,
-                  }}
-                />
+          {/* Progress */}
+          {total > 0 && pct !== null && (
+            <div className="mt-2 grid grid-cols-[1fr_auto] gap-2 items-center">
+              <div className="h-2 border-2 border-border bg-muted overflow-hidden">
+                <div className="h-full bg-foreground" style={{ width: `${pct}%` }} />
               </div>
-              <span className="text-[10px] text-muted-foreground">
-                {initiative.issueCountDone ?? 0}/{initiative.issueCountTotal ?? 0}
+              <span className="font-display text-[12px] tracking-[-0.03em] leading-none min-w-[34px] text-right">
+                {pct}%
               </span>
             </div>
           )}
 
-          {/* Dependency indicator */}
-          {depNames.length > 0 && (
-            <div className="mt-2">
-              <Tooltip>
-                <TooltipTrigger className="inline-block h-2 w-2 rounded-full bg-primary/60" />
-                <TooltipContent>
-                  Depends on: {depNames.join(", ")}
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          )}
-
-          {/* Assignee avatar */}
+          {/* Footer: assignee */}
           {initiative.assigneeName && (
-            <div className="mt-2 flex items-center gap-1.5">
-              <div className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[7px] font-semibold text-primary-foreground">
-                {getInitials(initiative.assigneeName)}
+            <div className="mt-2 flex items-center gap-1.5 border-t-[1.5px] border-border pt-1.5">
+              <div
+                className={cn(
+                  "h-5 w-5 border-[1.5px] border-border font-display text-[9px] flex items-center justify-center",
+                  `bg-pillar-${pillarSlug}`
+                )}
+              >
+                {getMonogram(initiative.assigneeName)}
               </div>
-              <span className="text-[10px] text-muted-foreground truncate">
-                {initiative.assigneeName}
-              </span>
+              <span className="text-[10px] font-bold">{initiative.assigneeName}</span>
             </div>
           )}
         </div>

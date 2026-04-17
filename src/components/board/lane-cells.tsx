@@ -28,6 +28,7 @@ interface Initiative {
 
 interface LaneCellProps {
   pillarId: string;
+  pillarName: string;
   lane: string;
   items: Initiative[];
   allInitiatives: Initiative[];
@@ -37,6 +38,7 @@ interface LaneCellProps {
 
 export function LaneCell({
   pillarId,
+  pillarName,
   lane,
   items,
   allInitiatives,
@@ -53,16 +55,25 @@ export function LaneCell({
         items={items.map((i) => i.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="flex flex-col gap-2">
-          {items.map((initiative) => (
-            <InitiativeCard
-              key={initiative.id}
-              initiative={initiative}
-              allInitiatives={allInitiatives}
-              onClick={() => onCardClick(initiative)}
-            />
-          ))}
-        </div>
+        {items.length === 0 ? (
+          <div
+            aria-hidden
+            className="border-2 border-dashed border-border hatch-ink min-h-[60px]"
+            style={{ opacity: 0.28 }}
+          />
+        ) : (
+          <div className="flex flex-col gap-2">
+            {items.map((initiative) => (
+              <InitiativeCard
+                key={initiative.id}
+                initiative={initiative}
+                allInitiatives={allInitiatives}
+                pillarName={pillarName}
+                onClick={() => onCardClick(initiative)}
+              />
+            ))}
+          </div>
+        )}
       </SortableContext>
     </div>
   );

@@ -14,6 +14,10 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { InitiativeCard } from "./initiative-card";
 import { LaneCell } from "./lane-cells";
+import { CapacityIndicator } from "./capacity-indicator";
+import { AssigneeSelect } from "@/components/assignee-select";
+import { cn } from "@/lib/utils";
+import { getPillarSlug, getPillarAbbr } from "@/lib/pillar-utils";
 
 interface Pillar {
   id: string;
@@ -45,6 +49,8 @@ interface Initiative {
 interface BoardViewProps {
   pillars: Pillar[];
   initiatives: Initiative[];
+  assigneeFilter: string | null;
+  onAssigneeFilterChange: (v: string | null) => void;
   onReorder: (updates: Array<{
     id: string;
     sortOrder: number;
@@ -67,6 +73,8 @@ const OPTIONAL_LANES = [
 export function BoardView({
   pillars,
   initiatives,
+  assigneeFilter,
+  onAssigneeFilterChange,
   onReorder,
   onCardClick,
 }: BoardViewProps) {
@@ -143,32 +151,82 @@ export function BoardView({
   const backlogCount = initiatives.filter((i) => i.lane === "backlog").length;
   const doneCount = initiatives.filter((i) => i.lane === "done").length;
 
+  const activePillarCount = new Set(
+    initiatives.filter((i) => i.lane === "now").map((i) => i.pillarId)
+  ).size;
+
+  const quarterLabel = (() => {
+    const d = new Date();
+    const q = Math.floor(d.getMonth() / 3) + 1;
+    return `Q${q} · ${d.getFullYear()}`;
+  })();
+
   return (
     <TooltipProvider>
-      <div className="mb-3 flex items-center gap-2">
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={() => setShowBacklog(!showBacklog)}
-            className={`rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors ${
-              showBacklog
-                ? "border-primary/30 bg-primary/10 text-primary"
-                : "border-border text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Backlog{backlogCount > 0 ? ` (${backlogCount})` : ""}
-          </button>
-          <button
-            onClick={() => setShowDone(!showDone)}
-            className={`rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors ${
-              showDone
-                ? "border-primary/30 bg-primary/10 text-primary"
-                : "border-border text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Done{doneCount > 0 ? ` (${doneCount})` : ""}
-          </button>
-        </div>
+      {/* Top strip: title + capacity gauge + assignee chip */}
+      <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-stretch mb-4">
+        <h1 className="font-display text-[44px] leading-[0.95] tracking-[-0.045em] border-b-[3px] border-ink pb-1.5 flex items-baseline gap-3">
+          THE&nbsp;ROADMAP
+          <span className="bg-ink text-cream font-sans text-[11px] font-semibold tracking-[0.12em] px-2 py-0.5 self-center translate-y-[-6px]">
+            {quarterLabel}
+          </span>
+        </h1>
+        <CapacityIndicator activePillarCount={activePillarCount} />
+        <AssigneeSelect
+          value={assigneeFilter}
+          onChange={onAssigneeFilterChange}
+          className="w-[200px]"
+        />
       </div>
+
+      {/* Lane toggles row */}
+      <div className="flex items-center gap-2.5 mb-3">
+        <span className="text-[10px] font-display uppercase tracking-[0.2em] text-ink-soft">
+          Show →
+        </span>
+        <button
+          onClick={() => setShowBacklog(!showBacklog)}
+          aria-pressed={showBacklog}
+          className={cn(
+            "border-2 border-foreground px-3 py-1 font-sans text-[11px] font-bold uppercase tracking-[0.1em] flex items-center gap-1.5 transition-colors",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
+            showBacklog ? "bg-ink text-cream" : "bg-transparent text-foreground"
+          )}
+        >
+          Backlog
+          {backlogCount > 0 && (
+            <span className="border-[1.5px] border-foreground bg-background text-foreground px-1 text-[10px] font-display leading-[1.4]">
+              {backlogCount}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setShowDone(!showDone)}
+          aria-pressed={showDone}
+          className={cn(
+            "border-2 border-foreground px-3 py-1 font-sans text-[11px] font-bold uppercase tracking-[0.1em] flex items-center gap-1.5 transition-colors",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
+            showDone ? "bg-ink text-cream" : "bg-transparent text-foreground"
+          )}
+        >
+          Done
+          {doneCount > 0 && (
+            <span className="border-[1.5px] border-foreground bg-background text-foreground px-1 text-[10px] font-display leading-[1.4]">
+              {doneCount}
+            </span>
+          )}
+        </button>
+      </div>
+      {pillars.length === 0 ? (
+        <div className="border-2 border-dashed border-foreground hatch-ink p-10 flex flex-col items-center justify-center gap-3" style={{ opacity: 0.9 }}>
+          <span className="font-display text-[20px] tracking-[-0.02em] uppercase bg-background px-3 py-1 border-2 border-foreground">
+            No pillars yet
+          </span>
+          <p className="font-serif italic text-[13px] max-w-[48ch] text-center bg-background px-3 py-1.5 border-2 border-foreground">
+            Run a Linear sync from <span className="font-mono not-italic">/settings</span> or seed the database (<span className="font-mono not-italic">pnpm db:seed</span>) to populate the five pillars.
+          </p>
+        </div>
+      ) : (
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -179,18 +237,40 @@ export function BoardView({
           className="overflow-x-auto pb-4"
           style={{
             display: "grid",
-            gridTemplateColumns: `repeat(${pillars.length}, minmax(240px, 1fr))`,
-            gap: "16px",
+            gridTemplateColumns: `44px repeat(${pillars.length}, minmax(240px, 1fr))`,
+            gap: "14px",
           }}
         >
-          {/* Pillar headers */}
-          {pillars.map((pillar) => (
-            <div key={pillar.id} className="flex items-center justify-between pb-1">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/60">
-                {pillar.name}
-              </h3>
-            </div>
-          ))}
+          {/* Leading gutter cell under the title row */}
+          <div aria-hidden />
+          {/* Pillar headers — colored brutalist blocks */}
+          {pillars.map((pillar, idx) => {
+            const slug = getPillarSlug(pillar.name);
+            const abbr = getPillarAbbr(pillar.name);
+            return (
+              <div
+                key={pillar.id}
+                className={cn(
+                  "border-2 border-border p-3 min-h-[96px] shadow-brut-sm flex flex-col justify-between",
+                  `bg-pillar-${slug}`
+                )}
+              >
+                <span className="font-display text-[11px] tracking-[0.12em] bg-ink text-cream px-1.5 py-0.5 self-start">
+                  PILLAR 0{idx + 1} · {abbr}
+                </span>
+                <div className="mt-1.5">
+                  <h2 className="font-display text-[19px] leading-[0.95] tracking-[-0.03em]">
+                    {pillar.name}
+                  </h2>
+                  {pillar.customerStory && (
+                    <p className="font-serif italic text-[11px] leading-[1.25] mt-2 opacity-85">
+                      &ldquo;{pillar.customerStory}&rdquo;
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
 
           {/* Lane rows */}
           {visibleLanes.map((lane) => {
@@ -200,29 +280,29 @@ export function BoardView({
             if ((lane.id === "done" || lane.id === "backlog") && !hasAnyItems) return null;
 
             return [
-              // Lane header row
-              ...pillars.map((pillar, idx) => (
-                <div
-                  key={`${lane.id}-header-${pillar.id}`}
-                  className="flex items-center gap-2 pt-2"
+              // Gutter cell with rotated lane label
+              <div
+                key={`${lane.id}-gutter`}
+                className="flex flex-col items-end justify-end border-r-[3px] border-border pb-3 -mr-2"
+              >
+                <span
+                  aria-hidden
+                  className="font-display text-[28px] leading-[0.9] tracking-[0.04em] uppercase"
+                  style={{
+                    writingMode: "vertical-rl",
+                    transform: "rotate(180deg)",
+                  }}
                 >
-                  {idx === 0 ? (
-                    <>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                        {lane.label}
-                      </span>
-                      <div className="h-px flex-1 bg-border" />
-                    </>
-                  ) : (
-                    <div className="h-px flex-1 bg-border" />
-                  )}
-                </div>
-              )),
-              // Lane card cells
+                  {lane.label}
+                </span>
+                <span className="sr-only">Lane: {lane.label}</span>
+              </div>,
+              // Lane card cells across pillars
               ...pillars.map((pillar) => (
                 <LaneCell
                   key={`${lane.id}-${pillar.id}`}
                   pillarId={pillar.id}
+                  pillarName={pillar.name}
                   lane={lane.id}
                   items={boardInitiatives.filter(
                     (i) => i.pillarId === pillar.id && i.lane === lane.id
@@ -232,6 +312,12 @@ export function BoardView({
                   droppable={lane.droppable}
                 />
               )),
+              // Full-width divider rule after the lane
+              <div
+                key={`${lane.id}-divider`}
+                aria-hidden
+                style={{ gridColumn: "1 / -1", borderTop: "3px solid var(--border)", height: 0, marginTop: "2px" }}
+              />,
             ];
           })}
         </div>
@@ -240,11 +326,13 @@ export function BoardView({
             <InitiativeCard
               initiative={activeInitiative}
               allInitiatives={initiatives}
+              pillarName={pillars.find((p) => p.id === activeInitiative.pillarId)?.name}
               onClick={() => {}}
             />
           )}
         </DragOverlay>
       </DndContext>
+      )}
     </TooltipProvider>
   );
 }

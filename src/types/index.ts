@@ -74,6 +74,7 @@ export const UpdateIdeaSchema = z.object({
 export const PromoteIdeaSchema = z.object({
   pillarId: z.string().uuid(),
   lane: Lane.optional().default("backlog"),
+  linearProjectId: z.string().optional(),
 });
 
 // Attachment schemas

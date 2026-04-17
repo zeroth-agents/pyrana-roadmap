@@ -27,20 +27,19 @@ describe("Logo", () => {
     const svg = container.querySelector("svg")!;
     expect(svg).toHaveClass("custom-class");
     expect(svg.getAttribute("width")).toBe("48");
+    expect(svg.getAttribute("height")).toBe("38");
   });
 
-  it("unframed variant allows recoloring via currentColor", () => {
-    const { container } = render(
-      <Logo variant="unframed" className="text-white" />
-    );
+  it("unframed variant's ink paths use currentColor", () => {
+    const { container } = render(<Logo variant="unframed" />);
     const svg = container.querySelector("svg")!;
-    // ink paths should use currentColor so parent color cascades
     const inkPaths = Array.from(svg.querySelectorAll("path")).filter(
-      (p) => !p.getAttribute("class")?.includes("cls-0") &&
-             !p.getAttribute("class")?.includes("cls-1")
+      (p) => p.getAttribute("fill") === "currentColor"
     );
+    // Body silhouette + 4 fin/jaw/bar paths = 5 ink paths in the unframed variant
+    expect(inkPaths.length).toBe(5);
     inkPaths.forEach((p) => {
-      expect(p.getAttribute("fill") ?? "currentColor").toMatch(/currentColor|^$/);
+      expect(p.getAttribute("fill")).toBe("currentColor");
     });
   });
 });

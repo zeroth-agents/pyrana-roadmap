@@ -18,6 +18,8 @@ import { AttachmentSection } from "./attachments/attachment-section";
 import { AssigneeSelect } from "./assignee-select";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { getPillarSlug } from "@/lib/pillar-utils";
+import { cn } from "@/lib/utils";
 
 interface Milestone {
   name: string;
@@ -198,13 +200,24 @@ export function InitiativeDetail({
   return (
     <Sheet open onOpenChange={onClose}>
       <SheetContent className="data-[side=right]:w-[780px] data-[side=right]:sm:max-w-none overflow-y-auto">
-        <SheetHeader className="px-7 pt-5 pb-0">
-          <SheetTitle className="text-xl">{initiative.title}</SheetTitle>
+        <SheetHeader className="px-7 pt-6 pb-0">
+          <div className="font-display text-[10px] tracking-[0.22em] uppercase bg-ink text-cream px-2 py-0.5 self-start mb-2">
+            {pillarName.toUpperCase()} · {LANE_LABELS[lane]?.toUpperCase() ?? lane.toUpperCase()}
+          </div>
+          <SheetTitle className="font-display text-[32px] leading-[0.95] tracking-[-0.035em] pb-3 border-b-[3px] border-ink">
+            {initiative.title}
+          </SheetTitle>
+          {initiative.linearProjectId && (
+            <div className="mt-2 font-mono text-[11px] border-2 border-ink bg-cream-2 px-2 py-1 shadow-brut-sm self-start">
+              INIT-{initiative.id.slice(0, 6).toUpperCase()} · LIN
+            </div>
+          )}
         </SheetHeader>
 
         <div className="mt-2 space-y-6 px-7 pb-7">
-          {/* Status badges + progress */}
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Chip row */}
+          <div className="flex flex-wrap gap-2.5">
+            {/* Lane chip (ink filled) */}
             <Select
               value={lane}
               onValueChange={async (newLane: string | null) => {
@@ -218,8 +231,9 @@ export function InitiativeDetail({
                 onUpdate();
               }}
             >
-              <SelectTrigger className="h-7 w-auto gap-1 rounded-full bg-primary/10 text-primary border-0 px-3 text-xs font-medium">
-                <span>{LANE_LABELS[lane] ?? lane}</span>
+              <SelectTrigger className="h-auto border-2 border-ink bg-ink text-cream px-2.5 py-1 shadow-[2px_2px_0_var(--ink)] font-bold text-[11px] tracking-[0.04em] w-auto gap-1.5">
+                <span className="text-[8px] tracking-[0.2em] uppercase opacity-70 mr-0.5">Lane</span>
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(LANE_LABELS).map(([value, label]) => (
@@ -227,10 +241,25 @@ export function InitiativeDetail({
                 ))}
               </SelectContent>
             </Select>
-            <Badge variant="outline">{pillarName}</Badge>
-            <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-0">
+
+            {/* Pillar chip (color-filled) */}
+            <div
+              className={cn(
+                "flex items-center gap-1.5 border-2 border-ink px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--ink)]",
+                `bg-pillar-${getPillarSlug(pillarName)}`
+              )}
+            >
+              <span className="text-[8px] tracking-[0.2em] uppercase opacity-55 mr-0.5">Pillar</span>
+              {pillarName}
+            </div>
+
+            {/* Size + issue count chip */}
+            <div className="border-2 border-ink bg-destructive px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--ink)] text-ink flex items-center gap-1.5">
+              <span className="text-[8px] tracking-[0.2em] uppercase opacity-55 mr-0.5">Size</span>
               {initiative.size} · {total} issues
-            </Badge>
+            </div>
+
+            {/* Assignee */}
             <AssigneeSelect
               value={assigneeId}
               onChange={async (userId) => {
@@ -245,33 +274,41 @@ export function InitiativeDetail({
             />
           </div>
 
-          {/* Progress bar */}
+          {/* Progress rail */}
           {total > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary transition-all"
-                  style={{ width: `${progress}%` }}
-                />
+            <div className="grid grid-cols-[1fr_auto] gap-5 items-center">
+              <div className="h-5 border-2 border-ink bg-cream-2 overflow-hidden relative">
+                <div className="h-full bg-ink transition-all" style={{ width: `${progress}%` }} />
               </div>
-              <span className="text-xs text-muted-foreground">{done}/{total} done ({progress}%)</span>
+              <div className="font-display text-[44px] leading-[0.9] tracking-[-0.05em] flex items-baseline gap-1">
+                {progress}
+                <span className="text-[22px]">%</span>
+                <span className="text-[12px] tracking-[0.15em] opacity-60 ml-2">
+                  {done} / {total} DONE
+                </span>
+              </div>
             </div>
           )}
 
           {/* Metadata row */}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex gap-3.5 font-mono text-[10px] tracking-[0.04em] items-center">
             {initiative.linearProjectUrl && (
               <a
                 href={initiative.linearProjectUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-secondary hover:underline"
+                className="font-bold underline-offset-2 hover:underline"
               >
-                View in Linear ↗
+                VIEW IN LINEAR ↗
               </a>
             )}
             {initiative.linearSyncedAt && (
-              <span>Synced {new Date(initiative.linearSyncedAt).toLocaleString()}</span>
+              <>
+                <span className="opacity-30">·</span>
+                <span>
+                  SYNCED {new Date(initiative.linearSyncedAt).toLocaleTimeString()} · {new Date(initiative.linearSyncedAt).toLocaleDateString()}
+                </span>
+              </>
             )}
           </div>
 

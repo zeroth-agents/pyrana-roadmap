@@ -43,7 +43,7 @@ export function AssigneeSelect({ value, onChange, className }: AssigneeSelectPro
         className
       )}>
         <span className="text-[9px] font-display uppercase tracking-[0.18em] opacity-70 leading-none">
-          Viewing as
+          Filter by assignee
         </span>
         <SelectValue placeholder="Anyone">
           {(val: string) => {

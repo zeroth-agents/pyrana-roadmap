@@ -64,10 +64,12 @@ export async function GET(request: Request) {
   let scopes: string[];
   try {
     scopes = parseScopes(scopeRaw);
-  } catch {
+  } catch (e) {
+    console.log("[oauth/authorize] scope parse error:", scopeRaw, "error:", (e as Error).message, "client:", clientId);
     return redirectWithError(redirectUri, "invalid_scope", state);
   }
   if (!isScopeSubset(scopes, client.scopes)) {
+    console.log("[oauth/authorize] scope subset fail - requested:", scopes, "allowed:", client.scopes, "client:", clientId);
     return redirectWithError(redirectUri, "invalid_scope", state);
   }
 

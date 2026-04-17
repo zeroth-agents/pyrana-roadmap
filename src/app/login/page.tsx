@@ -1,106 +1,73 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
+import packageJson from "../../../package.json";
 
 function LoginContent() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
 
-  // Use the non-rotating LEFT PANEL as center reference (not the rotating element)
-  const leftPanelRef = useRef<HTMLDivElement>(null);
-  const rightPanelRef = useRef<HTMLDivElement>(null);
-  const [rotation, setRotation] = useState(0);
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!leftPanelRef.current) return;
-    const rect = leftPanelRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const angleRad = Math.atan2(e.clientY - centerY, e.clientX - centerX);
-    const angleDeg = (angleRad * 180) / Math.PI;
-    setRotation(angleDeg);
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    setRotation(0);
-  }, []);
-
-  useEffect(() => {
-    const panel = rightPanelRef.current;
-    if (!panel) return;
-    panel.addEventListener("mousemove", handleMouseMove);
-    panel.addEventListener("mouseleave", handleMouseLeave);
-    return () => {
-      panel.removeEventListener("mousemove", handleMouseMove);
-      panel.removeEventListener("mouseleave", handleMouseLeave);
-    };
-  }, [handleMouseMove, handleMouseLeave]);
-
   return (
-    <div className="flex h-screen w-full overflow-hidden">
-      {/* ── Left 2/3 — Piranha logo ── */}
-      <div ref={leftPanelRef} className="relative flex w-2/3 items-center justify-center bg-sidebar">
-        <div
-          style={{
-            transform: `rotate(${rotation}deg)`,
-            filter: "drop-shadow(0 0 80px oklch(0.65 0.17 35 / 0.2))",
-          }}
-          className="transition-transform duration-200 ease-out"
-        >
-          <svg
-            viewBox="0 0 709 438"
-            className="h-auto w-[clamp(260px,38vw,580px)] text-primary"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+    <main className="min-h-screen bg-ink text-cream flex items-center justify-center p-6">
+      <div
+        className="relative w-full max-w-5xl border-2 border-ink shadow-brut-lg p-10 md:p-12 grid md:grid-cols-[1.5fr_1fr] gap-10 bg-ink overflow-hidden"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(90deg, transparent 0 40px, rgba(239,232,216,0.06) 40px 41px), repeating-linear-gradient(0deg, transparent 0 40px, rgba(239,232,216,0.06) 40px 41px)",
+        }}
+      >
+        <div className="relative z-10">
+          <div className="font-mono text-[10px] tracking-[0.22em] opacity-65">
+            PYRANA · INTERNAL TOOL · NO MARKETING
+          </div>
+          <h1
+            className="font-display leading-[0.85] tracking-[-0.055em] mt-4 mb-5"
+            style={{ fontSize: "clamp(56px, 8vw, 112px)" }}
           >
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M531.007 222.236C539.702 218.672 550.676 213.79 559.112 204.385C544.06 201.337 531.562 196.427 519.916 193.563C511.066 201.814 520.198 217.188 531.007 222.236Z"
-              fill="currentColor"
-            />
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M565.631 203.572C523.117 186.658 523.185 164.751 449.045 164.349C468.094 167.211 480.204 183.075 486.098 203.043C490.211 216.979 515.376 224.801 531.007 222.236C520.27 216.335 511.562 203.291 519.916 193.563C528.541 197.36 547.919 207.508 565.631 203.572ZM647.816 357.635L643.806 318.805L617.535 351.675L610.46 349.932C607.868 339.591 602.42 314.207 602.42 314.207L586.088 339.316L508.285 309.067C543.345 283.213 567.525 277.689 567.525 277.689C567.525 277.689 568.54 298.481 572.664 319.617C590.259 302.514 597.55 271.197 597.55 271.197L602.69 268.492C612.967 288.292 617.027 318.535 617.027 318.535C633.716 297.207 635.13 280.048 638.937 260.377C649.778 273.166 656.627 295.515 660.848 307.174C676.43 288.266 678.706 253.452 678.706 253.452M647.816 357.635C657.595 346.286 677.802 308.399 678.204 311.163C679.617 320.881 681.473 337.686 673.164 368.79C685.109 372.636 682.291 371.271 684.568 372.906C545.6 445.501 410.106 394.971 410.106 394.971C393.307 405.268 334.499 440.783 250.312 437.048C275.997 418.69 304.266 400.566 322.464 372.732C294.519 358.388 274.571 345.727 274.571 345.727C274.571 345.727 218.887 391.121 130.812 395.079C167.472 373.678 193.859 336.283 214.312 298.586C197.645 279.693 174.165 268.828 151.849 257.745C108.091 327.197 36.6516 357.366 6.58201 366.97C6.58201 366.97 79.4417 272.912 79.3256 217.38C71.3682 162.27 0 76.4481 0 76.4481C0 76.4481 66.2729 79.1696 142.308 165.44C180 130.099 224.652 99.8178 271.812 78.4535C268.886 48.5293 246.386 22.1947 226.812 0.0394864C297.816 -1.24068 346.078 28.7334 396.288 68.0229C529.464 97.3848 665.873 198.218 708.402 229.252C678.706 253.452 708.402 229.252 678.706 253.452M595.905 372.486C595.905 372.486 579.487 362.588 528.674 343.167C506.23 334.589 464.69 312.766 464.69 312.766C464.69 312.766 487.105 287.477 501.152 278.474C541.705 252.481 587.759 233.676 635.063 224.169C567.608 171.316 493.611 125.435 409.512 106.011C334.23 95.5437 267.293 107.479 149.999 206.068C150.599 214.081 150.599 214.081 150.599 214.081C184.516 233.419 236.72 265.293 282.013 300.716C327.685 336.435 366.498 365.37 406.041 368.061C406.041 368.061 365.32 318.166 377.374 241.834C381.527 215.538 401.366 193.865 401.366 193.865C382.162 239.088 394.205 317.183 440.505 355.332C507.332 393.782 595.905 372.486 595.905 372.486ZM254.812 226.771C289.703 190.194 337.964 164.93 387.812 157.432C326.3 218.124 324.756 249.44 354.443 331.332C318.558 298.836 299.035 256.617 254.812 226.771Z"
-              fill="currentColor"
-              fillOpacity="0.9"
-            />
-          </svg>
+            THE<br />
+            <span style={{ color: "var(--brand-orange)", fontStyle: "italic" }}>
+              ROADMAP.
+            </span>
+          </h1>
+          <p className="font-serif italic text-[15px] leading-[1.4] max-w-[48ch] opacity-85">
+            Five pillars, four lanes, and a hard cap of three things we&apos;ll
+            actually finish this quarter. If you&apos;re reading this, you&apos;re on
+            the team that decides which three.
+          </p>
         </div>
 
-        {/* Subtle wordmark */}
-        <span className="absolute bottom-10 left-1/2 -translate-x-1/2 select-none text-3xl font-bold tracking-[0.3em] text-sidebar-foreground/10">
-          PYRANA
+        <div className="relative z-10 flex flex-col justify-center">
+          <button
+            onClick={() => signIn("microsoft-entra-id", { callbackUrl })}
+            className="flex items-center gap-2.5 bg-cream text-ink border-2 border-cream px-5 py-4 font-display text-[14px] tracking-[-0.01em] uppercase shadow-[5px_5px_0_var(--brand-orange)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0_var(--brand-orange)] transition-transform cursor-pointer"
+          >
+            <span
+              className="grid grid-cols-2 gap-[1px] w-5 h-5 flex-shrink-0"
+              aria-hidden
+            >
+              <span className="bg-[#f25022]" />
+              <span className="bg-[#7fba00]" />
+              <span className="bg-[#00a4ef]" />
+              <span className="bg-[#ffb900]" />
+            </span>
+            SIGN IN WITH ENTRA ID →
+          </button>
+          <div className="mt-4 font-mono text-[10px] tracking-[0.08em] opacity-55">
+            AUTH VIA MICROSOFT · SESSION 24H · PATS IN SETTINGS
+          </div>
+        </div>
+
+        <span
+          aria-hidden
+          className="absolute bottom-4 right-5 border-2 border-cream font-display text-[11px] tracking-[0.18em] px-2 py-1 opacity-80"
+          style={{ transform: "rotate(-3deg)", zIndex: 1 }}
+        >
+          INTERNAL · v{packageJson.version}
         </span>
       </div>
-
-      {/* ── Right 1/3 — Sign in ── */}
-      <div
-        ref={rightPanelRef}
-        className="flex w-1/3 flex-col items-center justify-center bg-background"
-      >
-        <div className="flex flex-col items-center gap-6">
-          <div className="text-center">
-            <h1 className="text-xl font-semibold tracking-tight text-foreground">
-              Sign in
-            </h1>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              Continue to Pyrana
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => signIn("microsoft-entra-id", { callbackUrl })}
-            className="cursor-pointer rounded-lg bg-primary px-10 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-all hover:brightness-110 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            Sign In
-          </button>
-        </div>
-      </div>
-    </div>
+    </main>
   );
 }
 

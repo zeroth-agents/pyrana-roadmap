@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface Connected {
   clientId: string;
@@ -43,32 +43,51 @@ export function ConnectedApps() {
   }
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <h2 className="mb-4 text-lg font-semibold">Connected apps</h2>
-        {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
+    <section className="border-2 border-ink bg-cream shadow-brut-md overflow-hidden">
+      <header className="bg-ink text-cream px-3.5 py-2.5 flex justify-between items-baseline">
+        <span className="font-display text-[16px] tracking-[-0.02em]">CONNECTED APPS</span>
+        <span className="font-mono text-[10px] tracking-[0.08em]">
+          {!loading && `${items.length} CONNECTED`}
+        </span>
+      </header>
+      <div className="p-4 flex flex-col gap-2.5">
+        {loading && (
+          <p className="font-mono text-[11px] opacity-60">LOADING…</p>
+        )}
         {!loading && items.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            No MCP clients are currently connected to your account.
+          <p className="font-mono text-[11px] opacity-60">
+            NO MCP CLIENTS ARE CURRENTLY CONNECTED TO YOUR ACCOUNT.
           </p>
         )}
-        {items.map((item) => (
-          <div
-            key={item.clientId}
-            className="flex items-center justify-between border-b border-border py-2 last:border-b-0"
-          >
-            <div>
-              <p className="text-sm font-medium">{item.name}</p>
-              <p className="text-xs text-muted-foreground">
-                {item.registrationType === "dcr" ? "MCP client" : "Manual app"}
-              </p>
+        {items.map((item) => {
+          const initial = item.name.charAt(0).toUpperCase();
+          const isDrive = item.name.toLowerCase().includes("drive");
+          return (
+            <div
+              key={item.clientId}
+              className="border-2 border-ink bg-cream shadow-brut-sm p-3 grid grid-cols-[40px_1fr_auto] gap-3 items-center"
+            >
+              <div
+                className={cn(
+                  "h-10 w-10 border-2 border-ink font-display text-[14px] flex items-center justify-center shrink-0",
+                  isDrive ? "bg-pillar-dc" : "bg-pillar-pf"
+                )}
+              >
+                {initial}
+              </div>
+              <div>
+                <div className="font-display text-[13px]">{item.name}</div>
+                <div className="font-mono text-[10px] opacity-70 mt-0.5">
+                  {item.registrationType === "dcr" ? "MCP CLIENT" : "MANUAL APP"}
+                </div>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => disconnect(item.clientId)}>
+                DISCONNECT
+              </Button>
             </div>
-            <Button variant="outline" size="sm" onClick={() => disconnect(item.clientId)}>
-              Disconnect
-            </Button>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+          );
+        })}
+      </div>
+    </section>
   );
 }

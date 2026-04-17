@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
@@ -89,6 +87,13 @@ export default function SettingsPage() {
       if (tokenTimerRef.current) clearInterval(tokenTimerRef.current);
       setCreating(false);
     }
+  }
+
+  function handleCopy() {
+    if (!newToken) return;
+    navigator.clipboard.writeText(newToken);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   async function handleSync() {
@@ -284,101 +289,74 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <h2 className="mb-2 text-lg font-medium">API Tokens</h2>
-      <p className="mb-4 text-sm text-muted-foreground">
-        Personal access tokens for the Claude Code skill. Add to your{" "}
-        <code className="rounded bg-muted px-1 py-0.5 text-xs">.env.local</code>{" "}
-        as <code className="rounded bg-muted px-1 py-0.5 text-xs">ROADMAP_API_TOKEN</code>.
-      </p>
+      <section className="border-2 border-ink bg-cream shadow-brut-md overflow-hidden mt-6">
+        <header className="bg-ink text-cream px-3.5 py-2.5 flex justify-between items-baseline">
+          <span className="font-display text-[16px] tracking-[-0.02em]">ACCESS TOKENS</span>
+          <span className="font-mono text-[10px] tracking-[0.08em]">
+            {tokens.length} ACTIVE
+          </span>
+        </header>
 
-      {newToken && (
-        <Card className="mb-4 border-green-200 bg-green-50">
-          <CardContent className="p-4">
-            <p className="mb-2 text-sm font-medium text-green-800">
-              Token created. Copy it now — it won&apos;t be shown again.
-            </p>
-            <div className="flex gap-2">
-              <Input value={newToken} readOnly className="font-mono text-xs" />
-              <Button
-                size="sm"
-                variant="outline"
-                className="shrink-0"
-                onClick={() => {
-                  navigator.clipboard.writeText(newToken);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                }}
-              >
-                {copied ? "Copied!" : "Copy"}
-              </Button>
+        {newToken && (
+          <div className="m-4 border-2 border-ink bg-pillar-ai shadow-brut-md p-4">
+            <div className="font-display text-[12px] tracking-[0.12em] mb-2">
+              NEW TOKEN — COPY IT NOW (YOU WON&apos;T SEE IT AGAIN)
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="mb-4 space-y-3">
-        <Button onClick={handleCreate} disabled={creating}>
-          {creating ? "Generating…" : "Generate New Token"}
-        </Button>
-
-        {creating && (
-          <div className="space-y-2">
-            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
-                style={{ width: `${TOKEN_STEPS[tokenStep].progress}%` }}
-              />
+            <div className="font-mono text-[13px] bg-cream border-2 border-ink px-2 py-1.5 break-all">
+              {newToken}
             </div>
-            <p className="animate-pulse text-sm text-muted-foreground">
-              {TOKEN_STEPS[tokenStep].label}
-            </p>
+            <Button onClick={handleCopy} className="mt-2">
+              {copied ? "✓ COPIED" : "COPY"}
+            </Button>
           </div>
         )}
-      </div>
 
-      <div className="space-y-2">
-        {tokens.map((t) => (
-          <Card key={t.id}>
-            <CardContent className="flex items-center justify-between p-3">
-              <div className="text-sm">
-                <span className="font-mono text-xs text-muted-foreground">
+        <div className="p-4 flex flex-col gap-2.5">
+          {tokens.map((t) => (
+            <div
+              key={t.id}
+              className="border-2 border-ink bg-cream shadow-brut-sm p-3 grid grid-cols-[1fr_auto] gap-2 items-center"
+            >
+              <div>
+                <div className="font-display text-[12px] tracking-[-0.01em]">
                   {t.tokenPrefix || t.id.slice(0, 8)}…
-                </span>
-                <span className="ml-3 text-muted-foreground">
-                  Created {new Date(t.createdAt).toLocaleDateString()}
-                </span>
-                {t.lastUsedAt && (
-                  <span className="ml-3 text-muted-foreground">
-                    Last used {new Date(t.lastUsedAt).toLocaleDateString()}
-                  </span>
-                )}
+                </div>
+                <div className="font-mono text-[10px] opacity-65 mt-1">
+                  CREATED {new Date(t.createdAt).toLocaleDateString()} ·
+                  {t.lastUsedAt
+                    ? ` LAST USED ${new Date(t.lastUsedAt).toLocaleString()}`
+                    : " NEVER USED"}
+                </div>
               </div>
               <Button
-                size="sm"
                 variant="destructive"
                 onClick={() => setRevokeTarget(t.id)}
               >
-                Revoke
+                REVOKE
               </Button>
-            </CardContent>
-          </Card>
-        ))}
-        {tokens.length === 0 && (
-          <p className="text-sm text-muted-foreground">No tokens yet</p>
-        )}
-      </div>
+            </div>
+          ))}
+          <button
+            onClick={handleCreate}
+            disabled={creating}
+            className="border-2 border-dashed border-ink bg-transparent p-3 font-display text-[11px] tracking-[0.12em] uppercase flex justify-center items-center gap-1.5 hover:bg-cream-2 disabled:opacity-50 cursor-pointer"
+          >
+            {creating ? TOKEN_STEPS[tokenStep].label.toUpperCase() : "+ MINT NEW TOKEN"}
+          </button>
+        </div>
+      </section>
 
       <Dialog open={!!revokeTarget} onOpenChange={(open) => { if (!open) setRevokeTarget(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Revoke token</DialogTitle>
+            <DialogTitle>REVOKE TOKEN</DialogTitle>
             <DialogDescription>
               This token will stop working immediately. Any integrations using it will lose access. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRevokeTarget(null)}>
-              Cancel
+              CANCEL
             </Button>
             <Button
               variant="destructive"
@@ -387,7 +365,7 @@ export default function SettingsPage() {
                 setRevokeTarget(null);
               }}
             >
-              Revoke
+              REVOKE
             </Button>
           </DialogFooter>
         </DialogContent>

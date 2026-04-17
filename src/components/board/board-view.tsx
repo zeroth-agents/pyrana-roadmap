@@ -222,10 +222,12 @@ export function BoardView({
           className="overflow-x-auto pb-4"
           style={{
             display: "grid",
-            gridTemplateColumns: `repeat(${pillars.length}, minmax(240px, 1fr))`,
-            gap: "16px",
+            gridTemplateColumns: `44px repeat(${pillars.length}, minmax(240px, 1fr))`,
+            gap: "14px",
           }}
         >
+          {/* Leading gutter cell under the title row */}
+          <div aria-hidden />
           {/* Pillar headers */}
           {pillars.map((pillar) => (
             <div key={pillar.id} className="flex items-center justify-between pb-1">
@@ -243,25 +245,24 @@ export function BoardView({
             if ((lane.id === "done" || lane.id === "backlog") && !hasAnyItems) return null;
 
             return [
-              // Lane header row
-              ...pillars.map((pillar, idx) => (
-                <div
-                  key={`${lane.id}-header-${pillar.id}`}
-                  className="flex items-center gap-2 pt-2"
+              // Gutter cell with rotated lane label
+              <div
+                key={`${lane.id}-gutter`}
+                className="flex flex-col items-end justify-end border-r-[3px] border-ink pb-3 -mr-2"
+              >
+                <span
+                  aria-hidden
+                  className="font-display text-[28px] leading-[0.9] tracking-[0.04em] uppercase"
+                  style={{
+                    writingMode: "vertical-rl",
+                    transform: "rotate(180deg)",
+                  }}
                 >
-                  {idx === 0 ? (
-                    <>
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                        {lane.label}
-                      </span>
-                      <div className="h-px flex-1 bg-border" />
-                    </>
-                  ) : (
-                    <div className="h-px flex-1 bg-border" />
-                  )}
-                </div>
-              )),
-              // Lane card cells
+                  {lane.label}
+                </span>
+                <span className="sr-only">Lane: {lane.label}</span>
+              </div>,
+              // Lane card cells across pillars
               ...pillars.map((pillar) => (
                 <LaneCell
                   key={`${lane.id}-${pillar.id}`}
@@ -275,6 +276,12 @@ export function BoardView({
                   droppable={lane.droppable}
                 />
               )),
+              // Full-width divider rule after the lane
+              <div
+                key={`${lane.id}-divider`}
+                aria-hidden
+                style={{ gridColumn: "1 / -1", borderTop: "3px solid var(--ink)", height: 0, marginTop: "2px" }}
+              />,
             ];
           })}
         </div>

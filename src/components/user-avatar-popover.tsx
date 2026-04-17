@@ -1,52 +1,41 @@
 "use client";
 
 import { signOut } from "next-auth/react";
-import { User, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { getMonogram } from "@/lib/pillar-utils";
 
 interface UserAvatarPopoverProps {
   name: string | null | undefined;
   email: string | null | undefined;
 }
 
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) {
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  }
-  return parts[0][0].toUpperCase();
-}
-
 export function UserAvatarPopover({ name, email }: UserAvatarPopoverProps) {
   if (!name?.trim()) {
     return (
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/50">
-        <User className="h-4 w-4 text-white" />
+      <div className="flex h-10 w-10 items-center justify-center border-2 border-sidebar-foreground bg-cream-2 text-ink font-display text-[12px]">
+        ??
       </div>
     );
   }
 
-  const initials = getInitials(name);
-
   return (
     <Popover>
       <PopoverTrigger
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-primary transition-opacity hover:opacity-80"
+        className="flex h-10 w-10 items-center justify-center border-2 border-sidebar-foreground bg-pillar-pf text-ink font-display text-[12px] tracking-[-0.02em] hover:shadow-[2px_2px_0_var(--sidebar-foreground)] transition-shadow"
         title={name}
       >
-        <span className="text-[10px] font-semibold text-white">
-          {initials}
-        </span>
+        <span className="font-display text-[12px]">{getMonogram(name)}</span>
       </PopoverTrigger>
       <PopoverContent
         side="right"
         align="end"
-        className="w-56 border-sidebar-border bg-sidebar p-3 text-sidebar-foreground"
+        className="w-56 bg-sidebar text-sidebar-foreground border-[2px] border-sidebar-foreground p-3"
       >
         <div className="space-y-1">
           <p className="text-sm font-semibold">{name}</p>
@@ -54,10 +43,10 @@ export function UserAvatarPopover({ name, email }: UserAvatarPopoverProps) {
             <p className="text-xs text-sidebar-foreground/60">{email}</p>
           )}
         </div>
-        <Separator className="my-2 bg-sidebar-border" />
+        <Separator className="my-2 bg-sidebar-foreground/30" />
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors hover:bg-primary/15 hover:text-primary"
+          className="flex w-full items-center gap-2 border-2 border-transparent hover:border-sidebar-foreground px-2 py-1.5 text-xs font-display uppercase tracking-[0.08em] transition-colors"
         >
           <LogOut className="h-3.5 w-3.5" />
           Sign out

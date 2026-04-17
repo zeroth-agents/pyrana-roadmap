@@ -1,6 +1,6 @@
 "use client";
 
-import { VoteButton } from "./vote-button";
+import { VoteCluster } from "./vote-button";
 import { cn } from "@/lib/utils";
 import { getPillarSlug, getMonogram } from "@/lib/pillar-utils";
 
@@ -17,9 +17,9 @@ interface IdeaCardData {
   pillarId: string | null;
   status: string;
   priorityScore: number | null;
-  voteCount: number;
+  score: number;
+  userVote: 1 | -1 | 0;
   commentCount: number;
-  userVoted: boolean;
   createdAt: string;
   assigneeId?: string | null;
   assigneeName?: string | null;
@@ -29,7 +29,7 @@ interface IdeaCardProps {
   idea: IdeaCardData;
   pillars: Pillar[];
   onClick: () => void;
-  onVoteChange?: (voted: boolean, count: number) => void;
+  onVoteChange?: (userVote: 1 | -1 | 0, score: number) => void;
 }
 
 function timeAgo(dateStr: string): string {
@@ -61,11 +61,11 @@ export function IdeaCard({ idea, pillars, onClick, onVoteChange }: IdeaCardProps
       )}
     >
       {/* Vote stack */}
-      <VoteButton
+      <VoteCluster
         ideaId={idea.id}
-        initialVoted={idea.userVoted}
-        initialCount={idea.voteCount}
-        onVoteChange={onVoteChange}
+        initialUserVote={idea.userVote}
+        initialScore={idea.score}
+        onChange={onVoteChange}
       />
 
       {/* Body */}

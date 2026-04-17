@@ -18,7 +18,7 @@ import {
 import { CommentThread } from "@/components/comment-thread";
 import { AttachmentSection } from "@/components/attachments/attachment-section";
 import { AssigneeSelect } from "@/components/assignee-select";
-import { VoteButton } from "./vote-button";
+import { VoteCluster } from "./vote-button";
 import { PromoteDialog } from "./promote-dialog";
 import { ProseMarkdown } from "@/lib/markdown";
 import { getPillarSlug, getMonogram } from "@/lib/pillar-utils";
@@ -40,9 +40,11 @@ interface IdeaDetailData {
   priorityScore: number | null;
   promotedInitiativeId: string | null;
   linearProjectId: string | null;
-  voteCount: number;
+  upCount: number;
+  downCount: number;
+  score: number;
+  userVote: 1 | -1 | 0;
   voters: Voter[];
-  userVoted: boolean;
   createdAt: string;
   assigneeId?: string | null;
   assigneeName?: string | null;
@@ -176,14 +178,12 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
 
             {/* Vote row */}
             <div className="flex items-center gap-5 mt-5 px-7">
-              <VoteButton
+              <VoteCluster
                 ideaId={idea.id}
-                initialVoted={idea.userVoted}
-                initialCount={idea.voteCount}
-                onVoteChange={(voted, count) =>
-                  setIdea((prev) =>
-                    prev ? { ...prev, userVoted: voted, voteCount: count } : prev
-                  )
+                initialUserVote={idea.userVote}
+                initialScore={idea.score}
+                onChange={(userVote, score) =>
+                  setIdea((prev) => (prev ? { ...prev, userVote, score } : prev))
                 }
               />
               <div>

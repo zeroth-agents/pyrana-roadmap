@@ -31,9 +31,9 @@ interface IdeaData {
   pillarId: string | null;
   status: string;
   priorityScore: number | null;
-  voteCount: number;
+  score: number;
+  userVote: 1 | -1 | 0;
   commentCount: number;
-  userVoted: boolean;
   createdAt: string;
   assigneeId?: string | null;
   assigneeName?: string | null;
@@ -76,7 +76,7 @@ export default function IdeasPage() {
 
     return fetch(`/api/ideas?${params}`)
       .then((r) => r.json())
-      .then(setIdeas);
+      .then((data) => setIdeas(data.items));
   }, [sort, statusFilter, pillarFilter, assigneeFilter]);
 
   useEffect(() => {

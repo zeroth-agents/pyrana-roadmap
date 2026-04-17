@@ -18,6 +18,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getPillarSlug, getMonogram } from "@/lib/pillar-utils";
 import { cn } from "@/lib/utils";
+import { ProseMarkdown } from "@/lib/markdown";
 
 interface Milestone {
   name: string;
@@ -358,13 +359,13 @@ export function InitiativeDetail({
             <>
               <SectionHeader num="02" label="Scope" detail="What's in, what's out" />
               {initiative.description && (
-                <p className="mt-3 text-[13px] leading-[1.55] text-ink-soft">
-                  {initiative.description}
-                </p>
+                <div className="mt-3 text-[13px] leading-[1.55] text-ink-soft">
+                  <ProseMarkdown>{initiative.description}</ProseMarkdown>
+                </div>
               )}
               {initiative.content && (
-                <div className="mt-2 text-[13px] leading-[1.55] whitespace-pre-wrap">
-                  {initiative.content}
+                <div className="mt-2 text-[13px] leading-[1.55]">
+                  <ProseMarkdown>{initiative.content}</ProseMarkdown>
                 </div>
               )}
             </>

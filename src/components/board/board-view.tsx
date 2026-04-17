@@ -17,6 +17,7 @@ import { LaneCell } from "./lane-cells";
 import { CapacityIndicator } from "./capacity-indicator";
 import { AssigneeSelect } from "@/components/assignee-select";
 import { cn } from "@/lib/utils";
+import { getPillarSlug, getPillarAbbr } from "@/lib/pillar-utils";
 
 interface Pillar {
   id: string;
@@ -228,14 +229,34 @@ export function BoardView({
         >
           {/* Leading gutter cell under the title row */}
           <div aria-hidden />
-          {/* Pillar headers */}
-          {pillars.map((pillar) => (
-            <div key={pillar.id} className="flex items-center justify-between pb-1">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-foreground/60">
-                {pillar.name}
-              </h3>
-            </div>
-          ))}
+          {/* Pillar headers — colored brutalist blocks */}
+          {pillars.map((pillar, idx) => {
+            const slug = getPillarSlug(pillar.name);
+            const abbr = getPillarAbbr(pillar.name);
+            return (
+              <div
+                key={pillar.id}
+                className={cn(
+                  "border-2 border-ink p-3 min-h-[96px] shadow-brut-sm flex flex-col justify-between",
+                  `bg-pillar-${slug}`
+                )}
+              >
+                <span className="font-display text-[11px] tracking-[0.12em] bg-ink text-cream px-1.5 py-0.5 self-start">
+                  PILLAR 0{idx + 1} · {abbr}
+                </span>
+                <div className="mt-1.5">
+                  <h2 className="font-display text-[19px] leading-[0.95] tracking-[-0.03em]">
+                    {pillar.name}
+                  </h2>
+                  {pillar.customerStory && (
+                    <p className="font-serif italic text-[11px] leading-[1.25] mt-2 opacity-85">
+                      &ldquo;{pillar.customerStory}&rdquo;
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
 
           {/* Lane rows */}
           {visibleLanes.map((lane) => {

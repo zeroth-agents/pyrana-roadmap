@@ -132,12 +132,12 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
     }
   }
 
-  async function handlePromote(pillarId: string, lane: string) {
+  async function handlePromote(pillarId: string, lane: string, linearProjectId?: string) {
     if (!idea) return;
     const res = await fetch(`/api/ideas/${idea.id}/promote`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pillarId, lane }),
+      body: JSON.stringify({ pillarId, lane, linearProjectId }),
     });
     if (res.ok) {
       const data = await res.json();

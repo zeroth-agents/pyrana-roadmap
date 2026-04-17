@@ -64,6 +64,13 @@
       "when": 1776310732000,
       "tag": "0008_greedy_smasher",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1776449437673,
+      "tag": "0009_furry_avengers",
+      "breakpoints": true
     }
   ]
 }

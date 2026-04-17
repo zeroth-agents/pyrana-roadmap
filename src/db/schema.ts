@@ -3,6 +3,7 @@ import {
   uuid,
   text,
   integer,
+  smallint,
   timestamp,
   pgEnum,
   unique,
@@ -125,6 +126,7 @@ export const ideaVotes = pgTable(
       .references(() => ideas.id, { onDelete: "cascade" }),
     userId: text("user_id").notNull(),
     userName: text("user_name").notNull(),
+    value: smallint().notNull().default(1),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

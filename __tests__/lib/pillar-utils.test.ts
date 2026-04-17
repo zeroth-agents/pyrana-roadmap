@@ -23,6 +23,10 @@ describe("getPillarAbbr", () => {
     expect(getPillarAbbr("")).toBe("??");
     expect(getPillarAbbr(undefined)).toBe("??");
   });
+
+  it("pads single-character pillar names to two chars", () => {
+    expect(getPillarAbbr("X")).toBe("XX");
+  });
 });
 
 describe("getPillarSlug", () => {
@@ -60,5 +64,9 @@ describe("getMonogram", () => {
   it("handles empty/undefined", () => {
     expect(getMonogram("")).toBe("??");
     expect(getMonogram(undefined)).toBe("??");
+  });
+
+  it("pads single-character names to two chars", () => {
+    expect(getMonogram("A")).toBe("AA");
   });
 });

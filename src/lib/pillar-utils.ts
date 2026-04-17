@@ -1,33 +1,35 @@
-const KNOWN_SLUGS: Record<string, "ai" | "ac" | "dc" | "bx" | "pf"> = {
-  "Agent Intelligence": "ai",
-  "Agent Collaboration": "ac",
-  "Data & Compute": "dc",
-  "Builder Experience": "bx",
-  "Platform Foundation": "pf",
-};
-
-const KNOWN_ABBRS: Record<string, string> = {
-  "Agent Intelligence": "AI",
-  "Agent Collaboration": "AC",
-  "Data & Compute": "DC",
-  "Builder Experience": "BX",
-  "Platform Foundation": "PF",
-};
-
 export type PillarSlug = "ai" | "ac" | "dc" | "bx" | "pf";
+
+const PILLAR_MAP: Record<string, { slug: PillarSlug; abbr: string }> = {
+  "Agent Intelligence":  { slug: "ai", abbr: "AI" },
+  "Agent Collaboration": { slug: "ac", abbr: "AC" },
+  "Data & Compute":      { slug: "dc", abbr: "DC" },
+  "Builder Experience":  { slug: "bx", abbr: "BX" },
+  "Platform Foundation": { slug: "pf", abbr: "PF" },
+};
+
+function splitWords(name: string): string[] {
+  return name.replace(/[^\p{L}\s]/gu, "").trim().split(/\s+/).filter(Boolean);
+}
+
+function fallbackInitials(name: string): string {
+  const words = splitWords(name);
+  if (words.length === 0) return "??";
+  if (words.length === 1) {
+    const w = words[0];
+    return (w.length >= 2 ? w.slice(0, 2) : w + w).toUpperCase();
+  }
+  return (words[0][0] + words[1][0]).toUpperCase();
+}
 
 export function getPillarAbbr(name: string | undefined): string {
   if (!name) return "??";
-  if (KNOWN_ABBRS[name]) return KNOWN_ABBRS[name];
-  const words = name.replace(/[^\p{L}\s]/gu, "").trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return "??";
-  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-  return (words[0][0] + words[1][0]).toUpperCase();
+  return PILLAR_MAP[name]?.abbr ?? fallbackInitials(name);
 }
 
 export function getPillarSlug(name: string | undefined): PillarSlug {
   if (!name) return "pf";
-  return KNOWN_SLUGS[name] ?? "pf";
+  return PILLAR_MAP[name]?.slug ?? "pf";
 }
 
 export function getPillarColorClass(name: string | undefined): string {
@@ -36,8 +38,5 @@ export function getPillarColorClass(name: string | undefined): string {
 
 export function getMonogram(name: string | undefined): string {
   if (!name) return "??";
-  const words = name.replace(/[^\p{L}\s]/gu, "").trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return "??";
-  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-  return (words[0][0] + words[1][0]).toUpperCase();
+  return fallbackInitials(name);
 }

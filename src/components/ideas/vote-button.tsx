@@ -15,63 +15,58 @@ export function VoteButton({
   ideaId,
   initialVoted,
   initialCount,
-  compact = false,
+  compact: _compact,
   onVoteChange,
 }: VoteButtonProps) {
   const [voted, setVoted] = useState(initialVoted);
   const [count, setCount] = useState(initialCount);
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  async function handleToggle(e: React.MouseEvent) {
+  async function toggle(e: React.MouseEvent) {
     e.stopPropagation();
-    if (submitting) return;
-
-    setSubmitting(true);
+    if (loading) return;
+    setLoading(true);
+    const optimisticVoted = !voted;
+    const optimisticCount = count + (optimisticVoted ? 1 : -1);
+    setVoted(optimisticVoted);
+    setCount(optimisticCount);
     try {
-      const res = await fetch(`/api/ideas/${ideaId}/vote`, {
-        method: "POST",
-      });
-      const data = await res.json();
-      setVoted(data.voted);
-      setCount(data.voteCount);
-      onVoteChange?.(data.voted, data.voteCount);
-    } catch (err) {
-      console.error("Vote failed:", err);
+      const res = await fetch(
+        `/api/ideas/${ideaId}/${optimisticVoted ? "vote" : "unvote"}`,
+        { method: "POST" }
+      );
+      if (!res.ok) throw new Error();
+      onVoteChange?.(optimisticVoted, optimisticCount);
+    } catch {
+      setVoted(voted);
+      setCount(count);
+    } finally {
+      setLoading(false);
     }
-    setSubmitting(false);
-  }
-
-  if (compact) {
-    return (
-      <button
-        onClick={handleToggle}
-        disabled={submitting}
-        className={cn(
-          "flex items-center gap-1 text-sm transition-colors",
-          voted
-            ? "text-primary font-semibold"
-            : "text-muted-foreground hover:text-primary"
-        )}
-      >
-        <span>▲</span>
-        <span>{count}</span>
-      </button>
-    );
   }
 
   return (
     <button
-      onClick={handleToggle}
-      disabled={submitting}
+      onClick={toggle}
+      aria-label={voted ? "Remove vote" : "Vote for this idea"}
+      aria-pressed={voted}
+      disabled={loading}
       className={cn(
-        "flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors",
-        voted
-          ? "border-primary/30 bg-primary/10 text-primary"
-          : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-primary"
+        "border-2 border-ink bg-cream w-[38px] flex flex-col items-stretch justify-start font-display select-none",
+        loading && "opacity-50"
       )}
     >
-      <span>▲</span>
-      <span>Upvote · {count}</span>
+      <span
+        className={cn(
+          "block w-full border-b-2 border-ink py-0.5 text-[12px]",
+          voted ? "bg-pillar-bx" : "bg-pillar-ai"
+        )}
+      >
+        ▲
+      </span>
+      <span className="block py-1 text-[16px] tracking-[-0.04em] leading-none">
+        {count}
+      </span>
     </button>
   );
 }

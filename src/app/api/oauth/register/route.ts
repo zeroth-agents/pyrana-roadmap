@@ -44,8 +44,8 @@ export async function POST(request: Request) {
 
   let scopes: string[];
   try {
-    scopes = parseScopes(parsed.data.scope ?? "read");
-    if (scopes.length === 0) scopes = ["read"];
+    scopes = parseScopes(parsed.data.scope ?? "read write");
+    if (scopes.length === 0) scopes = ["read", "write"];
   } catch (e) {
     return badRequest((e as Error).message);
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,33 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+function CopyableSecret({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    await navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <p className="flex-1 min-w-0 rounded bg-muted p-2 font-mono text-xs break-all">
+        {value}
+      </p>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={copy}
+        aria-label={copied ? "Copied" : "Copy to clipboard"}
+      >
+        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+      </Button>
+    </div>
+  );
+}
 
 interface Manual {
   clientId: string;
@@ -124,20 +152,22 @@ export function OauthApps() {
         </div>
 
         <Dialog open={!!newSecret} onOpenChange={(o) => !o && setNewSecret(null)}>
-          <DialogContent>
+          <DialogContent className="w-[min(640px,calc(100vw-2rem))] max-w-[640px]">
             <DialogHeader>
               <DialogTitle>Copy your client secret</DialogTitle>
               <DialogDescription>
                 This is the only time the secret will be shown. Store it securely.
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">Client ID</p>
-              <p className="rounded bg-muted p-2 font-mono text-xs">{newSecret?.clientId}</p>
-              <p className="text-xs text-muted-foreground">Client Secret</p>
-              <p className="rounded bg-muted p-2 font-mono text-xs break-all">
-                {newSecret?.clientSecret}
-              </p>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <p className="text-xs text-muted-foreground">Client ID</p>
+                {newSecret && <CopyableSecret value={newSecret.clientId} />}
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-xs text-muted-foreground">Client Secret</p>
+                {newSecret && <CopyableSecret value={newSecret.clientSecret} />}
+              </div>
             </div>
             <DialogFooter>
               <Button onClick={() => setNewSecret(null)}>Done</Button>

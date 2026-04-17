@@ -3,70 +3,103 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-interface VoteButtonProps {
+interface VoteClusterProps {
   ideaId: string;
-  initialVoted: boolean;
-  initialCount: number;
-  compact?: boolean;
-  onVoteChange?: (voted: boolean, count: number) => void;
+  initialUserVote: 1 | -1 | 0;
+  initialScore: number;
+  onChange?: (userVote: 1 | -1 | 0, score: number) => void;
 }
 
-export function VoteButton({
+export function VoteCluster({
   ideaId,
-  initialVoted,
-  initialCount,
-  compact: _compact,
-  onVoteChange,
-}: VoteButtonProps) {
-  const [voted, setVoted] = useState(initialVoted);
-  const [count, setCount] = useState(initialCount);
+  initialUserVote,
+  initialScore,
+  onChange,
+}: VoteClusterProps) {
+  const [userVote, setUserVote] = useState<1 | -1 | 0>(initialUserVote);
+  const [score, setScore] = useState(initialScore);
   const [loading, setLoading] = useState(false);
 
-  async function toggle(e: React.MouseEvent) {
+  async function submit(value: 1 | -1, e: React.MouseEvent) {
     e.stopPropagation();
     if (loading) return;
     setLoading(true);
-    const optimisticVoted = !voted;
-    const optimisticCount = count + (optimisticVoted ? 1 : -1);
-    setVoted(optimisticVoted);
-    setCount(optimisticCount);
+
+    const previousVote = userVote;
+    const previousScore = score;
+    const nextVote: 1 | -1 | 0 = userVote === value ? 0 : value;
+    const delta = nextVote - userVote;
+    const nextScore = score + delta;
+
+    setUserVote(nextVote);
+    setScore(nextScore);
+
     try {
-      const res = await fetch(
-        `/api/ideas/${ideaId}/${optimisticVoted ? "vote" : "unvote"}`,
-        { method: "POST" }
-      );
+      const res = await fetch(`/api/ideas/${ideaId}/vote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value }),
+      });
       if (!res.ok) throw new Error();
-      onVoteChange?.(optimisticVoted, optimisticCount);
+      const body = await res.json();
+      setUserVote(body.userVote);
+      setScore(body.score);
+      onChange?.(body.userVote, body.score);
     } catch {
-      setVoted(voted);
-      setCount(count);
+      setUserVote(previousVote);
+      setScore(previousScore);
     } finally {
       setLoading(false);
     }
   }
 
+  const scoreTone =
+    score > 0 ? "text-foreground" : score < 0 ? "text-destructive" : "text-muted-foreground";
+
   return (
-    <button
-      onClick={toggle}
-      aria-label={voted ? "Remove vote" : "Vote for this idea"}
-      aria-pressed={voted}
-      disabled={loading}
+    <div
       className={cn(
         "border-2 border-border bg-background w-[38px] flex flex-col items-stretch justify-start font-display select-none",
         loading && "opacity-50"
       )}
     >
-      <span
+      <button
+        type="button"
+        onClick={(e) => submit(1, e)}
+        aria-label={userVote === 1 ? "Remove upvote" : "Upvote"}
+        aria-pressed={userVote === 1}
+        disabled={loading}
         className={cn(
           "block w-full border-b-2 border-border py-0.5 text-[12px]",
-          voted ? "bg-pillar-bx" : "bg-pillar-ai"
+          userVote === 1 ? "bg-pillar-bx" : "bg-pillar-ai"
         )}
       >
         ▲
+      </button>
+      <span
+        className={cn(
+          "block py-1 text-[16px] tracking-[-0.04em] leading-none text-center",
+          scoreTone
+        )}
+      >
+        {score}
       </span>
-      <span className="block py-1 text-[16px] tracking-[-0.04em] leading-none">
-        {count}
-      </span>
-    </button>
+      <button
+        type="button"
+        onClick={(e) => submit(-1, e)}
+        aria-label={userVote === -1 ? "Remove downvote" : "Downvote"}
+        aria-pressed={userVote === -1}
+        disabled={loading}
+        className={cn(
+          "block w-full border-t-2 border-border py-0.5 text-[12px]",
+          userVote === -1 ? "bg-destructive/30" : "bg-muted"
+        )}
+      >
+        ▼
+      </button>
+    </div>
   );
 }
+
+// Backwards export name so external imports can be renamed in a separate task.
+export const VoteButton = VoteCluster;

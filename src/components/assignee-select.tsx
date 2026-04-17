@@ -8,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { getMonogram } from "@/lib/pillar-utils";
 
 interface User {
   id: string;
@@ -18,15 +20,6 @@ interface AssigneeSelectProps {
   value: string | null;
   onChange: (userId: string | null) => void;
   className?: string;
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((p) => p[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
 }
 
 export function AssigneeSelect({ value, onChange, className }: AssigneeSelectProps) {
@@ -44,30 +37,39 @@ export function AssigneeSelect({ value, onChange, className }: AssigneeSelectPro
       value={value ?? "unassigned"}
       onValueChange={(v) => onChange(v === "unassigned" ? null : v)}
     >
-      <SelectTrigger className={className ?? "h-7 w-auto gap-1 rounded-full bg-muted/50 border-0 px-3 text-xs"}>
-        <SelectValue placeholder="Unassigned">
+      <SelectTrigger className={cn(
+        "h-auto min-h-12 gap-2 border-2 border-ink bg-cream px-3 py-1.5 shadow-brut-sm",
+        "flex flex-col items-start data-placeholder:text-ink-soft",
+        className
+      )}>
+        <span className="text-[9px] font-display uppercase tracking-[0.18em] opacity-70 leading-none">
+          Viewing as
+        </span>
+        <SelectValue placeholder="Anyone">
           {(val: string) => {
-            if (val === "unassigned") return "Unassigned";
+            if (val === "unassigned" || !val) {
+              return <span className="font-display text-base leading-none">Anyone</span>;
+            }
             const user = users.find((u) => u.id === val);
-            if (!user) return "Unassigned";
+            if (!user) return <span className="font-display text-base leading-none">Anyone</span>;
             return (
-              <span className="flex items-center gap-1.5">
-                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[7px] font-semibold text-primary-foreground">
-                  {getInitials(user.name)}
+              <div className="flex items-center gap-2">
+                <span className="flex h-6 w-6 items-center justify-center border-2 border-ink bg-pillar-bx font-display text-[11px] text-ink">
+                  {getMonogram(user.name)}
                 </span>
-                {user.name}
-              </span>
+                <span className="font-display text-base leading-none">{user.name}</span>
+              </div>
             );
           }}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="unassigned">Unassigned</SelectItem>
+        <SelectItem value="unassigned">Anyone</SelectItem>
         {users.map((u) => (
           <SelectItem key={u.id} value={u.id}>
             <span className="flex items-center gap-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[8px] font-semibold text-primary-foreground">
-                {getInitials(u.name)}
+              <span className="flex h-5 w-5 items-center justify-center border-[1.5px] border-ink bg-pillar-bx font-display text-[9px] text-ink">
+                {getMonogram(u.name)}
               </span>
               {u.name}
             </span>

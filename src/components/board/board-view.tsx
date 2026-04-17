@@ -14,6 +14,9 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { InitiativeCard } from "./initiative-card";
 import { LaneCell } from "./lane-cells";
+import { CapacityIndicator } from "./capacity-indicator";
+import { AssigneeSelect } from "@/components/assignee-select";
+import { cn } from "@/lib/utils";
 
 interface Pillar {
   id: string;
@@ -45,6 +48,8 @@ interface Initiative {
 interface BoardViewProps {
   pillars: Pillar[];
   initiatives: Initiative[];
+  assigneeFilter: string | null;
+  onAssigneeFilterChange: (v: string | null) => void;
   onReorder: (updates: Array<{
     id: string;
     sortOrder: number;
@@ -67,6 +72,8 @@ const OPTIONAL_LANES = [
 export function BoardView({
   pillars,
   initiatives,
+  assigneeFilter,
+  onAssigneeFilterChange,
   onReorder,
   onCardClick,
 }: BoardViewProps) {
@@ -143,31 +150,67 @@ export function BoardView({
   const backlogCount = initiatives.filter((i) => i.lane === "backlog").length;
   const doneCount = initiatives.filter((i) => i.lane === "done").length;
 
+  const activePillarCount = new Set(
+    initiatives.filter((i) => i.lane === "now").map((i) => i.pillarId)
+  ).size;
+
+  const quarterLabel = (() => {
+    const d = new Date();
+    const q = Math.floor(d.getMonth() / 3) + 1;
+    return `Q${q} · ${d.getFullYear()}`;
+  })();
+
   return (
     <TooltipProvider>
-      <div className="mb-3 flex items-center gap-2">
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={() => setShowBacklog(!showBacklog)}
-            className={`rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors ${
-              showBacklog
-                ? "border-primary/30 bg-primary/10 text-primary"
-                : "border-border text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Backlog{backlogCount > 0 ? ` (${backlogCount})` : ""}
-          </button>
-          <button
-            onClick={() => setShowDone(!showDone)}
-            className={`rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors ${
-              showDone
-                ? "border-primary/30 bg-primary/10 text-primary"
-                : "border-border text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Done{doneCount > 0 ? ` (${doneCount})` : ""}
-          </button>
-        </div>
+      {/* Top strip: title + capacity gauge + assignee chip */}
+      <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-stretch mb-4">
+        <h1 className="font-display text-[44px] leading-[0.95] tracking-[-0.045em] border-b-[3px] border-ink pb-1.5 flex items-baseline gap-3">
+          THE&nbsp;ROADMAP
+          <span className="bg-ink text-cream font-sans text-[11px] font-semibold tracking-[0.12em] px-2 py-0.5 self-center translate-y-[-6px]">
+            {quarterLabel}
+          </span>
+        </h1>
+        <CapacityIndicator activePillarCount={activePillarCount} />
+        <AssigneeSelect
+          value={assigneeFilter}
+          onChange={onAssigneeFilterChange}
+          className="w-[200px]"
+        />
+      </div>
+
+      {/* Lane toggles row */}
+      <div className="flex items-center gap-2.5 mb-3">
+        <span className="text-[10px] font-display uppercase tracking-[0.2em] text-ink-soft">
+          Show →
+        </span>
+        <button
+          onClick={() => setShowBacklog(!showBacklog)}
+          className={cn(
+            "border-2 border-ink px-3 py-1 font-sans text-[11px] font-bold uppercase tracking-[0.1em] flex items-center gap-1.5 transition-colors",
+            showBacklog ? "bg-ink text-cream" : "bg-transparent text-ink"
+          )}
+        >
+          Backlog
+          {backlogCount > 0 && (
+            <span className="border-[1.5px] border-ink bg-cream text-ink px-1 text-[10px] font-display leading-[1.4]">
+              {backlogCount}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setShowDone(!showDone)}
+          className={cn(
+            "border-2 border-ink px-3 py-1 font-sans text-[11px] font-bold uppercase tracking-[0.1em] flex items-center gap-1.5 transition-colors",
+            showDone ? "bg-ink text-cream" : "bg-transparent text-ink"
+          )}
+        >
+          Done
+          {doneCount > 0 && (
+            <span className="border-[1.5px] border-ink bg-cream text-ink px-1 text-[10px] font-display leading-[1.4]">
+              {doneCount}
+            </span>
+          )}
+        </button>
       </div>
       <DndContext
         sensors={sensors}

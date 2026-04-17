@@ -94,3 +94,10 @@ export const ListAttachmentsSchema = z.object({
 export const VoteSchema = z.object({
   value: z.union([z.literal(1), z.literal(-1)]),
 });
+
+export type VoteResponse = {
+  upCount: number;
+  downCount: number;
+  score: number;
+  userVote: 1 | -1 | 0;
+};

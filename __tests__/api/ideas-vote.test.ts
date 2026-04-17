@@ -38,6 +38,9 @@ describe("POST /api/ideas/[id]/vote", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toMatchObject({ upCount: 1, downCount: 0, score: 1, userVote: 1 });
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({ value: 1, ideaId: "idea-1", userId: "u1" })
+    );
   });
 
   it("deletes the vote when user re-clicks the same side", async () => {
@@ -52,8 +55,8 @@ describe("POST /api/ideas/[id]/vote", () => {
     const { POST } = await import("@/app/api/ideas/[id]/vote/route");
     const res = await POST(makeVoteRequest("idea-1", 1), { params: Promise.resolve({ id: "idea-1" }) });
     const body = await res.json();
-    expect(body.userVote).toBe(0);
-    expect(deleteFn).toHaveBeenCalled();
+    expect(body).toMatchObject({ upCount: 0, downCount: 0, score: 0, userVote: 0 });
+    expect(deleteFn).toHaveBeenCalledWith(expect.anything());
   });
 
   it("switches the vote when user clicks opposite side", async () => {

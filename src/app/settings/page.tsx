@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -90,6 +91,29 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleSync() {
+    setSyncing(true);
+    setSyncStep(0);
+    setSyncResult(null);
+
+    let step = 0;
+    stepTimerRef.current = setInterval(() => {
+      step = Math.min(step + 1, SYNC_STEPS.length - 1);
+      setSyncStep(step);
+    }, 1800);
+
+    try {
+      const res = await fetch("/api/sync/linear", { method: "POST" });
+      const data = await res.json();
+      setSyncResult(data);
+    } catch {
+      setSyncResult({ created: 0, updated: 0, errors: ["Sync request failed"] });
+    } finally {
+      if (stepTimerRef.current) clearInterval(stepTimerRef.current);
+      setSyncing(false);
+    }
+  }
+
   async function handleRevoke(id: string) {
     setTokens((prev) => prev.filter((t) => t.id !== id));
     try {
@@ -144,64 +168,121 @@ export default function SettingsPage() {
       <OauthApps />
 
       <div>
-      <h2 className="mb-2 text-lg font-medium">Linear Sync</h2>
-      <p className="mb-4 text-sm text-muted-foreground">
-        Pull latest project data from Linear — descriptions, leads, issue counts, and statuses.
-      </p>
-      <div className="mb-8 space-y-3">
-        <Button
-          onClick={async () => {
-            setSyncing(true);
-            setSyncStep(0);
-            setSyncResult(null);
+      <section className="border-2 border-ink bg-cream shadow-brut-md overflow-hidden mb-8">
+        <header className="bg-ink text-cream px-3.5 py-2.5 flex justify-between items-baseline">
+          <span className="font-display text-[16px] tracking-[-0.02em]">
+            LINEAR SYNC
+          </span>
+          <span className="font-mono text-[10px] tracking-[0.08em]">
+            {syncing
+              ? `TRIGGERED ${new Date().toLocaleTimeString()} · MANUAL`
+              : syncResult
+              ? `LAST SYNC COMPLETE · ${(syncResult.created ?? 0) + (syncResult.updated ?? 0)} CHANGES`
+              : "NOT YET RUN THIS SESSION"}
+          </span>
+        </header>
 
-            // Advance through steps on a timer
-            let step = 0;
-            stepTimerRef.current = setInterval(() => {
-              step = Math.min(step + 1, SYNC_STEPS.length - 1);
-              setSyncStep(step);
-            }, 1800);
-
-            try {
-              const res = await fetch("/api/sync/linear", { method: "POST" });
-              const data = await res.json();
-              setSyncResult(data);
-            } catch {
-              setSyncResult({ created: 0, updated: 0, errors: ["Sync request failed"] });
-            } finally {
-              if (stepTimerRef.current) clearInterval(stepTimerRef.current);
-              setSyncing(false);
-            }
-          }}
-          disabled={syncing}
-        >
-          {syncing ? "Syncing…" : "Sync from Linear"}
-        </Button>
-
-        {syncing && (
-          <div className="space-y-2">
-            {/* Progress bar */}
-            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-700 ease-out"
-                style={{ width: `${SYNC_STEPS[syncStep].progress}%` }}
-              />
+        <div className="p-4">
+          <div className="flex justify-between items-baseline mb-2.5">
+            <div className="font-display text-[10px] tracking-[0.16em] bg-pillar-ai border-2 border-ink px-2 py-1 shadow-brut-sm flex items-center gap-1.5">
+              {syncing && (
+                <span
+                  aria-hidden
+                  className="w-2.5 h-2.5 bg-destructive border-2 border-ink inline-block motion-safe:animate-[blip_1s_infinite]"
+                />
+              )}
+              {syncing ? "RUNNING…" : syncResult ? "COMPLETE" : "READY"}
             </div>
-            {/* Step label */}
-            <p className="animate-pulse text-sm text-muted-foreground">
-              {SYNC_STEPS[syncStep].label}
-            </p>
+            {syncing ? (
+              <span className="font-mono text-[10px] opacity-70">
+                ETA ~{Math.max(1, Math.round((SYNC_STEPS.length - syncStep) * 1.2))}s
+              </span>
+            ) : (
+              <Button onClick={handleSync} disabled={syncing}>
+                {syncResult ? "SYNC AGAIN" : "RUN SYNC"}
+              </Button>
+            )}
           </div>
-        )}
 
-        {!syncing && syncResult && (
-          <p className={`text-sm ${syncResult.errors.length > 0 ? "text-destructive" : "text-muted-foreground"}`}>
-            {syncResult.errors.length > 0
-              ? `Error: ${syncResult.errors[0]}`
-              : `Done — ${syncResult.created} created, ${syncResult.updated} updated`}
-          </p>
-        )}
-      </div>
+          {/* Hatched progress meter */}
+          <div className="h-[26px] border-2 border-ink bg-cream-2 shadow-brut-sm relative overflow-hidden">
+            <div
+              className="h-full transition-[width] ease-out duration-500"
+              style={{
+                width: `${
+                  syncing
+                    ? SYNC_STEPS[syncStep]?.progress ?? 0
+                    : syncResult
+                    ? 100
+                    : 0
+                }%`,
+                backgroundImage:
+                  "repeating-linear-gradient(45deg, var(--ink) 0 6px, oklch(0.3 0.01 60) 6px 12px)",
+              }}
+            />
+            <span
+              className="absolute right-2 top-1/2 -translate-y-1/2 font-display text-[14px] tracking-[-0.03em]"
+              style={{ color: "var(--cream)", mixBlendMode: "difference" }}
+            >
+              {syncing
+                ? SYNC_STEPS[syncStep]?.progress ?? 0
+                : syncResult
+                ? 100
+                : 0}
+              %
+            </span>
+          </div>
+
+          {/* Steps list */}
+          <ul className="mt-4">
+            {SYNC_STEPS.map((step, idx) => {
+              const isDone = syncResult != null || (syncing && idx < syncStep);
+              const isActive = syncing && idx === syncStep;
+              return (
+                <li
+                  key={step.label}
+                  className={cn(
+                    "grid grid-cols-[22px_1fr_auto] gap-2.5 items-center py-1.5 px-0.5 text-[12px] border-b-[1.5px] border-ink",
+                    isDone && "opacity-65",
+                    isActive && "bg-cream-2 px-1 font-bold"
+                  )}
+                >
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "w-4 h-4 border-2 border-ink relative",
+                      isDone
+                        ? "bg-ink"
+                        : isActive
+                        ? "bg-pillar-ai motion-safe:animate-[stepPulse_0.9s_infinite]"
+                        : "bg-transparent"
+                    )}
+                  >
+                    {isDone && (
+                      <span className="absolute -top-[3px] left-[1px] font-display text-[13px] text-pillar-ai">
+                        ✓
+                      </span>
+                    )}
+                  </span>
+                  <span className={cn(isDone && "line-through")}>
+                    {step.label}
+                    {isActive && "…"}
+                  </span>
+                  <span className="font-mono text-[10px] opacity-60">
+                    {isDone ? "done" : isActive ? "↻" : "—"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+
+          {!syncing && syncResult && syncResult.errors.length > 0 && (
+            <div className="mt-3 border-2 border-ink bg-cream-2 px-3 py-2 font-mono text-[11px] text-destructive">
+              ERROR: {syncResult.errors[0]}
+            </div>
+          )}
+        </div>
+      </section>
 
       <h2 className="mb-2 text-lg font-medium">API Tokens</h2>
       <p className="mb-4 text-sm text-muted-foreground">

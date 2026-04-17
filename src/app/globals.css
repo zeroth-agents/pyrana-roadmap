@@ -224,3 +224,13 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+@keyframes blip {
+  0%, 100% { background-color: var(--destructive); }
+  50% { background-color: var(--pillar-ai); }
+}
+
+@keyframes stepPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}

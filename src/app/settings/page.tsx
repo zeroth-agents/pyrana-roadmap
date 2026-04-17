@@ -173,7 +173,7 @@ export default function SettingsPage() {
       <OauthApps />
 
       <div>
-      <section className="border-2 border-ink bg-cream shadow-brut-md overflow-hidden mb-8">
+      <section className="border-2 border-border bg-card shadow-brut-md overflow-hidden mb-8">
         <header className="bg-ink text-cream px-3.5 py-2.5 flex justify-between items-baseline">
           <span className="font-display text-[16px] tracking-[-0.02em]">
             LINEAR SYNC
@@ -189,11 +189,11 @@ export default function SettingsPage() {
 
         <div className="p-4">
           <div className="flex justify-between items-baseline mb-2.5">
-            <div className="font-display text-[10px] tracking-[0.16em] bg-pillar-ai border-2 border-ink px-2 py-1 shadow-brut-sm flex items-center gap-1.5">
+            <div className="font-display text-[10px] tracking-[0.16em] bg-pillar-ai border-2 border-border px-2 py-1 shadow-brut-sm flex items-center gap-1.5">
               {syncing && (
                 <span
                   aria-hidden
-                  className="w-2.5 h-2.5 bg-destructive border-2 border-ink inline-block motion-safe:animate-[blip_1s_infinite]"
+                  className="w-2.5 h-2.5 bg-destructive border-2 border-border inline-block motion-safe:animate-[blip_1s_infinite]"
                 />
               )}
               {syncing ? "RUNNING…" : syncResult ? "COMPLETE" : "READY"}
@@ -210,7 +210,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Hatched progress meter */}
-          <div className="h-[26px] border-2 border-ink bg-cream-2 shadow-brut-sm relative overflow-hidden">
+          <div className="h-[26px] border-2 border-border bg-muted shadow-brut-sm relative overflow-hidden">
             <div
               className="h-full transition-[width] ease-out duration-500"
               style={{
@@ -247,15 +247,15 @@ export default function SettingsPage() {
                 <li
                   key={step.label}
                   className={cn(
-                    "grid grid-cols-[22px_1fr_auto] gap-2.5 items-center py-1.5 px-0.5 text-[12px] border-b-[1.5px] border-ink",
+                    "grid grid-cols-[22px_1fr_auto] gap-2.5 items-center py-1.5 px-0.5 text-[12px] border-b-[1.5px] border-border",
                     isDone && "opacity-65",
-                    isActive && "bg-cream-2 px-1 font-bold"
+                    isActive && "bg-muted px-1 font-bold"
                   )}
                 >
                   <span
                     aria-hidden
                     className={cn(
-                      "w-4 h-4 border-2 border-ink relative",
+                      "w-4 h-4 border-2 border-border relative",
                       isDone
                         ? "bg-ink"
                         : isActive
@@ -282,14 +282,14 @@ export default function SettingsPage() {
           </ul>
 
           {!syncing && syncResult && syncResult.errors.length > 0 && (
-            <div className="mt-3 border-2 border-ink bg-cream-2 px-3 py-2 font-mono text-[11px] text-destructive">
+            <div className="mt-3 border-2 border-border bg-muted px-3 py-2 font-mono text-[11px] text-destructive">
               ERROR: {syncResult.errors[0]}
             </div>
           )}
         </div>
       </section>
 
-      <section className="border-2 border-ink bg-cream shadow-brut-md overflow-hidden mt-6">
+      <section className="border-2 border-border bg-card shadow-brut-md overflow-hidden mt-6">
         <header className="bg-ink text-cream px-3.5 py-2.5 flex justify-between items-baseline">
           <span className="font-display text-[16px] tracking-[-0.02em]">ACCESS TOKENS</span>
           <span className="font-mono text-[10px] tracking-[0.08em]">
@@ -298,11 +298,11 @@ export default function SettingsPage() {
         </header>
 
         {newToken && (
-          <div className="m-4 border-2 border-ink bg-pillar-ai shadow-brut-md p-4">
+          <div className="m-4 border-2 border-border bg-pillar-ai shadow-brut-md p-4">
             <div className="font-display text-[12px] tracking-[0.12em] mb-2">
               NEW TOKEN — COPY IT NOW (YOU WON&apos;T SEE IT AGAIN)
             </div>
-            <div className="font-mono text-[13px] bg-cream border-2 border-ink px-2 py-1.5 break-all">
+            <div className="font-mono text-[13px] bg-background border-2 border-border px-2 py-1.5 break-all">
               {newToken}
             </div>
             <Button onClick={handleCopy} className="mt-2">
@@ -315,7 +315,7 @@ export default function SettingsPage() {
           {tokens.map((t) => (
             <div
               key={t.id}
-              className="border-2 border-ink bg-cream shadow-brut-sm p-3 grid grid-cols-[1fr_auto] gap-2 items-center"
+              className="border-2 border-border bg-card shadow-brut-sm p-3 grid grid-cols-[1fr_auto] gap-2 items-center"
             >
               <div>
                 <div className="font-display text-[12px] tracking-[-0.01em]">
@@ -339,7 +339,7 @@ export default function SettingsPage() {
           <button
             onClick={handleCreate}
             disabled={creating}
-            className="border-2 border-dashed border-ink bg-transparent p-3 font-display text-[11px] tracking-[0.12em] uppercase flex justify-center items-center gap-1.5 hover:bg-cream-2 disabled:opacity-50 cursor-pointer"
+            className="border-2 border-dashed border-border bg-transparent p-3 font-display text-[11px] tracking-[0.12em] uppercase flex justify-center items-center gap-1.5 hover:bg-muted disabled:opacity-50 cursor-pointer"
           >
             {creating ? TOKEN_STEPS[tokenStep].label.toUpperCase() : "+ MINT NEW TOKEN"}
           </button>

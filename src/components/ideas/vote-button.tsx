@@ -52,13 +52,13 @@ export function VoteButton({
       aria-pressed={voted}
       disabled={loading}
       className={cn(
-        "border-2 border-ink bg-cream w-[38px] flex flex-col items-stretch justify-start font-display select-none",
+        "border-2 border-border bg-background w-[38px] flex flex-col items-stretch justify-start font-display select-none",
         loading && "opacity-50"
       )}
     >
       <span
         className={cn(
-          "block w-full border-b-2 border-ink py-0.5 text-[12px]",
+          "block w-full border-b-2 border-border py-0.5 text-[12px]",
           voted ? "bg-pillar-bx" : "bg-pillar-ai"
         )}
       >

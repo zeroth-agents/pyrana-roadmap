@@ -170,7 +170,7 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
                 IDEA · {idea.status.toUpperCase()}
                 {pillar && ` · ${pillar.name.toUpperCase()}`}
               </div>
-              <SheetTitle className="font-display text-[32px] leading-[0.95] tracking-[-0.035em] pb-3 border-b-[3px] border-ink">
+              <SheetTitle className="font-display text-[32px] leading-[0.95] tracking-[-0.035em] pb-3 border-b-[3px] border-border">
                 {idea.title}
               </SheetTitle>
             </SheetHeader>
@@ -192,14 +192,14 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
                   Author · Submitted
                 </div>
                 <div className="font-mono text-[12px] mt-0.5 flex items-center gap-1.5">
-                  <span className="inline-flex h-5 w-5 items-center justify-center border-[1.5px] border-ink bg-pillar-pf font-display text-[9px]">
+                  <span className="inline-flex h-5 w-5 items-center justify-center border-[1.5px] border-border bg-pillar-pf font-display text-[9px]">
                     {getMonogram(idea.authorName)}
                   </span>
                   {idea.authorName} · {new Date(idea.createdAt).toLocaleDateString()}
                 </div>
               </div>
               {idea.priorityScore != null && (
-                <div className="ml-auto border-2 border-ink bg-pillar-ai px-2.5 py-1 shadow-brut-sm">
+                <div className="ml-auto border-2 border-border bg-pillar-ai px-2.5 py-1 shadow-brut-sm">
                   <div className="font-display text-[9px] tracking-[0.18em] uppercase opacity-60">Priority</div>
                   <div className="font-display text-[20px] tracking-[-0.03em] leading-none">P{idea.priorityScore}</div>
                 </div>
@@ -211,7 +211,7 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
               {/* §01 Body */}
               <div className="px-7">
                 <SectionHeader num="01" label="Body" />
-                <div className="mt-3 font-serif italic text-[15px] leading-[1.35] bg-cream-2 border-2 border-ink p-3.5 shadow-brut-sm prose-neutral max-w-none">
+                <div className="mt-3 font-serif italic text-[15px] leading-[1.35] bg-muted border-2 border-border p-3.5 shadow-brut-sm prose-neutral max-w-none">
                   <Markdown
                     remarkPlugins={[remarkGfm]}
                     components={{
@@ -236,7 +236,7 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
                     value={idea.priorityScore?.toString() ?? "none"}
                     onValueChange={handlePriorityChange}
                   >
-                    <SelectTrigger className="h-auto border-2 border-ink px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--ink)] w-auto gap-1.5 bg-cream">
+                    <SelectTrigger className="h-auto border-2 border-border px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)] w-auto gap-1.5 bg-background">
                       <span className="text-[8px] tracking-[0.2em] uppercase opacity-55 mr-0.5">Priority</span>
                       <SelectValue>
                         {(value: string) => value === "none" ? "—" : `P${value}`}
@@ -267,8 +267,8 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
                     }}
                   >
                     <SelectTrigger className={cn(
-                      "h-auto border-2 border-ink px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--ink)] w-auto gap-1.5",
-                      pillar ? `bg-pillar-${getPillarSlug(pillar.name)}` : "bg-cream"
+                      "h-auto border-2 border-border px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)] w-auto gap-1.5",
+                      pillar ? `bg-pillar-${getPillarSlug(pillar.name)}` : "bg-background"
                     )}>
                       <span className="text-[8px] tracking-[0.2em] uppercase opacity-55 mr-0.5">Pillar</span>
                       <SelectValue placeholder="Choose pillar" />

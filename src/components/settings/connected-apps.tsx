@@ -43,7 +43,7 @@ export function ConnectedApps() {
   }
 
   return (
-    <section className="border-2 border-ink bg-cream shadow-brut-md overflow-hidden">
+    <section className="border-2 border-border bg-card shadow-brut-md overflow-hidden">
       <header className="bg-ink text-cream px-3.5 py-2.5 flex justify-between items-baseline">
         <span className="font-display text-[16px] tracking-[-0.02em]">CONNECTED APPS</span>
         <span className="font-mono text-[10px] tracking-[0.08em]">
@@ -65,11 +65,11 @@ export function ConnectedApps() {
           return (
             <div
               key={item.clientId}
-              className="border-2 border-ink bg-cream shadow-brut-sm p-3 grid grid-cols-[40px_1fr_auto] gap-3 items-center"
+              className="border-2 border-border bg-card shadow-brut-sm p-3 grid grid-cols-[40px_1fr_auto] gap-3 items-center"
             >
               <div
                 className={cn(
-                  "h-10 w-10 border-2 border-ink font-display text-[14px] flex items-center justify-center shrink-0",
+                  "h-10 w-10 border-2 border-border font-display text-[14px] flex items-center justify-center shrink-0",
                   isDrive ? "bg-pillar-dc" : "bg-pillar-pf"
                 )}
               >

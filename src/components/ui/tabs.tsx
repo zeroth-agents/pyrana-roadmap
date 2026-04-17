@@ -24,7 +24,7 @@ function Tabs({
 }
 
 const tabsListVariants = cva(
-  "group/tabs-list inline-flex h-10 items-center justify-center gap-2 text-ink",
+  "group/tabs-list inline-flex h-10 items-center justify-center gap-2 text-foreground",
   {
     variants: {
       variant: {
@@ -58,7 +58,7 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
       className={cn(
-        "inline-flex items-center justify-center whitespace-nowrap border-b-[3px] border-transparent px-3 py-1.5 text-sm font-display uppercase tracking-[0.08em] text-ink-soft transition-all hover:text-ink data-[state=active]:border-ink data-[state=active]:text-ink focus-visible:outline-2 focus-visible:outline-ink",
+        "inline-flex items-center justify-center whitespace-nowrap border-b-[3px] border-transparent px-3 py-1.5 text-sm font-display uppercase tracking-[0.08em] text-muted-foreground transition-all hover:text-foreground data-[state=active]:border-foreground data-[state=active]:text-foreground focus-visible:outline-2 focus-visible:outline-foreground",
         className
       )}
       {...props}
@@ -70,7 +70,7 @@ function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
   return (
     <TabsPrimitive.Panel
       data-slot="tabs-content"
-      className={cn("mt-4 focus-visible:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink", className)}
+      className={cn("mt-4 focus-visible:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground", className)}
       {...props}
     />
   )

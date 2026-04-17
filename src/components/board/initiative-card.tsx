@@ -58,12 +58,12 @@ export function InitiativeCard({
     <div ref={setNodeRef} style={style}>
       <div
         className={cn(
-          "cursor-pointer border-2 border-ink shadow-brut-sm transition-transform",
+          "cursor-pointer border-2 border-border shadow-brut-sm transition-transform",
           "hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[4px_4px_0_var(--shadow-color)]",
           isDragging && "cursor-grabbing opacity-80"
         )}
         style={{
-          backgroundColor: `color-mix(in oklab, var(--pillar-${pillarSlug}) 22%, var(--cream))`,
+          backgroundColor: `color-mix(in oklab, var(--pillar-${pillarSlug}) 22%, var(--card))`,
         }}
         onClick={onClick}
         {...attributes}
@@ -77,7 +77,7 @@ export function InitiativeCard({
             </h3>
             <div
               className={cn(
-                "h-[26px] w-[26px] border-2 border-ink flex items-center justify-center font-display text-[15px]",
+                "h-[26px] w-[26px] border-2 border-border flex items-center justify-center font-display text-[15px]",
                 SIZE_BG[initiative.size] ?? "bg-ink text-cream"
               )}
             >
@@ -95,8 +95,8 @@ export function InitiativeCard({
           {/* Progress */}
           {total > 0 && pct !== null && (
             <div className="mt-2 grid grid-cols-[1fr_auto] gap-2 items-center">
-              <div className="h-2 border-2 border-ink bg-cream-2 overflow-hidden">
-                <div className="h-full bg-ink" style={{ width: `${pct}%` }} />
+              <div className="h-2 border-2 border-border bg-muted overflow-hidden">
+                <div className="h-full bg-foreground" style={{ width: `${pct}%` }} />
               </div>
               <span className="font-display text-[12px] tracking-[-0.03em] leading-none min-w-[34px] text-right">
                 {pct}%
@@ -106,10 +106,10 @@ export function InitiativeCard({
 
           {/* Footer: assignee */}
           {initiative.assigneeName && (
-            <div className="mt-2 flex items-center gap-1.5 border-t-[1.5px] border-ink pt-1.5">
+            <div className="mt-2 flex items-center gap-1.5 border-t-[1.5px] border-border pt-1.5">
               <div
                 className={cn(
-                  "h-5 w-5 border-[1.5px] border-ink font-display text-[9px] flex items-center justify-center",
+                  "h-5 w-5 border-[1.5px] border-border font-display text-[9px] flex items-center justify-center",
                   `bg-pillar-${pillarSlug}`
                 )}
               >

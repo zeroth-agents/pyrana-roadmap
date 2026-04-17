@@ -55,8 +55,8 @@ export function IdeaCard({ idea, pillars, onClick, onVoteChange }: IdeaCardProps
     <div
       onClick={onClick}
       className={cn(
-        "cursor-pointer border-2 border-ink shadow-brut-sm transition-transform hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[4px_4px_0_var(--shadow-color)] grid grid-cols-[auto_1fr] gap-2.5 p-3 relative",
-        isPromoted ? "bg-pillar-bx" : "bg-cream-2"
+        "cursor-pointer border-2 border-border shadow-brut-sm transition-transform hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[4px_4px_0_var(--shadow-color)] grid grid-cols-[auto_1fr] gap-2.5 p-3 relative",
+        isPromoted ? "bg-pillar-bx" : "bg-muted"
       )}
     >
       {/* Vote stack */}
@@ -72,7 +72,7 @@ export function IdeaCard({ idea, pillars, onClick, onVoteChange }: IdeaCardProps
         {pillar && (
           <span
             className={cn(
-              "inline-block border-[1.5px] border-ink font-display text-[8px] tracking-[0.18em] uppercase px-1 py-0.5 mb-1",
+              "inline-block border-[1.5px] border-border font-display text-[8px] tracking-[0.18em] uppercase px-1 py-0.5 mb-1",
               `bg-pillar-${pillarSlug}`
             )}
           >

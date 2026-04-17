@@ -213,11 +213,11 @@ export function InitiativeDetail({
           <div className="font-display text-[10px] tracking-[0.22em] uppercase bg-ink text-cream px-2 py-0.5 self-start mb-2">
             {pillarName.toUpperCase()} · {LANE_LABELS[lane]?.toUpperCase() ?? lane.toUpperCase()}
           </div>
-          <SheetTitle className="font-display text-[32px] leading-[0.95] tracking-[-0.035em] pb-3 border-b-[3px] border-ink">
+          <SheetTitle className="font-display text-[32px] leading-[0.95] tracking-[-0.035em] pb-3 border-b-[3px] border-border">
             {initiative.title}
           </SheetTitle>
           {initiative.linearProjectId && (
-            <div className="mt-2 font-mono text-[11px] border-2 border-ink bg-cream-2 px-2 py-1 shadow-brut-sm self-start">
+            <div className="mt-2 font-mono text-[11px] border-2 border-border bg-muted px-2 py-1 shadow-brut-sm self-start">
               INIT-{initiative.id.slice(0, 6).toUpperCase()} · LIN
             </div>
           )}
@@ -240,7 +240,7 @@ export function InitiativeDetail({
                 onUpdate();
               }}
             >
-              <SelectTrigger className="h-auto border-2 border-ink bg-ink text-cream px-2.5 py-1 shadow-[2px_2px_0_var(--ink)] font-bold text-[11px] tracking-[0.04em] w-auto gap-1.5">
+              <SelectTrigger className="h-auto border-2 border-foreground bg-ink text-cream px-2.5 py-1 shadow-[2px_2px_0_var(--foreground)] font-bold text-[11px] tracking-[0.04em] w-auto gap-1.5">
                 <span className="text-[8px] tracking-[0.2em] uppercase opacity-70 mr-0.5">Lane</span>
                 <SelectValue />
               </SelectTrigger>
@@ -254,7 +254,7 @@ export function InitiativeDetail({
             {/* Pillar chip (color-filled) */}
             <div
               className={cn(
-                "flex items-center gap-1.5 border-2 border-ink px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--ink)]",
+                "flex items-center gap-1.5 border-2 border-border px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)]",
                 `bg-pillar-${getPillarSlug(pillarName)}`
               )}
             >
@@ -263,7 +263,7 @@ export function InitiativeDetail({
             </div>
 
             {/* Size + issue count chip */}
-            <div className="border-2 border-ink bg-destructive px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--ink)] text-ink flex items-center gap-1.5">
+            <div className="border-2 border-border bg-destructive px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)] text-ink flex items-center gap-1.5">
               <span className="text-[8px] tracking-[0.2em] uppercase opacity-55 mr-0.5">Size</span>
               {initiative.size} · {total} issues
             </div>
@@ -286,8 +286,8 @@ export function InitiativeDetail({
           {/* Progress rail */}
           {total > 0 && (
             <div className="grid grid-cols-[1fr_auto] gap-5 items-center">
-              <div className="h-5 border-2 border-ink bg-cream-2 overflow-hidden relative">
-                <div className="h-full bg-ink transition-all" style={{ width: `${progress}%` }} />
+              <div className="h-5 border-2 border-border bg-muted overflow-hidden relative">
+                <div className="h-full bg-foreground transition-all" style={{ width: `${progress}%` }} />
               </div>
               <div className="font-display text-[44px] leading-[0.9] tracking-[-0.05em] flex items-baseline gap-1">
                 {progress}
@@ -324,7 +324,7 @@ export function InitiativeDetail({
           {/* §01 Why — Rationale */}
           <SectionHeader num="01" label="Why" detail="Rationale" />
           {(rationale || initiative.why) ? (
-            <blockquote className="mt-3 font-serif italic text-[15px] leading-[1.35] bg-cream-2 border-2 border-ink p-3.5 shadow-brut-sm before:content-['\u201C'] before:text-[22px] before:not-italic before:opacity-60 before:mr-0.5 after:content-['\u201D'] after:text-[22px] after:not-italic after:opacity-60 after:ml-0.5">
+            <blockquote className="mt-3 font-serif italic text-[15px] leading-[1.35] bg-muted border-2 border-border p-3.5 shadow-brut-sm before:content-['\u201C'] before:text-[22px] before:not-italic before:opacity-60 before:mr-0.5 after:content-['\u201D'] after:text-[22px] after:not-italic after:opacity-60 after:ml-0.5">
               {rationale || initiative.why}
             </blockquote>
           ) : null}
@@ -387,8 +387,8 @@ export function InitiativeDetail({
                       <div
                         key={m.name}
                         className={cn(
-                          "border-2 border-ink shadow-brut-sm p-3 grid grid-cols-[1fr_auto] gap-1.5",
-                          done ? "bg-pillar-bx" : "bg-cream"
+                          "border-2 border-border shadow-brut-sm p-3 grid grid-cols-[1fr_auto] gap-1.5",
+                          done ? "bg-pillar-bx" : "bg-card"
                         )}
                       >
                         <div className="font-display text-[13px] tracking-[-0.01em]">{m.name}</div>
@@ -398,8 +398,8 @@ export function InitiativeDetail({
                             {m.description}
                           </p>
                         )}
-                        <div className="col-span-full h-1.5 border-[1.5px] border-ink bg-cream-2 mt-1">
-                          <div className="h-full bg-ink" style={{ width: `${pct}%` }} />
+                        <div className="col-span-full h-1.5 border-[1.5px] border-border bg-muted mt-1">
+                          <div className="h-full bg-foreground" style={{ width: `${pct}%` }} />
                         </div>
                       </div>
                     );
@@ -433,7 +433,7 @@ export function InitiativeDetail({
           ) : !initiative.linearProjectId ? (
             <p className="text-sm text-ink-soft py-4 text-center mt-3">Not linked to a Linear project</p>
           ) : (
-            <div className="mt-3 border-t-2 border-ink">
+            <div className="mt-3 border-t-2 border-border">
               {issues.map((issue) => {
                 const isExpanded = expandedIssueId === issue.id;
                 const statusBg =
@@ -444,20 +444,20 @@ export function InitiativeDetail({
                 return (
                   <div key={issue.id}>
                     <button
-                      className="w-full grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center py-2 px-0.5 border-b-2 border-ink text-left hover:bg-cream-2"
+                      className="w-full grid grid-cols-[auto_1fr_auto_auto] gap-2 items-center py-2 px-0.5 border-b-2 border-border text-left hover:bg-muted"
                       onClick={() => setExpandedIssueId(isExpanded ? null : issue.id)}
                     >
-                      <span className={cn("h-3 w-3 border-2 border-ink", statusBg)} aria-hidden />
+                      <span className={cn("h-3 w-3 border-2 border-border", statusBg)} aria-hidden />
                       <span className="text-[12px] font-semibold truncate">{issue.title}</span>
                       <span className="font-mono text-[10px] tracking-[0.04em] opacity-70">{issue.identifier}</span>
                       {issue.assigneeName && (
-                        <span className="h-[18px] w-[18px] border-[1.5px] border-ink bg-pillar-pf font-display text-[9px] flex items-center justify-center">
+                        <span className="h-[18px] w-[18px] border-[1.5px] border-border bg-pillar-pf font-display text-[9px] flex items-center justify-center">
                           {getMonogram(issue.assigneeName)}
                         </span>
                       )}
                     </button>
                     {isExpanded && (
-                      <div className="ml-6 mr-2 mb-2 mt-1 border-2 border-ink bg-cream p-3 space-y-3">
+                      <div className="ml-6 mr-2 mb-2 mt-1 border-2 border-border bg-card p-3 space-y-3">
                         {issue.description && (
                           <div className="prose prose-xs prose-muted max-w-none text-xs text-muted-foreground [&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mt-3 [&_h2]:mb-1 [&_h3]:text-xs [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:my-1 [&_ul]:my-1 [&_ul]:pl-4 [&_li]:my-0.5 [&_strong]:text-foreground/70">
                             <Markdown
@@ -522,9 +522,9 @@ export function InitiativeDetail({
                           </div>
                         </div>
                         <div className="flex items-center gap-2 font-mono text-[10px]">
-                          <span className="border-2 border-ink px-1.5 py-0.5">{issue.priorityLabel}</span>
+                          <span className="border-2 border-border px-1.5 py-0.5">{issue.priorityLabel}</span>
                           {issue.labels.map((label) => (
-                            <span key={label} className="border border-ink px-1.5 py-0.5 opacity-70">{label}</span>
+                            <span key={label} className="border border-border px-1.5 py-0.5 opacity-70">{label}</span>
                           ))}
                         </div>
                       </div>
@@ -553,7 +553,7 @@ export function InitiativeDetail({
                 href={initiative.linearProjectUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center border-2 border-ink bg-transparent text-ink px-4 py-2 font-display uppercase tracking-[0.08em] text-sm shadow-brut-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_var(--shadow-color)] transition-transform"
+                className="inline-flex items-center justify-center border-2 border-border bg-transparent text-foreground px-4 py-2 font-display uppercase tracking-[0.08em] text-sm shadow-brut-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_var(--shadow-color)] transition-transform"
               >
                 OPEN IN LINEAR ↗
               </a>

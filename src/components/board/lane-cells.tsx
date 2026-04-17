@@ -58,7 +58,7 @@ export function LaneCell({
         {items.length === 0 ? (
           <div
             aria-hidden
-            className="border-2 border-dashed border-ink hatch-ink min-h-[60px]"
+            className="border-2 border-dashed border-border hatch-ink min-h-[60px]"
             style={{ opacity: 0.28 }}
           />
         ) : (

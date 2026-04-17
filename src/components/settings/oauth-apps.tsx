@@ -25,8 +25,8 @@ function CopyableField({ label, value, highlight }: { label: string; value: stri
     <div>
       <div className="font-display text-[10px] tracking-[0.15em] uppercase mb-1">{label}</div>
       <div
-        className={`font-mono text-[13px] border-2 border-ink px-2 py-1.5 break-all ${
-          highlight ? "bg-pillar-ai" : "bg-cream-2"
+        className={`font-mono text-[13px] border-2 border-border px-2 py-1.5 break-all ${
+          highlight ? "bg-pillar-ai" : "bg-muted"
         }`}
       >
         {value}
@@ -109,7 +109,7 @@ export function OauthApps() {
   }
 
   return (
-    <section className="border-2 border-ink bg-cream shadow-brut-md overflow-hidden">
+    <section className="border-2 border-border bg-card shadow-brut-md overflow-hidden">
       <header className="bg-ink text-cream px-3.5 py-2.5 flex justify-between items-baseline">
         <span className="font-display text-[16px] tracking-[-0.02em]">OAUTH APPS</span>
         <span className="font-mono text-[10px] tracking-[0.08em]">
@@ -127,7 +127,7 @@ export function OauthApps() {
         {items.map((item) => (
           <div
             key={item.clientId}
-            className="border-2 border-ink bg-cream shadow-brut-sm p-3 grid grid-cols-[1fr_auto] gap-2 items-center"
+            className="border-2 border-border bg-card shadow-brut-sm p-3 grid grid-cols-[1fr_auto] gap-2 items-center"
           >
             <div>
               <div className="font-display text-[12px]">{item.name}</div>
@@ -146,7 +146,7 @@ export function OauthApps() {
 
         <button
           onClick={() => setCreateOpen(true)}
-          className="border-2 border-dashed border-ink bg-transparent p-3 font-display text-[11px] tracking-[0.12em] uppercase flex justify-center items-center gap-1.5 hover:bg-cream-2 cursor-pointer"
+          className="border-2 border-dashed border-border bg-transparent p-3 font-display text-[11px] tracking-[0.12em] uppercase flex justify-center items-center gap-1.5 hover:bg-muted cursor-pointer"
         >
           + CREATE OAUTH APP
         </button>
@@ -173,7 +173,7 @@ export function OauthApps() {
             <div>
               <div className="font-display text-[10px] tracking-[0.15em] uppercase mb-1">Redirect URIs (one per line)</div>
               <textarea
-                className="w-full border-2 border-ink bg-cream-2 p-2 font-mono text-[12px] resize-y"
+                className="w-full border-2 border-border bg-muted p-2 font-mono text-[12px] resize-y"
                 rows={3}
                 placeholder="https://example.com/callback"
                 value={redirects}

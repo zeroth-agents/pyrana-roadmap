@@ -18,8 +18,8 @@ export function CapacityIndicator({
     <div
       data-state={state}
       className={cn(
-        "border-2 border-ink px-4 py-2 shadow-brut-sm flex flex-col min-w-[170px]",
-        overCapacity ? "hatch-warn" : "bg-cream-2",
+        "border-2 border-border px-4 py-2 shadow-brut-sm flex flex-col min-w-[170px]",
+        overCapacity ? "hatch-warn" : "bg-muted",
         className
       )}
     >

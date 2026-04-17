@@ -69,7 +69,7 @@ export function InitiativesTable({
   }
 
   return (
-    <div className="border-2 border-ink bg-cream shadow-brut-md overflow-hidden">
+    <div className="border-2 border-border bg-card shadow-brut-md overflow-hidden">
       {/* Header bar */}
       <div className="bg-ink text-cream px-4 py-2.5 flex justify-between items-baseline">
         <span className="font-display text-[18px] tracking-[-0.02em]">
@@ -81,12 +81,12 @@ export function InitiativesTable({
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 px-4 py-3 border-b-2 border-ink bg-cream-2">
+      <div className="flex flex-wrap gap-3 px-4 py-3 border-b-2 border-border bg-muted">
         <Select value={filters.pillar} onValueChange={(v) => setFilters({ ...filters, pillar: v === "all" ? "" : v ?? "" })}>
           <SelectTrigger
             className={cn(
-              "h-auto min-h-9 w-48 border-2 border-ink px-3 py-1 font-bold text-[11px] shadow-brut-sm",
-              filters.pillar ? "bg-pillar-ai" : "bg-cream"
+              "h-auto min-h-9 w-48 border-2 border-border px-3 py-1 font-bold text-[11px] shadow-brut-sm",
+              filters.pillar ? "bg-pillar-ai" : "bg-background"
             )}
           >
             <span className="text-[8px] tracking-[0.18em] uppercase opacity-55 mr-1">Pillar</span>
@@ -101,8 +101,8 @@ export function InitiativesTable({
         <Select value={filters.lane} onValueChange={(v) => setFilters({ ...filters, lane: v === "all" ? "" : v ?? "" })}>
           <SelectTrigger
             className={cn(
-              "h-auto min-h-9 w-32 border-2 border-ink px-3 py-1 font-bold text-[11px] shadow-brut-sm",
-              filters.lane ? "bg-pillar-ai" : "bg-cream"
+              "h-auto min-h-9 w-32 border-2 border-border px-3 py-1 font-bold text-[11px] shadow-brut-sm",
+              filters.lane ? "bg-pillar-ai" : "bg-background"
             )}
           >
             <span className="text-[8px] tracking-[0.18em] uppercase opacity-55 mr-1">Lane</span>
@@ -119,8 +119,8 @@ export function InitiativesTable({
         <Select value={filters.size} onValueChange={(v) => setFilters({ ...filters, size: v === "all" ? "" : v ?? "" })}>
           <SelectTrigger
             className={cn(
-              "h-auto min-h-9 w-32 border-2 border-ink px-3 py-1 font-bold text-[11px] shadow-brut-sm",
-              filters.size ? "bg-pillar-ai" : "bg-cream"
+              "h-auto min-h-9 w-32 border-2 border-border px-3 py-1 font-bold text-[11px] shadow-brut-sm",
+              filters.size ? "bg-pillar-ai" : "bg-background"
             )}
           >
             <span className="text-[8px] tracking-[0.18em] uppercase opacity-55 mr-1">Size</span>
@@ -233,10 +233,10 @@ export function InitiativesTable({
                     onValueChange={(v) => v && onUpdate(initiative.id, { lane: v })}
                   >
                     <SelectTrigger className={cn(
-                      "h-auto border-[1.5px] border-transparent hover:border-ink bg-transparent px-1.5 py-0.5 font-display text-[10px] tracking-[0.14em] uppercase shadow-none",
-                      initiative.lane === "now" && "bg-ink text-cream border-ink",
-                      initiative.lane === "next" && "bg-cream border-ink text-ink",
-                      initiative.lane === "backlog" && "border-dashed border-ink text-ink-soft",
+                      "h-auto border-[1.5px] border-transparent hover:border-border bg-transparent px-1.5 py-0.5 font-display text-[10px] tracking-[0.14em] uppercase shadow-none",
+                      initiative.lane === "now" && "bg-ink text-cream border-foreground",
+                      initiative.lane === "next" && "bg-background border-border text-foreground",
+                      initiative.lane === "backlog" && "border-dashed border-border text-muted-foreground",
                     )}>
                       <SelectValue />
                     </SelectTrigger>
@@ -253,7 +253,7 @@ export function InitiativesTable({
                     onValueChange={(v) => v && onUpdate(initiative.id, { size: v })}
                   >
                     <SelectTrigger className={cn(
-                      "h-auto w-[32px] border-[1.5px] border-ink px-0 py-0 justify-center font-display text-[12px] shadow-none",
+                      "h-auto w-[32px] border-[1.5px] border-border px-0 py-0 justify-center font-display text-[12px] shadow-none",
                       initiative.size === "S" && "bg-pillar-bx",
                       initiative.size === "M" && "bg-pillar-ai",
                       initiative.size === "L" && "bg-pillar-ac",

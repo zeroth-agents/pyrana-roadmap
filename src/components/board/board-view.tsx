@@ -187,13 +187,13 @@ export function BoardView({
         <button
           onClick={() => setShowBacklog(!showBacklog)}
           className={cn(
-            "border-2 border-ink px-3 py-1 font-sans text-[11px] font-bold uppercase tracking-[0.1em] flex items-center gap-1.5 transition-colors",
-            showBacklog ? "bg-ink text-cream" : "bg-transparent text-ink"
+            "border-2 border-foreground px-3 py-1 font-sans text-[11px] font-bold uppercase tracking-[0.1em] flex items-center gap-1.5 transition-colors",
+            showBacklog ? "bg-ink text-cream" : "bg-transparent text-foreground"
           )}
         >
           Backlog
           {backlogCount > 0 && (
-            <span className="border-[1.5px] border-ink bg-cream text-ink px-1 text-[10px] font-display leading-[1.4]">
+            <span className="border-[1.5px] border-foreground bg-background text-foreground px-1 text-[10px] font-display leading-[1.4]">
               {backlogCount}
             </span>
           )}
@@ -201,13 +201,13 @@ export function BoardView({
         <button
           onClick={() => setShowDone(!showDone)}
           className={cn(
-            "border-2 border-ink px-3 py-1 font-sans text-[11px] font-bold uppercase tracking-[0.1em] flex items-center gap-1.5 transition-colors",
-            showDone ? "bg-ink text-cream" : "bg-transparent text-ink"
+            "border-2 border-foreground px-3 py-1 font-sans text-[11px] font-bold uppercase tracking-[0.1em] flex items-center gap-1.5 transition-colors",
+            showDone ? "bg-ink text-cream" : "bg-transparent text-foreground"
           )}
         >
           Done
           {doneCount > 0 && (
-            <span className="border-[1.5px] border-ink bg-cream text-ink px-1 text-[10px] font-display leading-[1.4]">
+            <span className="border-[1.5px] border-foreground bg-background text-foreground px-1 text-[10px] font-display leading-[1.4]">
               {doneCount}
             </span>
           )}
@@ -237,7 +237,7 @@ export function BoardView({
               <div
                 key={pillar.id}
                 className={cn(
-                  "border-2 border-ink p-3 min-h-[96px] shadow-brut-sm flex flex-col justify-between",
+                  "border-2 border-border p-3 min-h-[96px] shadow-brut-sm flex flex-col justify-between",
                   `bg-pillar-${slug}`
                 )}
               >
@@ -269,7 +269,7 @@ export function BoardView({
               // Gutter cell with rotated lane label
               <div
                 key={`${lane.id}-gutter`}
-                className="flex flex-col items-end justify-end border-r-[3px] border-ink pb-3 -mr-2"
+                className="flex flex-col items-end justify-end border-r-[3px] border-border pb-3 -mr-2"
               >
                 <span
                   aria-hidden
@@ -302,7 +302,7 @@ export function BoardView({
               <div
                 key={`${lane.id}-divider`}
                 aria-hidden
-                style={{ gridColumn: "1 / -1", borderTop: "3px solid var(--ink)", height: 0, marginTop: "2px" }}
+                style={{ gridColumn: "1 / -1", borderTop: "3px solid var(--border)", height: 0, marginTop: "2px" }}
               />,
             ];
           })}

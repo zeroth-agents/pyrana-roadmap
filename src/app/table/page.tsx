@@ -59,7 +59,7 @@ export default function TablePage() {
   if (loading) {
     return (
       <div>
-        <h1 className="font-display text-[32px] tracking-[-0.035em] mb-4 border-b-[3px] border-ink pb-1.5">
+        <h1 className="font-display text-[32px] tracking-[-0.035em] mb-4 border-b-[3px] border-border pb-1.5">
           TABLE VIEW
         </h1>
         <div className="space-y-4">
@@ -98,7 +98,7 @@ export default function TablePage() {
 
   return (
     <div>
-      <h1 className="font-display text-[32px] tracking-[-0.035em] mb-4 border-b-[3px] border-ink pb-1.5">
+      <h1 className="font-display text-[32px] tracking-[-0.035em] mb-4 border-b-[3px] border-border pb-1.5">
         TABLE VIEW
       </h1>
       <InitiativesTable

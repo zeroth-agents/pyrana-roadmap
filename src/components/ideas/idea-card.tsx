@@ -3,6 +3,7 @@
 import { VoteCluster } from "./vote-button";
 import { cn } from "@/lib/utils";
 import { getPillarSlug, getMonogram } from "@/lib/pillar-utils";
+import { Archive } from "lucide-react";
 
 interface Pillar {
   id: string;
@@ -30,6 +31,7 @@ interface IdeaCardProps {
   pillars: Pillar[];
   onClick: () => void;
   onVoteChange?: (userVote: 1 | -1 | 0, score: number) => void;
+  onArchive?: (ideaId: string) => void;
 }
 
 function timeAgo(dateStr: string): string {
@@ -45,7 +47,7 @@ function timeAgo(dateStr: string): string {
   return `${weeks}W AGO`;
 }
 
-export function IdeaCard({ idea, pillars, onClick, onVoteChange }: IdeaCardProps) {
+export function IdeaCard({ idea, pillars, onClick, onVoteChange, onArchive }: IdeaCardProps) {
   const pillar = pillars.find((p) => p.id === idea.pillarId);
   const pillarSlug = getPillarSlug(pillar?.name);
   const isPromoted = idea.status === "promoted";
@@ -55,7 +57,7 @@ export function IdeaCard({ idea, pillars, onClick, onVoteChange }: IdeaCardProps
     <div
       onClick={onClick}
       className={cn(
-        "cursor-pointer border-2 border-border shadow-brut-sm transition-transform hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[4px_4px_0_var(--shadow-color)] grid grid-cols-[auto_1fr] gap-2.5 p-3 relative",
+        "group cursor-pointer border-2 border-border shadow-brut-sm transition-transform hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[4px_4px_0_var(--shadow-color)] grid grid-cols-[auto_1fr] gap-2.5 p-3 relative",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
         isPromoted ? "bg-pillar-bx" : "bg-muted"
       )}
@@ -95,6 +97,21 @@ export function IdeaCard({ idea, pillars, onClick, onVoteChange }: IdeaCardProps
           )}
         </div>
       </div>
+
+      {/* Archive button */}
+      {idea.status === "open" && onArchive && (
+        <button
+          type="button"
+          aria-label="Archive idea"
+          onClick={(e) => {
+            e.stopPropagation();
+            onArchive(idea.id);
+          }}
+          className="absolute top-1 right-1 p-1 opacity-0 group-hover:opacity-100 hover:bg-ink hover:text-cream border border-transparent hover:border-ink transition"
+        >
+          <Archive className="h-3 w-3" />
+        </button>
+      )}
 
       {/* Promoted stamp */}
       {isPromoted && (

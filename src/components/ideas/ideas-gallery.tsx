@@ -28,9 +28,10 @@ interface IdeasGalleryProps {
   pillars: Pillar[];
   onSelectIdea: (id: string) => void;
   onRefresh: () => void;
+  onArchive?: (ideaId: string) => void;
 }
 
-export function IdeasGallery({ ideas, pillars, onSelectIdea, onRefresh }: IdeasGalleryProps) {
+export function IdeasGallery({ ideas, pillars, onSelectIdea, onRefresh, onArchive }: IdeasGalleryProps) {
   if (ideas.length === 0) {
     return (
       <div className="flex h-40 items-center justify-center">
@@ -48,6 +49,7 @@ export function IdeasGallery({ ideas, pillars, onSelectIdea, onRefresh }: IdeasG
           pillars={pillars}
           onClick={() => onSelectIdea(idea.id)}
           onVoteChange={() => onRefresh()}
+          onArchive={onArchive}
         />
       ))}
     </div>

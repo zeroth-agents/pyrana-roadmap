@@ -17,6 +17,7 @@ import { CreateIdeaDialog } from "@/components/ideas/create-idea-dialog";
 import { LayoutGrid, List, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface Pillar {
   id: string;
@@ -85,6 +86,38 @@ export default function IdeasPage() {
       fetch("/api/pillars").then((r) => r.json()).then(setPillars),
     ]).then(() => setLoading(false));
   }, [fetchIdeas]);
+
+  async function handleArchive(ideaId: string) {
+    const shouldHide = statusFilter !== "archived" && statusFilter !== "all";
+    const previous = ideas;
+    if (shouldHide) setIdeas((prev) => prev.filter((i) => i.id !== ideaId));
+
+    const res = await fetch(`/api/ideas/${ideaId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "archived" }),
+    });
+
+    if (!res.ok) {
+      setIdeas(previous);
+      toast.error("Could not archive");
+      return;
+    }
+
+    toast("Archived", {
+      action: {
+        label: "Undo",
+        onClick: async () => {
+          await fetch(`/api/ideas/${ideaId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "open" }),
+          });
+          fetchIdeas();
+        },
+      },
+    });
+  }
 
   if (loading) {
     return (
@@ -233,6 +266,7 @@ export default function IdeasPage() {
           pillars={pillars}
           onSelectIdea={setSelectedIdeaId}
           onRefresh={fetchIdeas}
+          onArchive={handleArchive}
         />
       ) : (
         <IdeasList

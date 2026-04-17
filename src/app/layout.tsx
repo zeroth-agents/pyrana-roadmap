@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, Archivo_Black, IBM_Plex_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "sonner";
 import "./globals.css";
 import { auth } from "../../auth";
 import { Sidebar } from "@/components/sidebar";
@@ -60,6 +61,7 @@ export default async function RootLayout({
             children
           )}
         </ThemeProvider>
+        <Toaster position="bottom-right" />
       </body>
     </html>
   );

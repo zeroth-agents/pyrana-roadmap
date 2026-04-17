@@ -1,0 +1,46 @@
+import { describe, it, expect } from "vitest";
+import { render } from "@testing-library/react";
+import { Logo } from "@/components/logo";
+
+describe("Logo", () => {
+  it("framed variant renders the cream background rect", () => {
+    const { container } = render(<Logo variant="framed" />);
+    const svg = container.querySelector("svg")!;
+    expect(svg).toBeInTheDocument();
+    // Cream rect is the background; should be present in framed mode
+    const rects = svg.querySelectorAll("rect");
+    expect(rects.length).toBeGreaterThan(0);
+  });
+
+  it("unframed variant strips the cream background rect", () => {
+    const { container } = render(<Logo variant="unframed" />);
+    const svg = container.querySelector("svg")!;
+    // Unframed should NOT contain any <rect> — only <path>
+    const rects = svg.querySelectorAll("rect");
+    expect(rects.length).toBe(0);
+  });
+
+  it("accepts className and size props", () => {
+    const { container } = render(
+      <Logo variant="framed" className="custom-class" size={48} />
+    );
+    const svg = container.querySelector("svg")!;
+    expect(svg).toHaveClass("custom-class");
+    expect(svg.getAttribute("width")).toBe("48");
+  });
+
+  it("unframed variant allows recoloring via currentColor", () => {
+    const { container } = render(
+      <Logo variant="unframed" className="text-white" />
+    );
+    const svg = container.querySelector("svg")!;
+    // ink paths should use currentColor so parent color cascades
+    const inkPaths = Array.from(svg.querySelectorAll("path")).filter(
+      (p) => !p.getAttribute("class")?.includes("cls-0") &&
+             !p.getAttribute("class")?.includes("cls-1")
+    );
+    inkPaths.forEach((p) => {
+      expect(p.getAttribute("fill") ?? "currentColor").toMatch(/currentColor|^$/);
+    });
+  });
+});

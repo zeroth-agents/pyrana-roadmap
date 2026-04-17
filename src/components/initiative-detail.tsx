@@ -112,6 +112,35 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
+function SectionHeader({
+  num,
+  label,
+  detail,
+}: {
+  num: string;
+  label: string;
+  detail?: string;
+}) {
+  return (
+    <div className="mt-7">
+      <div className="flex items-baseline gap-2.5">
+        <span className="font-display text-[11px] tracking-[0.08em] bg-ink text-cream px-1.5 py-0.5">
+          §{num}
+        </span>
+        <span className="font-display text-[16px] tracking-[-0.02em] uppercase">
+          {label}
+        </span>
+        {detail && (
+          <span className="ml-auto text-[9px] tracking-[0.18em] opacity-60 uppercase">
+            {detail}
+          </span>
+        )}
+      </div>
+      <div className="h-[2px] bg-ink mt-1" />
+    </div>
+  );
+}
+
 export function InitiativeDetail({
   initiative,
   pillars,
@@ -312,54 +341,14 @@ export function InitiativeDetail({
             )}
           </div>
 
-          {/* Project subtitle + description */}
-          {initiative.description && (
-            <p className="text-sm text-muted-foreground leading-relaxed">{initiative.description}</p>
-          )}
-          {initiative.content && (
-            <div className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{initiative.content}</div>
-          )}
-
-          {/* Milestones */}
-          {(() => {
-            const milestones: Milestone[] = (() => { try { return JSON.parse(initiative.milestones); } catch { return []; } })();
-            if (milestones.length === 0) return null;
-            return (
-              <>
-                <Separator />
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-foreground/60">
-                    Milestones ({milestones.length})
-                  </span>
-                  <div className="mt-3 flex flex-col gap-3">
-                    {milestones.map((m) => (
-                      <div key={m.name} className="rounded-md border bg-card p-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">{m.name}</span>
-                          <span className="text-xs text-muted-foreground">{Math.round(m.progress)}%</span>
-                        </div>
-                        {m.description && (
-                          <p className="mt-1 text-xs text-muted-foreground">{m.description}</p>
-                        )}
-                        <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
-                          <div
-                            className="h-full rounded-full bg-primary transition-all"
-                            style={{ width: `${Math.round(m.progress)}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
-            );
-          })()}
-
-          <Separator />
-
-          {/* Rationale (editable) */}
-          <div>
-            <label className="text-xs font-medium">Rationale</label>
+          {/* §01 Why — Rationale */}
+          <SectionHeader num="01" label="Why" detail="Rationale" />
+          {(rationale || initiative.why) ? (
+            <blockquote className="mt-3 font-serif italic text-[15px] leading-[1.35] bg-cream-2 border-2 border-ink p-3.5 shadow-brut-sm before:content-['\u201C'] before:text-[22px] before:not-italic before:opacity-60 before:mr-0.5 after:content-['\u201D'] after:text-[22px] after:not-italic after:opacity-60 after:ml-0.5">
+              {rationale || initiative.why}
+            </blockquote>
+          ) : null}
+          <div className="mt-3">
             <Textarea
               value={rationale}
               onChange={(e) => setRationale(e.target.value)}
@@ -369,8 +358,8 @@ export function InitiativeDetail({
                   handleSaveRationale();
                 }
               }}
-              className="mt-1"
               rows={2}
+              placeholder="Why are we doing this?"
             />
             {rationale !== initiative.why && (
               <Button
@@ -384,7 +373,61 @@ export function InitiativeDetail({
             )}
           </div>
 
-          <Separator />
+          {/* §02 Scope — description + content */}
+          {(initiative.description || initiative.content) && (
+            <>
+              <SectionHeader num="02" label="Scope" detail="What's in, what's out" />
+              {initiative.description && (
+                <p className="mt-3 text-[13px] leading-[1.55] text-ink-soft">
+                  {initiative.description}
+                </p>
+              )}
+              {initiative.content && (
+                <div className="mt-2 text-[13px] leading-[1.55] whitespace-pre-wrap">
+                  {initiative.content}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* §03 Milestones — stamp-cards */}
+          {(() => {
+            const milestones: Milestone[] = (() => {
+              try { return JSON.parse(initiative.milestones); } catch { return []; }
+            })();
+            if (milestones.length === 0) return null;
+            return (
+              <>
+                <SectionHeader num="03" label="Milestones" detail={String(milestones.length)} />
+                <div className="mt-3 flex flex-col gap-2.5">
+                  {milestones.map((m) => {
+                    const pct = Math.round(m.progress);
+                    const done = pct >= 100;
+                    return (
+                      <div
+                        key={m.name}
+                        className={cn(
+                          "border-2 border-ink shadow-brut-sm p-3 grid grid-cols-[1fr_auto] gap-1.5",
+                          done ? "bg-pillar-bx" : "bg-cream"
+                        )}
+                      >
+                        <div className="font-display text-[13px] tracking-[-0.01em]">{m.name}</div>
+                        <div className="font-display text-[16px] tracking-[-0.03em]">{pct}%</div>
+                        {m.description && (
+                          <p className="col-span-full text-[11px] leading-[1.4] opacity-75">
+                            {m.description}
+                          </p>
+                        )}
+                        <div className="col-span-full h-1.5 border-[1.5px] border-ink bg-cream-2 mt-1">
+                          <div className="h-full bg-ink" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            );
+          })()}
 
           {/* Issues list */}
           <div>

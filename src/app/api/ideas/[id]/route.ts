@@ -45,7 +45,7 @@ export async function GET(
   const upVoters = votes.filter((v) => v.value === 1);
   const downVoters = votes.filter((v) => v.value === -1);
   const userVoteRow = votes.find((v) => v.userId === user.oid);
-  const userVote = userVoteRow?.value ?? 0;
+  const userVote: 1 | -1 | 0 = (userVoteRow?.value as 1 | -1 | undefined) ?? 0;
 
   return NextResponse.json({
     ...idea,

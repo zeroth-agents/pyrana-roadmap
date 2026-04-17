@@ -217,6 +217,16 @@ export function BoardView({
           )}
         </button>
       </div>
+      {pillars.length === 0 ? (
+        <div className="border-2 border-dashed border-foreground hatch-ink p-10 flex flex-col items-center justify-center gap-3" style={{ opacity: 0.9 }}>
+          <span className="font-display text-[20px] tracking-[-0.02em] uppercase bg-background px-3 py-1 border-2 border-foreground">
+            No pillars yet
+          </span>
+          <p className="font-serif italic text-[13px] max-w-[48ch] text-center bg-background px-3 py-1.5 border-2 border-foreground">
+            Run a Linear sync from <span className="font-mono not-italic">/settings</span> or seed the database (<span className="font-mono not-italic">pnpm db:seed</span>) to populate the five pillars.
+          </p>
+        </div>
+      ) : (
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -322,6 +332,7 @@ export function BoardView({
           )}
         </DragOverlay>
       </DndContext>
+      )}
     </TooltipProvider>
   );
 }

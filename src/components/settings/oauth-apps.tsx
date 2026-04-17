@@ -27,7 +27,6 @@ export function OauthApps() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [redirects, setRedirects] = useState("");
-  const [writeScope, setWriteScope] = useState(false);
   const [newSecret, setNewSecret] = useState<{ clientId: string; clientSecret: string } | null>(null);
 
   async function load() {
@@ -64,7 +63,7 @@ export function OauthApps() {
       body: JSON.stringify({
         name,
         redirect_uris,
-        scopes: writeScope ? ["read", "write"] : ["read"],
+        scopes: ["read", "write"],
       }),
     });
     if (res.ok) {
@@ -72,7 +71,6 @@ export function OauthApps() {
       setNewSecret({ clientId: data.client_id, clientSecret: data.client_secret });
       setName("");
       setRedirects("");
-      setWriteScope(false);
       load();
     }
   }
@@ -119,14 +117,9 @@ export function OauthApps() {
             value={redirects}
             onChange={(e) => setRedirects(e.target.value)}
           />
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={writeScope}
-              onChange={(e) => setWriteScope(e.target.checked)}
-            />
-            Grant write scope
-          </label>
+          <p className="text-xs text-muted-foreground">
+            Grants read + write access to the roadmap.
+          </p>
           <Button onClick={create}>Create app</Button>
         </div>
 

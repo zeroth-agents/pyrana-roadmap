@@ -27,6 +27,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@googleapis/drive": "^20.1.0",
     "@linear/sdk": "^78.0.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.1",

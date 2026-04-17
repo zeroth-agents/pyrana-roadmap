@@ -1,16 +1,15 @@
-import { NextResponse } from "next/server";
+import { randomUUID } from "crypto";
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { getUser } from "@/lib/auth-utils";
-import { tools, type ToolName } from "@/lib/mcp/tools";
-import { ScopeError } from "@/lib/mcp/require-scope";
-import { createRateLimiter } from "@/lib/oauth/rate-limit";
-import { createHash } from "crypto";
+import { createMcpServer } from "@/lib/mcp/server";
+import { storeSession, getSession, deleteSession } from "@/lib/mcp/session-store";
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const rl = createRateLimiter({ limit: 60, windowMs: 60_000 });
-
 function unauthorizedWithDiscovery(origin: string) {
-  return new NextResponse(JSON.stringify({ error: "unauthorized" }), {
+  return new Response(JSON.stringify({ error: "unauthorized" }), {
     status: 401,
     headers: {
       "content-type": "application/json",
@@ -19,18 +18,11 @@ function unauthorizedWithDiscovery(origin: string) {
   });
 }
 
-interface JsonRpcRequest {
-  jsonrpc: "2.0";
-  id: string | number | null;
-  method: string;
-  params?: Record<string, unknown>;
-}
-
-function jsonRpcResult(id: string | number | null, result: unknown) {
-  return { jsonrpc: "2.0" as const, id, result };
-}
-function jsonRpcError(id: string | number | null, code: number, message: string) {
-  return { jsonrpc: "2.0" as const, id, error: { code, message } };
+function jsonRpcError(status: number, message: string, id: unknown = null) {
+  return new Response(
+    JSON.stringify({ jsonrpc: "2.0", error: { code: -32000, message }, id }),
+    { status, headers: { "content-type": "application/json" } }
+  );
 }
 
 export async function POST(request: Request) {
@@ -38,76 +30,72 @@ export async function POST(request: Request) {
   const user = await getUser(request.headers);
   if (!user) return unauthorizedWithDiscovery(origin);
 
-  const bearer = request.headers.get("authorization")?.slice(7) ?? "";
-  const rlKey = bearer ? createHash("sha256").update(bearer).digest("hex") : user.oid;
-  if (!rl.check(rlKey)) {
-    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
-  }
-
-  let body: JsonRpcRequest;
+  let body: unknown;
   try {
-    body = (await request.json()) as JsonRpcRequest;
+    body = await request.json();
   } catch {
-    return NextResponse.json({ error: "invalid_json" }, { status: 400 });
+    return jsonRpcError(400, "Invalid JSON");
   }
 
-  const id = body.id ?? null;
+  const sessionId = request.headers.get("mcp-session-id");
 
-  if (body.method === "initialize") {
-    return NextResponse.json(
-      jsonRpcResult(id, {
-        protocolVersion: "2025-06-18",
-        capabilities: { tools: {} },
-        serverInfo: { name: "pyrana-roadmap", version: "0.0.0" },
-      })
-    );
+  // Existing session
+  if (sessionId) {
+    const session = getSession(sessionId);
+    if (!session) return jsonRpcError(404, "Session not found. Re-initialize.");
+    if (session.userOid !== user.oid) return jsonRpcError(403, "Forbidden");
+    return session.transport.handleRequest(request, { parsedBody: body });
   }
 
-  if (body.method === "tools/list") {
-    return NextResponse.json(
-      jsonRpcResult(id, {
-        tools: Object.entries(tools).map(([name, t]) => ({
-          name,
-          description: t.description,
-          inputSchema: { type: "object" }, // minimal; full JSON Schema conversion deferred
-        })),
-      })
-    );
-  }
+  // New session (must be initialize)
+  if (isInitializeRequest(body)) {
+    const transport = new WebStandardStreamableHTTPServerTransport({
+      sessionIdGenerator: () => randomUUID(),
+      onsessioninitialized: (sid) => {
+        storeSession(sid, { transport, server, userOid: user.oid, lastSeen: Date.now() });
+      },
+    });
 
-  if (body.method === "tools/call") {
-    const params = (body.params ?? {}) as {
-      name: ToolName;
-      arguments?: Record<string, unknown>;
+    transport.onclose = () => {
+      if (transport.sessionId) deleteSession(transport.sessionId);
     };
-    const tool = tools[params.name];
-    if (!tool) {
-      return NextResponse.json(jsonRpcError(id, -32601, `unknown tool: ${params.name}`));
-    }
-    const parsed = tool.inputSchema.safeParse(params.arguments ?? {});
-    if (!parsed.success) {
-      return NextResponse.json(jsonRpcError(id, -32602, "invalid_argument"));
-    }
-    try {
-      const result = await (tool.handler as (u: typeof user, a: unknown) => Promise<unknown>)(
-        user,
-        parsed.data
-      );
-      return NextResponse.json(
-        jsonRpcResult(id, {
-          content: [{ type: "text", text: JSON.stringify(result) }],
-        })
-      );
-    } catch (e) {
-      if (e instanceof ScopeError) {
-        return NextResponse.json(jsonRpcError(id, -32001, e.message), { status: 403 });
-      }
-      if ((e as Error).message === "not_found") {
-        return NextResponse.json(jsonRpcError(id, -32004, "not_found"), { status: 404 });
-      }
-      return NextResponse.json(jsonRpcError(id, -32000, (e as Error).message), { status: 500 });
-    }
+
+    const server = createMcpServer(user);
+    await server.connect(transport);
+
+    return transport.handleRequest(request, { parsedBody: body });
   }
 
-  return NextResponse.json(jsonRpcError(id, -32601, `unknown method: ${body.method}`));
+  return jsonRpcError(400, "Missing Mcp-Session-Id header or not an initialize request");
+}
+
+export async function GET(request: Request) {
+  const origin = process.env.APP_URL ?? new URL(request.url).origin;
+  const user = await getUser(request.headers);
+  if (!user) return unauthorizedWithDiscovery(origin);
+
+  const sessionId = request.headers.get("mcp-session-id");
+  if (!sessionId) return jsonRpcError(400, "Missing Mcp-Session-Id header");
+
+  const session = getSession(sessionId);
+  if (!session) return jsonRpcError(404, "Session not found. Re-initialize.");
+  if (session.userOid !== user.oid) return jsonRpcError(403, "Forbidden");
+
+  return session.transport.handleRequest(request);
+}
+
+export async function DELETE(request: Request) {
+  const origin = process.env.APP_URL ?? new URL(request.url).origin;
+  const user = await getUser(request.headers);
+  if (!user) return unauthorizedWithDiscovery(origin);
+
+  const sessionId = request.headers.get("mcp-session-id");
+  if (!sessionId) return jsonRpcError(400, "Missing Mcp-Session-Id header");
+
+  const session = getSession(sessionId);
+  if (!session) return jsonRpcError(404, "Session not found");
+  if (session.userOid !== user.oid) return jsonRpcError(403, "Forbidden");
+
+  deleteSession(sessionId);
+  return new Response(null, { status: 204 });
 }

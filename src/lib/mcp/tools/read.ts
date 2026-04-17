@@ -1,136 +1,136 @@
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { pillars, initiatives, ideas, comments, users } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
 import type { AuthUser } from "@/lib/auth-utils";
 
-export const readTools = {
-  whoami: {
-    description: "Return the current authenticated user and granted scopes.",
-    inputSchema: z.object({}),
-    handler: async (user: AuthUser, _args: Record<string, never>) => {
-      return { oid: user.oid, name: user.name, scopes: user.scopes };
-    },
-  },
+function textResult(data: unknown) {
+  return { content: [{ type: "text" as const, text: JSON.stringify(data) }] };
+}
 
-  list_pillars: {
-    description: "List all pillars with descriptions and customer stories.",
-    inputSchema: z.object({}),
-    handler: async (_user: AuthUser, _args: Record<string, never>) => {
-      return await db.select().from(pillars).orderBy(pillars.sortOrder);
+export function registerReadTools(server: McpServer, user: AuthUser) {
+  server.registerTool(
+    "whoami",
+    {
+      description: "Return the current authenticated user and granted scopes.",
+      inputSchema: {},
+      annotations: { readOnlyHint: true },
     },
-  },
+    async () => textResult({ oid: user.oid, name: user.name, scopes: user.scopes })
+  );
 
-  list_initiatives: {
-    description:
-      "List initiatives, optionally filtered by pillar, lane, or assignee.",
-    inputSchema: z.object({
-      pillarId: z.string().uuid().optional(),
-      lane: z.enum(["now", "next", "backlog", "done"]).optional(),
-      assigneeId: z.string().uuid().optional(),
-    }),
-    handler: async (
-      _user: AuthUser,
-      args: {
-        pillarId?: string;
-        lane?: "now" | "next" | "backlog" | "done";
-        assigneeId?: string;
-      }
-    ) => {
+  server.registerTool(
+    "list_pillars",
+    {
+      description: "List all pillars with descriptions and customer stories.",
+      inputSchema: {},
+      annotations: { readOnlyHint: true },
+    },
+    async () => textResult(await db.select().from(pillars).orderBy(pillars.sortOrder))
+  );
+
+  server.registerTool(
+    "list_initiatives",
+    {
+      description: "List initiatives, optionally filtered by pillar, lane, or assignee.",
+      inputSchema: {
+        pillarId: z.string().uuid().optional().describe("Filter by pillar UUID"),
+        lane: z.enum(["now", "next", "backlog", "done"]).optional().describe("Filter by lane"),
+        assigneeId: z.string().uuid().optional().describe("Filter by assignee UUID"),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async (args) => {
       const conditions = [];
-      if (args.pillarId)
-        conditions.push(eq(initiatives.pillarId, args.pillarId));
+      if (args.pillarId) conditions.push(eq(initiatives.pillarId, args.pillarId));
       if (args.lane) conditions.push(eq(initiatives.lane, args.lane));
-      if (args.assigneeId)
-        conditions.push(eq(initiatives.assigneeId, args.assigneeId));
+      if (args.assigneeId) conditions.push(eq(initiatives.assigneeId, args.assigneeId));
       const q = conditions.length
         ? db.select().from(initiatives).where(and(...conditions))
         : db.select().from(initiatives);
-      return await q;
-    },
-  },
+      return textResult(await q);
+    }
+  );
 
-  get_initiative: {
-    description: "Get a single initiative by id.",
-    inputSchema: z.object({ id: z.string().uuid() }),
-    handler: async (_user: AuthUser, args: { id: string }) => {
-      const rows = await db
-        .select()
-        .from(initiatives)
-        .where(eq(initiatives.id, args.id));
+  server.registerTool(
+    "get_initiative",
+    {
+      description: "Get a single initiative by id.",
+      inputSchema: { id: z.string().uuid().describe("Initiative UUID") },
+      annotations: { readOnlyHint: true },
+    },
+    async (args) => {
+      const rows = await db.select().from(initiatives).where(eq(initiatives.id, args.id));
       if (rows.length === 0) throw new Error("not_found");
-      return rows[0];
-    },
-  },
+      return textResult(rows[0]);
+    }
+  );
 
-  list_ideas: {
-    description: "List ideas, optionally filtered by status or pillar.",
-    inputSchema: z.object({
-      status: z.enum(["open", "promoted", "archived"]).optional(),
-      pillarId: z.string().uuid().optional(),
-    }),
-    handler: async (
-      _user: AuthUser,
-      args: {
-        status?: "open" | "promoted" | "archived";
-        pillarId?: string;
-      }
-    ) => {
+  server.registerTool(
+    "list_ideas",
+    {
+      description: "List ideas, optionally filtered by status or pillar.",
+      inputSchema: {
+        status: z.enum(["open", "promoted", "archived"]).optional().describe("Filter by status"),
+        pillarId: z.string().uuid().optional().describe("Filter by pillar UUID"),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async (args) => {
       const conditions = [];
       if (args.status) conditions.push(eq(ideas.status, args.status));
       if (args.pillarId) conditions.push(eq(ideas.pillarId, args.pillarId));
       const q = conditions.length
         ? db.select().from(ideas).where(and(...conditions))
         : db.select().from(ideas);
-      return await q;
-    },
-  },
+      return textResult(await q);
+    }
+  );
 
-  get_idea: {
-    description: "Get a single idea by id.",
-    inputSchema: z.object({ id: z.string().uuid() }),
-    handler: async (_user: AuthUser, args: { id: string }) => {
-      const rows = await db
-        .select()
-        .from(ideas)
-        .where(eq(ideas.id, args.id));
+  server.registerTool(
+    "get_idea",
+    {
+      description: "Get a single idea by id.",
+      inputSchema: { id: z.string().uuid().describe("Idea UUID") },
+      annotations: { readOnlyHint: true },
+    },
+    async (args) => {
+      const rows = await db.select().from(ideas).where(eq(ideas.id, args.id));
       if (rows.length === 0) throw new Error("not_found");
-      return rows[0];
-    },
-  },
+      return textResult(rows[0]);
+    }
+  );
 
-  list_comments: {
-    description: "List comments for a pillar, initiative, or idea.",
-    inputSchema: z.object({
-      targetType: z.enum(["pillar", "initiative", "idea"]),
-      targetId: z.string().uuid(),
-    }),
-    handler: async (
-      _user: AuthUser,
-      args: {
-        targetType: "pillar" | "initiative" | "idea";
-        targetId: string;
-      }
-    ) => {
-      return await db
-        .select()
-        .from(comments)
-        .where(
-          and(
-            eq(comments.targetType, args.targetType),
-            eq(comments.targetId, args.targetId)
+  server.registerTool(
+    "list_comments",
+    {
+      description: "List comments for a pillar, initiative, or idea.",
+      inputSchema: {
+        targetType: z.enum(["pillar", "initiative", "idea"]).describe("Target entity type"),
+        targetId: z.string().uuid().describe("Target entity UUID"),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async (args) =>
+      textResult(
+        await db
+          .select()
+          .from(comments)
+          .where(
+            and(eq(comments.targetType, args.targetType), eq(comments.targetId, args.targetId))
           )
-        );
-    },
-  },
+      )
+  );
 
-  list_users: {
-    description: "List team members (for assignee lookups).",
-    inputSchema: z.object({}),
-    handler: async (_user: AuthUser, _args: Record<string, never>) => {
-      return await db
-        .select({ id: users.id, name: users.name, email: users.email })
-        .from(users);
+  server.registerTool(
+    "list_users",
+    {
+      description: "List team members (for assignee lookups).",
+      inputSchema: {},
+      annotations: { readOnlyHint: true },
     },
-  },
-};
+    async () =>
+      textResult(await db.select({ id: users.id, name: users.name, email: users.email }).from(users))
+  );
+}

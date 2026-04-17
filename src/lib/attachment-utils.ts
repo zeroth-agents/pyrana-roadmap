@@ -14,6 +14,7 @@ export const ALLOWED_MIME_TYPES = [
   "text/markdown",
   "text/plain",
   "text/csv",
+  "text/html",
   "image/png",
   "image/jpeg",
   "image/gif",

@@ -20,8 +20,7 @@ import { AttachmentSection } from "@/components/attachments/attachment-section";
 import { AssigneeSelect } from "@/components/assignee-select";
 import { VoteButton } from "./vote-button";
 import { PromoteDialog } from "./promote-dialog";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { ProseMarkdown } from "@/lib/markdown";
 import { getPillarSlug, getMonogram } from "@/lib/pillar-utils";
 import { cn } from "@/lib/utils";
 
@@ -212,18 +211,7 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
               <div className="px-7">
                 <SectionHeader num="01" label="Body" />
                 <div className="mt-3 font-serif italic text-[15px] leading-[1.35] bg-muted border-2 border-border p-3.5 shadow-brut-sm prose-neutral max-w-none">
-                  <Markdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      a: ({ children, href, ...props }) => (
-                        <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline decoration-primary/40 hover:decoration-primary" {...props}>
-                          {children}
-                        </a>
-                      ),
-                    }}
-                  >
-                    {idea.body}
-                  </Markdown>
+                  <ProseMarkdown>{idea.body}</ProseMarkdown>
                 </div>
               </div>
 

@@ -26,9 +26,9 @@ export async function GET(request: Request) {
   const responseType = params.get("response_type");
   const codeChallenge = params.get("code_challenge");
   const codeChallengeMethod = params.get("code_challenge_method");
-  const scopeRaw = params.get("scope") ?? "read";
   const state = params.get("state");
   const resource = params.get("resource");
+  const scopeParam = params.get("scope");
 
   if (!clientId || !redirectUri) return badRequest("client_id and redirect_uri required");
 
@@ -60,6 +60,7 @@ export async function GET(request: Request) {
     return redirectWithError(redirectUri, "invalid_request", state);
   }
 
+  const scopeRaw = scopeParam ?? client.scopes.join(" ");
   let scopes: string[];
   try {
     scopes = parseScopes(scopeRaw);

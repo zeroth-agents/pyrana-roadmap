@@ -101,3 +101,29 @@ export type VoteResponse = {
   score: number;
   userVote: 1 | -1 | 0;
 };
+
+export type IdeasListResponse = {
+  items: Array<{
+    id: string;
+    pillarId: string | null;
+    title: string;
+    body: string;
+    authorId: string;
+    authorName: string;
+    priorityScore: number | null;
+    status: IdeaStatus;
+    promotedInitiativeId: string | null;
+    linearProjectId: string | null;
+    assigneeId: string | null;
+    assigneeName: string | null;
+    createdAt: string;
+    updatedAt: string;
+    upCount: number;
+    downCount: number;
+    score: number;
+    commentCount: number;
+    userVote: 1 | -1 | 0;
+  }>;
+  total: number;
+  buriedCount: number;
+};

@@ -14,7 +14,6 @@ export async function GET(request: Request) {
   const status = url.searchParams.get("status");
   const pillarId = url.searchParams.get("pillarId");
   const assigneeId = url.searchParams.get("assigneeId");
-  const assigneeIdParam = assigneeId;
   const q = url.searchParams.get("q")?.trim() ?? "";
   const includeBuried = url.searchParams.get("includeBuried") === "true";
   const sort = url.searchParams.get("sort") ?? "votes";
@@ -26,7 +25,7 @@ export async function GET(request: Request) {
   const conditions: SQL[] = [];
   if (status) conditions.push(eq(ideas.status, status as "open" | "promoted" | "archived"));
   if (pillarId) conditions.push(eq(ideas.pillarId, pillarId));
-  if (assigneeIdParam) conditions.push(eq(ideas.assigneeId, assigneeIdParam));
+  if (assigneeId) conditions.push(eq(ideas.assigneeId, assigneeId));
   if (q) {
     const pat = `%${q}%`;
     conditions.push(or(ilike(ideas.title, pat), ilike(ideas.body, pat))!);
@@ -66,7 +65,7 @@ export async function GET(request: Request) {
   // Apply buried filter — but only when status filter is NOT "archived"
   const appliedConditions = [...conditions];
   if (!includeBuried && status !== "archived") {
-    appliedConditions.push(sql`coalesce(${voteAggSq.up}, 0) - coalesce(${voteAggSq.down}, 0) >= 0`);
+    appliedConditions.push(sql`${scoreExpr} >= 0`);
   }
 
   let orderBy;
@@ -104,7 +103,7 @@ export async function GET(request: Request) {
       updatedAt: ideas.updatedAt,
       upCount: sql<number>`coalesce(${voteAggSq.up}, 0)`.as("up_count"),
       downCount: sql<number>`coalesce(${voteAggSq.down}, 0)`.as("down_count"),
-      score: sql<number>`coalesce(${voteAggSq.up}, 0) - coalesce(${voteAggSq.down}, 0)`.as("score"),
+      score: scoreExpr.as("score"),
       commentCount: sql<number>`coalesce(${commentCountSq.count}, 0)`.as("comment_count"),
       userVote: sql<number>`coalesce(${userVoteSq.value}, 0)`.as("user_vote"),
     })
@@ -125,7 +124,7 @@ export async function GET(request: Request) {
     .where(appliedConditions.length ? and(...appliedConditions) : undefined);
 
   const buriedConditions = [...conditions];
-  buriedConditions.push(sql`coalesce(${voteAggSq.up}, 0) - coalesce(${voteAggSq.down}, 0) < 0`);
+  buriedConditions.push(sql`${scoreExpr} < 0`);
   const [buriedRow] = await db
     .select({ count: sql<number>`count(*)` })
     .from(ideas)

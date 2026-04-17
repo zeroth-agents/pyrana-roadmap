@@ -90,3 +90,7 @@ export const ListAttachmentsSchema = z.object({
   target_type: AttachmentTarget,
   target_id: z.string().uuid(),
 });
+
+export const VoteSchema = z.object({
+  value: z.union([z.literal(1), z.literal(-1)]),
+});

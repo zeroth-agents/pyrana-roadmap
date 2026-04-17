@@ -288,6 +288,7 @@ export function BoardView({
                 <LaneCell
                   key={`${lane.id}-${pillar.id}`}
                   pillarId={pillar.id}
+                  pillarName={pillar.name}
                   lane={lane.id}
                   items={boardInitiatives.filter(
                     (i) => i.pillarId === pillar.id && i.lane === lane.id
@@ -311,6 +312,7 @@ export function BoardView({
             <InitiativeCard
               initiative={activeInitiative}
               allInitiatives={initiatives}
+              pillarName={pillars.find((p) => p.id === activeInitiative.pillarId)?.name}
               onClick={() => {}}
             />
           )}

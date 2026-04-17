@@ -28,6 +28,7 @@ interface Initiative {
 
 interface LaneCellProps {
   pillarId: string;
+  pillarName: string;
   lane: string;
   items: Initiative[];
   allInitiatives: Initiative[];
@@ -37,6 +38,7 @@ interface LaneCellProps {
 
 export function LaneCell({
   pillarId,
+  pillarName,
   lane,
   items,
   allInitiatives,
@@ -66,6 +68,7 @@ export function LaneCell({
                 key={initiative.id}
                 initiative={initiative}
                 allInitiatives={allInitiatives}
+                pillarName={pillarName}
                 onClick={() => onCardClick(initiative)}
               />
             ))}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -68,17 +69,25 @@ export default function IdeasPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
+  const [q, setQ] = useState("");
+
+  useEffect(() => {
+    const handle = setTimeout(() => setQ(searchInput), 200);
+    return () => clearTimeout(handle);
+  }, [searchInput]);
 
   const fetchIdeas = useCallback(() => {
     const params = new URLSearchParams({ sort });
     if (statusFilter !== "all") params.set("status", statusFilter);
     if (pillarFilter !== "all") params.set("pillarId", pillarFilter);
     if (assigneeFilter) params.set("assigneeId", assigneeFilter);
+    if (q) params.set("q", q);
 
     return fetch(`/api/ideas?${params}`)
       .then((r) => r.json())
       .then((data) => setIdeas(data.items));
-  }, [sort, statusFilter, pillarFilter, assigneeFilter]);
+  }, [sort, statusFilter, pillarFilter, assigneeFilter, q]);
 
   useEffect(() => {
     Promise.all([
@@ -173,6 +182,13 @@ export default function IdeasPage() {
 
       {/* Toolbar */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Input
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search ideas..."
+          className="h-8 w-[200px] text-xs"
+        />
+
         {/* View toggle */}
         <div className="flex rounded-lg border">
           <button

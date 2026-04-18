@@ -36,6 +36,10 @@ vi.mock("@/lib/linear", () => ({
     url: "https://linear.app/project/1",
   }),
   updateProjectStatus: vi.fn().mockResolvedValue(undefined),
+  getProjectById: vi.fn().mockResolvedValue({
+    id: "linear-existing",
+    url: "https://linear.app/project/existing",
+  }),
 }));
 
 vi.mock("@/lib/google-drive", () => ({
@@ -312,5 +316,39 @@ describe("POST /api/ideas/[id]/promote — attachment transfer", () => {
     // Only 1 insert call (the initiative)
     expect(mockInsert).toHaveBeenCalledTimes(1);
     expect(mockDelete).not.toHaveBeenCalled();
+  });
+
+  it("links to existing Linear project and does not create a new one", async () => {
+    const { db } = await import("@/db");
+    const { createLinearProject, getProjectById, updateProjectStatus } = await import("@/lib/linear");
+
+    setupPreTransactionSelects({ db: db as unknown as Record<string, any> });
+    setupTransactionMocks([]);
+
+    // db.update is called after the transaction to persist linearProjectId on initiative + idea.
+    (db.update as ReturnType<typeof vi.fn>).mockReturnValue({
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockResolvedValue(undefined),
+      }),
+    });
+
+    const { POST } = await import("@/app/api/ideas/[id]/promote/route");
+    const res = await POST(
+      makeRequest({
+        pillarId: PILLAR_ID,
+        lane: "now",
+        linearProjectId: "linear-existing",
+      }),
+      { params: fakeParams }
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.initiative.linearProjectId).toBe("linear-existing");
+    expect(body.initiative.linearProjectUrl).toBe("https://linear.app/project/existing");
+
+    expect(createLinearProject).not.toHaveBeenCalled();
+    expect(getProjectById).toHaveBeenCalledWith("linear-existing");
+    expect(updateProjectStatus).toHaveBeenCalledWith("linear-existing", "now");
   });
 });

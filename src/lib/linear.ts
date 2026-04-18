@@ -410,3 +410,49 @@ export async function getTeamMembers(teamKey = "PYR"): Promise<TeamMember[]> {
   }));
   return cachedMembers;
 }
+
+// --- Open project search ---
+
+export interface LinearProjectSearchResult {
+  id: string;
+  name: string;
+  status: string;
+  url: string;
+}
+
+export async function searchOpenProjects(
+  q: string
+): Promise<LinearProjectSearchResult[]> {
+  if (!process.env.LINEAR_API_KEY) return [];
+  const trimmed = q.trim();
+  if (!trimmed) return [];
+
+  const projects = await linear.projects({
+    filter: {
+      name: { containsIgnoreCase: trimmed },
+      status: { type: { nin: ["completed", "canceled"] } },
+    },
+    first: 20,
+  });
+
+  const results: LinearProjectSearchResult[] = [];
+  for (const project of projects.nodes) {
+    const status = await project.status;
+    results.push({
+      id: project.id,
+      name: project.name,
+      status: status?.name ?? "Backlog",
+      url: project.url,
+    });
+  }
+  return results;
+}
+
+export async function getProjectById(
+  id: string
+): Promise<{ id: string; url: string } | null> {
+  if (!process.env.LINEAR_API_KEY) return null;
+  const project = await linear.project(id);
+  if (!project) return null;
+  return { id: project.id, url: project.url };
+}

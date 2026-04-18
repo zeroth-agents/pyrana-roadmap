@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -17,6 +18,7 @@ import { CreateIdeaDialog } from "@/components/ideas/create-idea-dialog";
 import { LayoutGrid, List, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface Pillar {
   id: string;
@@ -31,9 +33,9 @@ interface IdeaData {
   pillarId: string | null;
   status: string;
   priorityScore: number | null;
-  voteCount: number;
+  score: number;
+  userVote: 1 | -1 | 0;
   commentCount: number;
-  userVoted: boolean;
   createdAt: string;
   assigneeId?: string | null;
   assigneeName?: string | null;
@@ -56,6 +58,8 @@ const STATUS_OPTIONS = [
   { value: "archived", label: "Archived" },
 ];
 
+const PAGE_SIZE = 30;
+
 export default function IdeasPage() {
   const [ideas, setIdeas] = useState<IdeaData[]>([]);
   const [pillars, setPillars] = useState<Pillar[]>([]);
@@ -67,24 +71,95 @@ export default function IdeasPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const fetchIdeas = useCallback(() => {
-    const params = new URLSearchParams({ sort });
-    if (statusFilter !== "all") params.set("status", statusFilter);
-    if (pillarFilter !== "all") params.set("pillarId", pillarFilter);
-    if (assigneeFilter) params.set("assigneeId", assigneeFilter);
-
-    return fetch(`/api/ideas?${params}`)
-      .then((r) => r.json())
-      .then(setIdeas);
-  }, [sort, statusFilter, pillarFilter, assigneeFilter]);
+  const [searchInput, setSearchInput] = useState("");
+  const [q, setQ] = useState("");
+  const [total, setTotal] = useState(0);
+  const [buriedCount, setBuriedCount] = useState(0);
+  const [includeBuried, setIncludeBuried] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
+    const handle = setTimeout(() => setQ(searchInput), 200);
+    return () => clearTimeout(handle);
+  }, [searchInput]);
+
+  const fetchIdeas = useCallback(
+    async (offset = 0, append = false) => {
+      const params = new URLSearchParams({ sort, limit: String(PAGE_SIZE), offset: String(offset) });
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (pillarFilter !== "all") params.set("pillarId", pillarFilter);
+      if (assigneeFilter) params.set("assigneeId", assigneeFilter);
+      if (q) params.set("q", q);
+      if (includeBuried) params.set("includeBuried", "true");
+
+      const data = await fetch(`/api/ideas?${params}`).then((r) => r.json());
+      setTotal(data.total);
+      setBuriedCount(data.buriedCount);
+      setIdeas((prev) => (append ? [...prev, ...data.items] : data.items));
+    },
+    [sort, statusFilter, pillarFilter, assigneeFilter, q, includeBuried]
+  );
+
+  useEffect(() => {
+    setLoading(true);
     Promise.all([
-      fetchIdeas(),
+      fetchIdeas(0, false),
       fetch("/api/pillars").then((r) => r.json()).then(setPillars),
-    ]).then(() => setLoading(false));
+    ]).finally(() => setLoading(false));
   }, [fetchIdeas]);
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+    const observer = new IntersectionObserver(
+      async (entries) => {
+        if (entries[0].isIntersecting && ideas.length < total && !loadingMore) {
+          setLoadingMore(true);
+          try {
+            await fetchIdeas(ideas.length, true);
+          } finally {
+            setLoadingMore(false);
+          }
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [ideas.length, total, loadingMore, fetchIdeas]);
+
+  async function handleArchive(ideaId: string) {
+    const shouldHide = statusFilter !== "archived" && statusFilter !== "all";
+    const previous = ideas;
+    if (shouldHide) setIdeas((prev) => prev.filter((i) => i.id !== ideaId));
+
+    const res = await fetch(`/api/ideas/${ideaId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "archived" }),
+    });
+
+    if (!res.ok) {
+      setIdeas(previous);
+      toast.error("Could not archive");
+      return;
+    }
+
+    toast("Archived", {
+      action: {
+        label: "Undo",
+        onClick: async () => {
+          await fetch(`/api/ideas/${ideaId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "open" }),
+          });
+          fetchIdeas();
+        },
+      },
+    });
+  }
 
   if (loading) {
     return (
@@ -140,6 +215,13 @@ export default function IdeasPage() {
 
       {/* Toolbar */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Input
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search ideas..."
+          className="h-8 w-[200px] text-xs"
+        />
+
         {/* View toggle */}
         <div className="flex rounded-lg border">
           <button
@@ -200,6 +282,18 @@ export default function IdeasPage() {
           </SelectContent>
         </Select>
 
+        {statusFilter !== "archived" && (
+          <label className="flex items-center gap-1.5 text-xs">
+            <input
+              type="checkbox"
+              checked={includeBuried}
+              onChange={(e) => setIncludeBuried(e.target.checked)}
+            />
+            Include buried
+            {buriedCount > 0 && <span className="text-muted-foreground">({buriedCount})</span>}
+          </label>
+        )}
+
         <AssigneeSelect
           value={assigneeFilter}
           onChange={setAssigneeFilter}
@@ -233,6 +327,7 @@ export default function IdeasPage() {
           pillars={pillars}
           onSelectIdea={setSelectedIdeaId}
           onRefresh={fetchIdeas}
+          onArchive={handleArchive}
         />
       ) : (
         <IdeasList
@@ -240,6 +335,12 @@ export default function IdeasPage() {
           pillars={pillars}
           onSelectIdea={setSelectedIdeaId}
         />
+      )}
+
+      <div ref={sentinelRef} className="h-6" />
+      {loadingMore && <p className="text-xs text-muted-foreground text-center py-2">Loading…</p>}
+      {ideas.length > 0 && ideas.length >= total && (
+        <p className="text-xs text-muted-foreground text-center py-2">All ideas loaded</p>
       )}
 
       {/* Detail panel */}

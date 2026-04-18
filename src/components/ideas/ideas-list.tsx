@@ -23,9 +23,9 @@ interface IdeaData {
   pillarId: string | null;
   status: string;
   priorityScore: number | null;
-  voteCount: number;
+  score: number;
+  userVote: 1 | -1 | 0;
   commentCount: number;
-  userVoted: boolean;
   createdAt: string;
 }
 
@@ -78,7 +78,7 @@ export function IdeasList({ ideas, pillars, onSelectIdea }: IdeasListProps) {
                   <span className="text-muted-foreground">—</span>
                 )}
               </TableCell>
-              <TableCell className="text-center">{idea.voteCount}</TableCell>
+              <TableCell className="text-center">{idea.score}</TableCell>
               <TableCell className="text-center">{idea.commentCount}</TableCell>
               <TableCell className="text-center">
                 {idea.priorityScore ? (

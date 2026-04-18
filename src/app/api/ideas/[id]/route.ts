@@ -37,19 +37,23 @@ export async function GET(
     .where(eq(ideas.id, id));
   if (!idea) return notFound("Idea not found");
 
-  // Get vote count and voter list
   const votes = await db
-    .select({ userId: ideaVotes.userId, userName: ideaVotes.userName })
+    .select({ userId: ideaVotes.userId, userName: ideaVotes.userName, value: ideaVotes.value })
     .from(ideaVotes)
     .where(eq(ideaVotes.ideaId, id));
 
-  const userVoted = votes.some((v) => v.userId === user.oid);
+  const upVoters = votes.filter((v) => v.value === 1);
+  const downVoters = votes.filter((v) => v.value === -1);
+  const userVoteRow = votes.find((v) => v.userId === user.oid);
+  const userVote: 1 | -1 | 0 = (userVoteRow?.value as 1 | -1 | undefined) ?? 0;
 
   return NextResponse.json({
     ...idea,
-    voteCount: votes.length,
-    voters: votes,
-    userVoted,
+    upCount: upVoters.length,
+    downCount: downVoters.length,
+    score: upVoters.length - downVoters.length,
+    voters: upVoters.map(({ userId, userName }) => ({ userId, userName })),
+    userVote,
   });
 }
 

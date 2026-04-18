@@ -15,20 +15,23 @@ interface IdeaData {
   pillarId: string | null;
   status: string;
   priorityScore: number | null;
-  voteCount: number;
+  score: number;
+  userVote: 1 | -1 | 0;
   commentCount: number;
-  userVoted: boolean;
   createdAt: string;
+  assigneeId?: string | null;
+  assigneeName?: string | null;
 }
 
 interface IdeasGalleryProps {
   ideas: IdeaData[];
   pillars: Pillar[];
   onSelectIdea: (id: string) => void;
-  onRefresh: () => void;
+  onRefresh?: () => void;
+  onArchive?: (ideaId: string) => void;
 }
 
-export function IdeasGallery({ ideas, pillars, onSelectIdea, onRefresh }: IdeasGalleryProps) {
+export function IdeasGallery({ ideas, pillars, onSelectIdea, onArchive }: IdeasGalleryProps) {
   if (ideas.length === 0) {
     return (
       <div className="flex h-40 items-center justify-center">
@@ -45,7 +48,7 @@ export function IdeasGallery({ ideas, pillars, onSelectIdea, onRefresh }: IdeasG
           idea={idea}
           pillars={pillars}
           onClick={() => onSelectIdea(idea.id)}
-          onVoteChange={() => onRefresh()}
+          onArchive={onArchive}
         />
       ))}
     </div>

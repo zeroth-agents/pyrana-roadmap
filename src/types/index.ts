@@ -74,6 +74,7 @@ export const UpdateIdeaSchema = z.object({
 export const PromoteIdeaSchema = z.object({
   pillarId: z.string().uuid(),
   lane: Lane.optional().default("backlog"),
+  linearProjectId: z.string().optional(),
 });
 
 // Attachment schemas
@@ -90,3 +91,40 @@ export const ListAttachmentsSchema = z.object({
   target_type: AttachmentTarget,
   target_id: z.string().uuid(),
 });
+
+export const VoteSchema = z.object({
+  value: z.union([z.literal(1), z.literal(-1)]),
+});
+
+export type VoteResponse = {
+  upCount: number;
+  downCount: number;
+  score: number;
+  userVote: 1 | -1 | 0;
+};
+
+export type IdeasListResponse = {
+  items: Array<{
+    id: string;
+    pillarId: string | null;
+    title: string;
+    body: string;
+    authorId: string;
+    authorName: string;
+    priorityScore: number | null;
+    status: IdeaStatus;
+    promotedInitiativeId: string | null;
+    linearProjectId: string | null;
+    assigneeId: string | null;
+    assigneeName: string | null;
+    createdAt: string;
+    updatedAt: string;
+    upCount: number;
+    downCount: number;
+    score: number;
+    commentCount: number;
+    userVote: 1 | -1 | 0;
+  }>;
+  total: number;
+  buriedCount: number;
+};

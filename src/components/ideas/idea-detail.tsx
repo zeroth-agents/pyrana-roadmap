@@ -18,10 +18,9 @@ import {
 import { CommentThread } from "@/components/comment-thread";
 import { AttachmentSection } from "@/components/attachments/attachment-section";
 import { AssigneeSelect } from "@/components/assignee-select";
-import { VoteButton } from "./vote-button";
+import { VoteCluster } from "./vote-button";
 import { PromoteDialog } from "./promote-dialog";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { ProseMarkdown } from "@/lib/markdown";
 import { getPillarSlug, getMonogram } from "@/lib/pillar-utils";
 import { cn } from "@/lib/utils";
 
@@ -41,9 +40,11 @@ interface IdeaDetailData {
   priorityScore: number | null;
   promotedInitiativeId: string | null;
   linearProjectId: string | null;
-  voteCount: number;
+  upCount: number;
+  downCount: number;
+  score: number;
+  userVote: 1 | -1 | 0;
   voters: Voter[];
-  userVoted: boolean;
   createdAt: string;
   assigneeId?: string | null;
   assigneeName?: string | null;
@@ -131,12 +132,12 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
     }
   }
 
-  async function handlePromote(pillarId: string, lane: string) {
+  async function handlePromote(pillarId: string, lane: string, linearProjectId?: string) {
     if (!idea) return;
     const res = await fetch(`/api/ideas/${idea.id}/promote`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ pillarId, lane }),
+      body: JSON.stringify({ pillarId, lane, linearProjectId }),
     });
     if (res.ok) {
       const data = await res.json();
@@ -177,14 +178,12 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
 
             {/* Vote row */}
             <div className="flex items-center gap-5 mt-5 px-7">
-              <VoteButton
+              <VoteCluster
                 ideaId={idea.id}
-                initialVoted={idea.userVoted}
-                initialCount={idea.voteCount}
-                onVoteChange={(voted, count) =>
-                  setIdea((prev) =>
-                    prev ? { ...prev, userVoted: voted, voteCount: count } : prev
-                  )
+                initialUserVote={idea.userVote}
+                initialScore={idea.score}
+                onChange={(userVote, score) =>
+                  setIdea((prev) => (prev ? { ...prev, userVote, score } : prev))
                 }
               />
               <div>
@@ -212,18 +211,7 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
               <div className="px-7">
                 <SectionHeader num="01" label="Body" />
                 <div className="mt-3 font-serif italic text-[15px] leading-[1.35] bg-muted border-2 border-border p-3.5 shadow-brut-sm prose-neutral max-w-none">
-                  <Markdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      a: ({ children, href, ...props }) => (
-                        <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline decoration-primary/40 hover:decoration-primary" {...props}>
-                          {children}
-                        </a>
-                      ),
-                    }}
-                  >
-                    {idea.body}
-                  </Markdown>
+                  <ProseMarkdown>{idea.body}</ProseMarkdown>
                 </div>
               </div>
 

@@ -5,7 +5,7 @@ import { ideas, initiatives, pillars, users, attachments } from "@/db/schema";
 import { getUser } from "@/lib/auth-utils";
 import { unauthorized, badRequest, notFound } from "@/lib/errors";
 import { PromoteIdeaSchema } from "@/types";
-import { createLinearProject, updateProjectStatus } from "@/lib/linear";
+import { createLinearProject, updateProjectStatus, getProjectById } from "@/lib/linear";
 import { ensureFolder, moveFile } from "@/lib/google-drive";
 
 const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
@@ -158,26 +158,35 @@ export async function POST(
     return { initiative: newInitiative, updatedIdea: ideaUpdated };
   });
 
-  // Create Linear project OUTSIDE transaction (external API call)
+  // Resolve Linear project — either use the supplied existing one or create new
   let linearProjectId: string | null = null;
   let linearProjectUrl: string | null = null;
-  try {
-    const linearProject = await createLinearProject(
-      idea.title,
-      idea.body,
-      linearLeadId
-    );
-    linearProjectId = linearProject.id;
-    linearProjectUrl = linearProject.url;
 
-    // Set the Linear project status to match the selected lane
-    const selectedLane = parsed.data.lane ?? "backlog";
-    if (selectedLane !== "backlog") {
-      await updateProjectStatus(linearProject.id, selectedLane);
+  try {
+    if (parsed.data.linearProjectId) {
+      const existing = await getProjectById(parsed.data.linearProjectId);
+      if (existing) {
+        linearProjectId = existing.id;
+        linearProjectUrl = existing.url;
+      }
+    } else {
+      const created = await createLinearProject(
+        idea.title,
+        idea.body,
+        linearLeadId
+      );
+      linearProjectId = created.id;
+      linearProjectUrl = created.url;
+    }
+
+    if (linearProjectId) {
+      const selectedLane = parsed.data.lane ?? "backlog";
+      if (selectedLane !== "backlog") {
+        await updateProjectStatus(linearProjectId, selectedLane);
+      }
     }
   } catch (err) {
-    console.error("Failed to create Linear project:", err);
-    // Continue without Linear — still return the initiative
+    console.error("Linear project resolution failed:", err);
   }
 
   // Update initiative with Linear IDs if successful

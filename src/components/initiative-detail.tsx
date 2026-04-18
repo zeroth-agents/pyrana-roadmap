@@ -18,6 +18,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { getPillarSlug, getMonogram } from "@/lib/pillar-utils";
 import { cn } from "@/lib/utils";
+import { ProseMarkdown } from "@/lib/markdown";
 
 interface Milestone {
   name: string;
@@ -130,6 +131,7 @@ export function InitiativeDetail({
   const [lane, setLane] = useState(initiative.lane);
   const [assigneeId, setAssigneeId] = useState(initiative.assigneeId ?? null);
   const [rationale, setRationale] = useState(initiative.why);
+  const [editingRationale, setEditingRationale] = useState(false);
   const [saving, setSaving] = useState(false);
   const [issues, setIssues] = useState<LinearIssue[]>([]);
   const [loading, setLoading] = useState(false);
@@ -323,48 +325,79 @@ export function InitiativeDetail({
 
           {/* §01 Why — Rationale */}
           <SectionHeader num="01" label="Why" detail="Rationale" />
-          {(rationale || initiative.why) ? (
-            <blockquote className="mt-3 font-serif italic text-[15px] leading-[1.35] bg-muted border-2 border-border p-3.5 shadow-brut-sm before:content-['\u201C'] before:text-[22px] before:not-italic before:opacity-60 before:mr-0.5 after:content-['\u201D'] after:text-[22px] after:not-italic after:opacity-60 after:ml-0.5">
-              {rationale || initiative.why}
+          {!editingRationale ? (
+            <blockquote
+              onClick={() => setEditingRationale(true)}
+              className="mt-3 cursor-pointer font-serif italic text-[15px] leading-[1.35] bg-muted border-2 border-border p-3.5 shadow-brut-sm"
+            >
+              {(rationale || initiative.why) ? (
+                <>
+                  <span className="not-italic opacity-60 text-[22px] mr-0.5">&ldquo;</span>
+                  <span className="inline">
+                    <ProseMarkdown>{rationale || initiative.why}</ProseMarkdown>
+                  </span>
+                  <span className="not-italic opacity-60 text-[22px] ml-0.5">&rdquo;</span>
+                </>
+              ) : (
+                <span className="opacity-60">Click to add rationale…</span>
+              )}
             </blockquote>
-          ) : null}
-          <div className="mt-3">
-            <Textarea
-              value={rationale}
-              onChange={(e) => setRationale(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.metaKey || e.shiftKey) && rationale !== initiative.why) {
-                  e.preventDefault();
-                  handleSaveRationale();
-                }
-              }}
-              rows={2}
-              placeholder="Why are we doing this?"
-            />
-            {rationale !== initiative.why && (
-              <Button
-                size="sm"
-                onClick={handleSaveRationale}
-                disabled={saving}
-                className="mt-2"
-              >
-                Save Rationale
-              </Button>
-            )}
-          </div>
+          ) : (
+            <div className="mt-3">
+              <Textarea
+                value={rationale}
+                onChange={(e) => setRationale(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.metaKey || e.shiftKey)) {
+                    e.preventDefault();
+                    handleSaveRationale();
+                    setEditingRationale(false);
+                  } else if (e.key === "Escape") {
+                    setRationale(initiative.why);
+                    setEditingRationale(false);
+                  }
+                }}
+                rows={3}
+                autoFocus
+                placeholder="Why are we doing this?"
+              />
+              <div className="mt-2 flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={async () => {
+                    await handleSaveRationale();
+                    setEditingRationale(false);
+                  }}
+                  disabled={saving || rationale === initiative.why}
+                >
+                  Save
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setRationale(initiative.why);
+                    setEditingRationale(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* §02 Scope — description + content */}
           {(initiative.description || initiative.content) && (
             <>
               <SectionHeader num="02" label="Scope" detail="What's in, what's out" />
               {initiative.description && (
-                <p className="mt-3 text-[13px] leading-[1.55] text-ink-soft">
-                  {initiative.description}
-                </p>
+                <div className="mt-3 text-[13px] leading-[1.55] text-ink-soft">
+                  <ProseMarkdown>{initiative.description}</ProseMarkdown>
+                </div>
               )}
               {initiative.content && (
-                <div className="mt-2 text-[13px] leading-[1.55] whitespace-pre-wrap">
-                  {initiative.content}
+                <div className="mt-2 text-[13px] leading-[1.55]">
+                  <ProseMarkdown>{initiative.content}</ProseMarkdown>
                 </div>
               )}
             </>

@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { BoardView } from "@/components/board/board-view";
+import { InitiativesTable } from "@/components/table/initiatives-table";
 import { InitiativeDetail } from "@/components/initiative-detail";
+import { AssigneeSelect } from "@/components/assignee-select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LayoutGrid, Table as TableIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Initiative {
   id: string;
@@ -34,11 +38,14 @@ interface Pillar {
   customerStory: string;
 }
 
-export default function BoardPage() {
+type ViewMode = "board" | "table";
+
+export default function RoadmapPage() {
   const [pillars, setPillars] = useState<Pillar[]>([]);
   const [initiatives, setInitiatives] = useState<Initiative[]>([]);
   const [selectedInitiative, setSelectedInitiative] = useState<Initiative | null>(null);
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
+  const [view, setView] = useState<ViewMode>("board");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,7 +56,6 @@ export default function BoardPage() {
         fetch(`/api/initiatives${assigneeFilter ? `?assigneeId=${assigneeFilter}` : ""}`),
       ]);
 
-      // If any request is 401, redirect to sign-in
       if ([pillarsRes, initiativesRes].some((r) => r.status === 401)) {
         window.location.href = "/api/auth/signin";
         return;
@@ -65,6 +71,13 @@ export default function BoardPage() {
     load();
   }, [assigneeFilter]);
 
+  async function refreshInitiatives() {
+    const data = await fetch(
+      `/api/initiatives${assigneeFilter ? `?assigneeId=${assigneeFilter}` : ""}`
+    ).then((r) => r.json());
+    if (Array.isArray(data)) setInitiatives(data);
+  }
+
   async function handleReorder(
     updates: Array<{ id: string; sortOrder: number; lane?: string; pillarId?: string }>
   ) {
@@ -73,30 +86,53 @@ export default function BoardPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
     });
-    const data = await fetch("/api/initiatives").then((r) => r.json());
-    setInitiatives(data);
+    refreshInitiatives();
   }
+
+  async function handleUpdate(id: string, data: Partial<Initiative>) {
+    await fetch(`/api/initiatives/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    refreshInitiatives();
+  }
+
+  async function handleBulkUpdate(ids: string[], data: Partial<Initiative>) {
+    await fetch("/api/initiatives/bulk", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids, update: data }),
+    });
+    refreshInitiatives();
+  }
+
+  const quarterLabel = (() => {
+    const d = new Date();
+    const q = Math.floor(d.getMonth() / 3) + 1;
+    return `Q${q} · ${d.getFullYear()}`;
+  })();
 
   if (loading) {
     return (
       <div>
-        {/* Title + assignee chip */}
         <div className="grid grid-cols-[1fr_auto] gap-4 items-stretch mb-4">
           <div className="border-b-[3px] border-ink pb-1.5 flex items-baseline gap-3">
             <Skeleton className="h-[40px] w-[340px]" />
             <Skeleton className="h-5 w-20" />
           </div>
-          <Skeleton className="h-12 w-[200px]" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-12 w-[160px]" />
+            <Skeleton className="h-12 w-[200px]" />
+          </div>
         </div>
 
-        {/* Lane toggles */}
         <div className="flex items-center gap-2.5 mb-3">
           <Skeleton className="h-3 w-14" />
           <Skeleton className="h-7 w-24" />
           <Skeleton className="h-7 w-20" />
         </div>
 
-        {/* Board grid */}
         <div
           className="pb-4"
           style={{
@@ -109,8 +145,6 @@ export default function BoardPage() {
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={`header-${i}`} className="h-[96px] w-full" />
           ))}
-
-          {/* Now lane gutter + cells */}
           <div className="flex items-end justify-end pb-3">
             <Skeleton className="h-[72px] w-5" />
           </div>
@@ -120,18 +154,6 @@ export default function BoardPage() {
               {i % 2 === 0 && <Skeleton className="h-[70px] w-full" />}
             </div>
           ))}
-
-          <div aria-hidden style={{ gridColumn: "1 / -1", borderTop: "3px solid var(--border)", height: 0, marginTop: "2px" }} />
-
-          {/* Next lane */}
-          <div className="flex items-end justify-end pb-3">
-            <Skeleton className="h-[72px] w-5" />
-          </div>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={`next-${i}`} className="space-y-2">
-              <Skeleton className="h-[70px] w-full" />
-            </div>
-          ))}
         </div>
       </div>
     );
@@ -139,25 +161,70 @@ export default function BoardPage() {
 
   return (
     <>
-      <BoardView
-        pillars={pillars}
-        initiatives={initiatives}
-        assigneeFilter={assigneeFilter}
-        onAssigneeFilterChange={setAssigneeFilter}
-        onReorder={handleReorder}
-        onCardClick={(init) => {
-          console.log("[page] onCardClick called", init.title);
-          setSelectedInitiative(init);
-        }}
-      />
+      {/* Shared header: title + view toggle + assignee filter */}
+      <div className="grid grid-cols-[1fr_auto] gap-4 items-stretch mb-4">
+        <h1 className="font-display text-[44px] leading-[0.95] tracking-[-0.045em] border-b-[3px] border-ink pb-1.5 flex items-baseline gap-3">
+          THE&nbsp;ROADMAP
+          <span className="bg-ink text-cream font-sans text-[11px] font-semibold tracking-[0.12em] px-2 py-0.5 self-center translate-y-[-6px]">
+            {quarterLabel}
+          </span>
+        </h1>
+        <div className="flex items-stretch gap-2">
+          <div className="flex h-12 border-2 border-foreground bg-background shadow-brut-sm">
+            <button
+              onClick={() => setView("board")}
+              aria-pressed={view === "board"}
+              className={cn(
+                "flex items-center gap-1.5 px-3 font-display text-[11px] tracking-[0.14em] uppercase border-r-2 border-foreground transition-colors",
+                view === "board" ? "bg-ink text-cream" : "bg-transparent hover:bg-muted"
+              )}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              Board
+            </button>
+            <button
+              onClick={() => setView("table")}
+              aria-pressed={view === "table"}
+              className={cn(
+                "flex items-center gap-1.5 px-3 font-display text-[11px] tracking-[0.14em] uppercase transition-colors",
+                view === "table" ? "bg-ink text-cream" : "bg-transparent hover:bg-muted"
+              )}
+            >
+              <TableIcon className="h-3.5 w-3.5" />
+              Table
+            </button>
+          </div>
+          <AssigneeSelect
+            value={assigneeFilter}
+            onChange={setAssigneeFilter}
+            className="w-[200px]"
+          />
+        </div>
+      </div>
+
+      {view === "board" ? (
+        <BoardView
+          pillars={pillars}
+          initiatives={initiatives}
+          onReorder={handleReorder}
+          onCardClick={setSelectedInitiative}
+        />
+      ) : (
+        <InitiativesTable
+          initiatives={initiatives}
+          pillars={pillars}
+          onUpdate={handleUpdate}
+          onBulkUpdate={handleBulkUpdate}
+          onRowClick={setSelectedInitiative}
+        />
+      )}
+
       {selectedInitiative && (
         <InitiativeDetail
           initiative={selectedInitiative}
           pillars={pillars}
           onClose={() => setSelectedInitiative(null)}
-          onUpdate={() => {
-            fetch("/api/initiatives").then((r) => r.json()).then(setInitiatives);
-          }}
+          onUpdate={refreshInitiatives}
         />
       )}
     </>

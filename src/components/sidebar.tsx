@@ -14,8 +14,7 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS = [
-  { href: "/", label: "Board", abbr: "BD" },
-  { href: "/table", label: "Table", abbr: "TB" },
+  { href: "/", label: "Roadmap", abbr: "RM" },
   { href: "/ideas", label: "Ideas", abbr: "ID" },
   { href: "/settings", label: "Settings", abbr: "SX" },
 ];

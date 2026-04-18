@@ -14,7 +14,6 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { InitiativeCard } from "./initiative-card";
 import { LaneCell } from "./lane-cells";
-import { AssigneeSelect } from "@/components/assignee-select";
 import { cn } from "@/lib/utils";
 import { getPillarSlug, getPillarAbbr } from "@/lib/pillar-utils";
 
@@ -48,8 +47,6 @@ interface Initiative {
 interface BoardViewProps {
   pillars: Pillar[];
   initiatives: Initiative[];
-  assigneeFilter: string | null;
-  onAssigneeFilterChange: (v: string | null) => void;
   onReorder: (updates: Array<{
     id: string;
     sortOrder: number;
@@ -72,8 +69,6 @@ const OPTIONAL_LANES = [
 export function BoardView({
   pillars,
   initiatives,
-  assigneeFilter,
-  onAssigneeFilterChange,
   onReorder,
   onCardClick,
 }: BoardViewProps) {
@@ -150,29 +145,8 @@ export function BoardView({
   const backlogCount = initiatives.filter((i) => i.lane === "backlog").length;
   const doneCount = initiatives.filter((i) => i.lane === "done").length;
 
-  const quarterLabel = (() => {
-    const d = new Date();
-    const q = Math.floor(d.getMonth() / 3) + 1;
-    return `Q${q} · ${d.getFullYear()}`;
-  })();
-
   return (
     <TooltipProvider>
-      {/* Top strip: title + assignee chip */}
-      <div className="grid grid-cols-[1fr_auto] gap-4 items-stretch mb-4">
-        <h1 className="font-display text-[44px] leading-[0.95] tracking-[-0.045em] border-b-[3px] border-ink pb-1.5 flex items-baseline gap-3">
-          THE&nbsp;ROADMAP
-          <span className="bg-ink text-cream font-sans text-[11px] font-semibold tracking-[0.12em] px-2 py-0.5 self-center translate-y-[-6px]">
-            {quarterLabel}
-          </span>
-        </h1>
-        <AssigneeSelect
-          value={assigneeFilter}
-          onChange={onAssigneeFilterChange}
-          className="w-[200px]"
-        />
-      </div>
-
       {/* Lane toggles row */}
       <div className="flex items-center gap-2.5 mb-3">
         <span className="text-[10px] font-display uppercase tracking-[0.2em] text-ink-soft">

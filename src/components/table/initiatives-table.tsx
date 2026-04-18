@@ -26,19 +26,21 @@ interface Pillar {
   name: string;
 }
 
-interface InitiativesTableProps {
-  initiatives: Initiative[];
+interface InitiativesTableProps<T extends Initiative> {
+  initiatives: T[];
   pillars: Pillar[];
   onUpdate: (id: string, data: Partial<Initiative>) => Promise<void>;
   onBulkUpdate: (ids: string[], data: Partial<Initiative>) => Promise<void>;
+  onRowClick?: (initiative: T) => void;
 }
 
-export function InitiativesTable({
+export function InitiativesTable<T extends Initiative>({
   initiatives,
   pillars,
   onUpdate,
   onBulkUpdate,
-}: InitiativesTableProps) {
+  onRowClick,
+}: InitiativesTableProps<T>) {
   const [filters, setFilters] = useState({ pillar: "", lane: "", size: "" });
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null);
@@ -198,12 +200,18 @@ export function InitiativesTable({
                 </TableCell>
                 <TableCell
                   className="cursor-pointer"
-                  onClick={() => setEditingCell({ id: initiative.id, field: "title" })}
+                  onClick={() => {
+                    if (editingCell?.id === initiative.id && editingCell.field === "title") return;
+                    if (onRowClick) onRowClick(initiative);
+                    else setEditingCell({ id: initiative.id, field: "title" });
+                  }}
+                  onDoubleClick={() => setEditingCell({ id: initiative.id, field: "title" })}
                 >
                   {editingCell?.id === initiative.id && editingCell.field === "title" ? (
                     <Input
                       defaultValue={initiative.title}
                       autoFocus
+                      onClick={(e) => e.stopPropagation()}
                       onBlur={(e) => {
                         onUpdate(initiative.id, { title: e.target.value });
                         setEditingCell(null);
@@ -216,7 +224,7 @@ export function InitiativesTable({
                       }}
                     />
                   ) : (
-                    <span className="font-semibold">{initiative.title}</span>
+                    <span className="font-semibold hover:underline">{initiative.title}</span>
                   )}
                 </TableCell>
                 <TableCell>

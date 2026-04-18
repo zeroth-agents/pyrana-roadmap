@@ -23,7 +23,7 @@ function makeSubquerySqMock() {
 describe("GET /api/ideas", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns envelope shape with items, total, buriedCount", async () => {
+  it("returns envelope shape with items and total", async () => {
     const { db } = await import("@/db");
 
     (db.select as any)
@@ -60,14 +60,6 @@ describe("GET /api/ideas", () => {
             where: vi.fn().mockResolvedValue([{ count: 10 }]),
           }),
         }),
-      })
-      // call 6: buried count query
-      .mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          leftJoin: vi.fn().mockReturnValue({
-            where: vi.fn().mockResolvedValue([{ count: 4 }]),
-          }),
-        }),
       });
 
     const { GET } = await import("@/app/api/ideas/route");
@@ -76,13 +68,12 @@ describe("GET /api/ideas", () => {
     const body = await res.json();
     expect(body).toHaveProperty("items");
     expect(body).toHaveProperty("total");
-    expect(body).toHaveProperty("buriedCount");
+    expect(body).not.toHaveProperty("buriedCount");
     expect(Array.isArray(body.items)).toBe(true);
     expect(body.total).toBe(10);
-    expect(body.buriedCount).toBe(4);
   });
 
-  it("accepts q, includeBuried, limit, offset params without error", async () => {
+  it("accepts q, limit, offset params without error", async () => {
     const { db } = await import("@/db");
 
     (db.select as any)
@@ -117,24 +108,15 @@ describe("GET /api/ideas", () => {
             where: vi.fn().mockResolvedValue([{ count: 0 }]),
           }),
         }),
-      })
-      // call 6: buried count
-      .mockReturnValueOnce({
-        from: vi.fn().mockReturnValue({
-          leftJoin: vi.fn().mockReturnValue({
-            where: vi.fn().mockResolvedValue([{ count: 0 }]),
-          }),
-        }),
       });
 
     const { GET } = await import("@/app/api/ideas/route");
     const res = await GET(
-      new Request("http://localhost/api/ideas?q=pipeline&includeBuried=true&limit=10&offset=20")
+      new Request("http://localhost/api/ideas?q=pipeline&limit=10&offset=20")
     );
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toHaveProperty("items");
     expect(body).toHaveProperty("total");
-    expect(body).toHaveProperty("buriedCount");
   });
 });

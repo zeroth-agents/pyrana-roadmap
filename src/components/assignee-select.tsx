@@ -20,9 +20,11 @@ interface AssigneeSelectProps {
   value: string | null;
   onChange: (userId: string | null) => void;
   className?: string;
+  /** Compact variant: single-line h-10 control with inline label, no stacked header. */
+  compact?: boolean;
 }
 
-export function AssigneeSelect({ value, onChange, className }: AssigneeSelectProps) {
+export function AssigneeSelect({ value, onChange, className, compact = false }: AssigneeSelectProps) {
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
@@ -31,6 +33,57 @@ export function AssigneeSelect({ value, onChange, className }: AssigneeSelectPro
       .then(setUsers)
       .catch(console.error);
   }, []);
+
+  if (compact) {
+    return (
+      <Select
+        value={value ?? "unassigned"}
+        onValueChange={(v) => onChange(v === "unassigned" ? null : v)}
+      >
+        <SelectTrigger
+          className={cn(
+            "h-10 gap-1.5 border-2 border-foreground bg-background px-3 shadow-brut-sm",
+            "flex items-center data-placeholder:text-muted-foreground",
+            className
+          )}
+        >
+          <span className="text-[8px] font-display uppercase tracking-[0.2em] opacity-55">
+            Assignee
+          </span>
+          <SelectValue placeholder="Anyone">
+            {(val: string) => {
+              if (val === "unassigned" || !val) {
+                return <span className="font-medium text-sm">Anyone</span>;
+              }
+              const user = users.find((u) => u.id === val);
+              if (!user) return <span className="font-medium text-sm">Anyone</span>;
+              return (
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="flex h-5 w-5 items-center justify-center border-[1.5px] border-ink bg-pillar-bx font-display text-[9px] text-ink">
+                    {getMonogram(user.name)}
+                  </span>
+                  <span className="font-medium text-sm">{user.name}</span>
+                </span>
+              );
+            }}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="unassigned">Anyone</SelectItem>
+          {users.map((u) => (
+            <SelectItem key={u.id} value={u.id}>
+              <span className="flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center border-[1.5px] border-border bg-pillar-bx font-display text-[9px] text-ink">
+                  {getMonogram(u.name)}
+                </span>
+                {u.name}
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
 
   return (
     <Select

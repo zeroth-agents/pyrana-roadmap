@@ -15,7 +15,7 @@ import { IdeasGallery } from "@/components/ideas/ideas-gallery";
 import { IdeasList } from "@/components/ideas/ideas-list";
 import { IdeaDetail } from "@/components/ideas/idea-detail";
 import { CreateIdeaDialog } from "@/components/ideas/create-idea-dialog";
-import { LayoutGrid, List, Plus, X } from "lucide-react";
+import { LayoutGrid, Table as TableIcon, Plus, X, Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -41,7 +41,7 @@ interface IdeaData {
   assigneeName?: string | null;
 }
 
-type ViewMode = "gallery" | "list";
+type ViewMode = "gallery" | "table";
 type SortMode = "votes" | "comments" | "newest" | "priority";
 
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
@@ -55,7 +55,6 @@ const STATUS_OPTIONS = [
   { value: "all", label: "All" },
   { value: "open", label: "Open" },
   { value: "promoted", label: "Promoted" },
-  { value: "archived", label: "Archived" },
 ];
 
 const PAGE_SIZE = 30;
@@ -74,8 +73,7 @@ export default function IdeasPage() {
   const [searchInput, setSearchInput] = useState("");
   const [q, setQ] = useState("");
   const [total, setTotal] = useState(0);
-  const [buriedCount, setBuriedCount] = useState(0);
-  const [includeBuried, setIncludeBuried] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const didInitialLoadRef = useRef(false);
 
@@ -87,18 +85,21 @@ export default function IdeasPage() {
   const fetchIdeas = useCallback(
     async (offset = 0, append = false) => {
       const params = new URLSearchParams({ sort, limit: String(PAGE_SIZE), offset: String(offset) });
-      if (statusFilter !== "all") params.set("status", statusFilter);
+      // When "Show archived" is on, force status=archived regardless of dropdown.
+      if (showArchived) {
+        params.set("status", "archived");
+      } else if (statusFilter !== "all") {
+        params.set("status", statusFilter);
+      }
       if (pillarFilter !== "all") params.set("pillarId", pillarFilter);
       if (assigneeFilter) params.set("assigneeId", assigneeFilter);
       if (q) params.set("q", q);
-      if (includeBuried) params.set("includeBuried", "true");
 
       const data = await fetch(`/api/ideas?${params}`).then((r) => r.json());
       setTotal(data.total);
-      setBuriedCount(data.buriedCount);
       setIdeas((prev) => (append ? [...prev, ...data.items] : data.items));
     },
-    [sort, statusFilter, pillarFilter, assigneeFilter, q, includeBuried]
+    [sort, statusFilter, pillarFilter, assigneeFilter, q, showArchived]
   );
 
   useEffect(() => {
@@ -139,7 +140,7 @@ export default function IdeasPage() {
   }, [ideas.length, total, loadingMore, fetchIdeas]);
 
   async function handleArchive(ideaId: string) {
-    const shouldHide = statusFilter !== "archived" && statusFilter !== "all";
+    const shouldHide = !showArchived && statusFilter !== "all";
     const previous = ideas;
     if (shouldHide) setIdeas((prev) => prev.filter((i) => i.id !== ideaId));
 
@@ -174,22 +175,21 @@ export default function IdeasPage() {
     return (
       <div>
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Ideas</h1>
-          <Skeleton className="h-9 w-28" />
+        <div className="grid grid-cols-[1fr_auto] gap-4 items-stretch mb-4">
+          <div className="border-b-[3px] border-ink pb-1.5">
+            <Skeleton className="h-[40px] w-[180px]" />
+          </div>
+          <Skeleton className="h-12 w-[130px]" />
         </div>
         {/* Toolbar */}
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          <Skeleton className="h-8 w-[220px]" />
-          <Skeleton className="h-8 w-[170px]" />
-          <Skeleton className="h-8 w-[160px]" />
-          <Skeleton className="h-8 w-[120px]" />
-          <Skeleton className="h-4 w-28" />
-          <Skeleton className="h-12 w-[160px]" />
-          <div className="ml-auto flex items-center gap-2">
-            <Skeleton className="h-3 w-8" />
-            <Skeleton className="h-8 w-[150px]" />
-          </div>
+          <Skeleton className="h-10 w-[220px]" />
+          <Skeleton className="h-10 w-[180px]" />
+          <Skeleton className="h-10 w-[180px]" />
+          <Skeleton className="h-10 w-[150px]" />
+          <Skeleton className="h-10 w-[180px]" />
+          <Skeleton className="h-10 w-[180px]" />
+          <Skeleton className="ml-auto h-10 w-[180px]" />
         </div>
         {/* Card grid */}
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
@@ -215,68 +215,72 @@ export default function IdeasPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Ideas</h1>
-        <Button onClick={() => setCreateOpen(true)} size="sm">
+      {/* Header — matches roadmap style */}
+      <div className="grid grid-cols-[1fr_auto] gap-4 items-stretch mb-4">
+        <h1 className="font-display text-[44px] leading-[0.95] tracking-[-0.045em] border-b-[3px] border-ink pb-1.5">
+          IDEAS
+        </h1>
+        <Button onClick={() => setCreateOpen(true)} className="h-12 px-4">
           <Plus className="mr-1 h-4 w-4" />
           New Idea
         </Button>
       </div>
 
-      {/* Toolbar */}
+      {/* Toolbar — uniform h-10 brutalist controls */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
+        {/* Search */}
         <div className="relative">
           <Input
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search title, body…"
             title="Searches idea title and body"
-            className="h-8 w-[220px] pr-7 font-sans text-xs font-medium shadow-brut-sm"
+            className="h-10 w-[220px] pr-8 text-sm shadow-brut-sm"
           />
           {searchInput && (
             <button
               type="button"
               aria-label="Clear search"
               onClick={() => setSearchInput("")}
-              className="absolute right-1 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center border-[1.5px] border-transparent hover:border-border hover:bg-muted text-muted-foreground hover:text-foreground"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center border-[1.5px] border-transparent hover:border-border hover:bg-muted text-muted-foreground hover:text-foreground"
             >
-              <X className="h-3 w-3" />
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
 
         {/* View toggle */}
-        <div className="flex h-8 border-2 border-foreground bg-background shadow-brut-sm">
+        <div className="flex h-10 border-2 border-foreground bg-background shadow-brut-sm">
           <button
             onClick={() => setView("gallery")}
             aria-pressed={view === "gallery"}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 font-display text-[10px] tracking-[0.14em] uppercase border-r-2 border-foreground transition-colors",
+              "flex items-center gap-1.5 px-3 font-display text-[11px] tracking-[0.14em] uppercase border-r-2 border-foreground transition-colors",
               view === "gallery" ? "bg-ink text-cream" : "bg-transparent hover:bg-muted"
             )}
           >
-            <LayoutGrid className="h-3 w-3" />
+            <LayoutGrid className="h-3.5 w-3.5" />
             Gallery
           </button>
           <button
-            onClick={() => setView("list")}
-            aria-pressed={view === "list"}
+            onClick={() => setView("table")}
+            aria-pressed={view === "table"}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 font-display text-[10px] tracking-[0.14em] uppercase transition-colors",
-              view === "list" ? "bg-ink text-cream" : "bg-transparent hover:bg-muted"
+              "flex items-center gap-1.5 px-3 font-display text-[11px] tracking-[0.14em] uppercase transition-colors",
+              view === "table" ? "bg-ink text-cream" : "bg-transparent hover:bg-muted"
             )}
           >
-            <List className="h-3 w-3" />
-            List
+            <TableIcon className="h-3.5 w-3.5" />
+            Table
           </button>
         </div>
 
-        {/* Filters */}
+        {/* Pillar */}
         <Select value={pillarFilter} onValueChange={(v) => v && setPillarFilter(v)}>
-          <SelectTrigger className="h-8 w-[160px] text-xs">
-            <SelectValue placeholder="All Pillars">
-              {(value: string) => value === "all" ? "All Pillars" : pillars.find((p) => p.id === value)?.name ?? "All Pillars"}
+          <SelectTrigger className="h-10 w-[180px] gap-1.5 px-3">
+            <span className="text-[8px] font-display uppercase tracking-[0.2em] opacity-55">Pillar</span>
+            <SelectValue placeholder="All">
+              {(value: string) => value === "all" ? "All" : pillars.find((p) => p.id === value)?.name ?? "All"}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
@@ -289,8 +293,19 @@ export default function IdeasPage() {
           </SelectContent>
         </Select>
 
-        <Select value={statusFilter} onValueChange={(v) => v && setStatusFilter(v)}>
-          <SelectTrigger className="h-8 w-[120px] text-xs">
+        {/* Status — disabled when "Show archived" is on */}
+        <Select
+          value={statusFilter}
+          onValueChange={(v) => v && setStatusFilter(v)}
+          disabled={showArchived}
+        >
+          <SelectTrigger
+            className={cn(
+              "h-10 w-[150px] gap-1.5 px-3",
+              showArchived && "opacity-50"
+            )}
+          >
+            <span className="text-[8px] font-display uppercase tracking-[0.2em] opacity-55">Status</span>
             <SelectValue placeholder="All">
               {(value: string) => STATUS_OPTIONS.find((o) => o.value === value)?.label ?? "All"}
             </SelectValue>
@@ -304,42 +319,56 @@ export default function IdeasPage() {
           </SelectContent>
         </Select>
 
-        {statusFilter !== "archived" && (
-          <label className="flex items-center gap-1.5 text-xs">
-            <input
-              type="checkbox"
-              checked={includeBuried}
-              onChange={(e) => setIncludeBuried(e.target.checked)}
-            />
-            Include buried
-            {buriedCount > 0 && <span className="text-muted-foreground">({buriedCount})</span>}
-          </label>
-        )}
+        {/* Show archived toggle */}
+        <button
+          type="button"
+          onClick={() => setShowArchived(!showArchived)}
+          aria-pressed={showArchived}
+          title={showArchived ? "Viewing archived ideas" : "Show archived ideas instead"}
+          className={cn(
+            "flex h-10 items-center gap-1.5 border-2 border-foreground px-3 shadow-brut-sm transition-transform",
+            "hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_var(--shadow-color)]",
+            showArchived ? "bg-ink text-cream" : "bg-background text-foreground"
+          )}
+        >
+          <span
+            aria-hidden
+            className={cn(
+              "flex h-3.5 w-3.5 items-center justify-center border-[1.5px] border-current",
+              showArchived && "bg-current"
+            )}
+          >
+            {showArchived && <Check className="h-3 w-3 text-ink" strokeWidth={3} />}
+          </span>
+          <span className="text-[11px] font-display tracking-[0.12em] uppercase">
+            Show archived
+          </span>
+        </button>
 
+        {/* Assignee */}
         <AssigneeSelect
+          compact
           value={assigneeFilter}
           onChange={setAssigneeFilter}
-          className="h-8 w-[160px] text-xs"
+          className="w-[180px]"
         />
 
         {/* Sort */}
-        <div className="ml-auto flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">Sort:</span>
-          <Select value={sort} onValueChange={(v) => v && setSort(v as SortMode)}>
-            <SelectTrigger className="h-8 w-[150px] text-xs">
-              <SelectValue placeholder="Most Voted">
-                {(value: string) => SORT_OPTIONS.find((o) => o.value === value)?.label ?? "Most Voted"}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {SORT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={sort} onValueChange={(v) => v && setSort(v as SortMode)}>
+          <SelectTrigger className="ml-auto h-10 w-[180px] gap-1.5 px-3">
+            <span className="text-[8px] font-display uppercase tracking-[0.2em] opacity-55">Sort</span>
+            <SelectValue placeholder="Most Voted">
+              {(value: string) => SORT_OPTIONS.find((o) => o.value === value)?.label ?? "Most Voted"}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Content */}

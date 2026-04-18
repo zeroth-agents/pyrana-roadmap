@@ -126,5 +126,4 @@ export type IdeasListResponse = {
     userVote: 1 | -1 | 0;
   }>;
   total: number;
-  buriedCount: number;
 };

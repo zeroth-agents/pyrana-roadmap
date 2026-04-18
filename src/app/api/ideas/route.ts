@@ -15,7 +15,6 @@ export async function GET(request: Request) {
   const pillarId = url.searchParams.get("pillarId");
   const assigneeId = url.searchParams.get("assigneeId");
   const q = url.searchParams.get("q")?.trim() ?? "";
-  const includeBuried = url.searchParams.get("includeBuried") === "true";
   const sort = url.searchParams.get("sort") ?? "votes";
   const limitRaw = parseInt(url.searchParams.get("limit") ?? "30", 10);
   const limit = Math.max(1, Math.min(100, isNaN(limitRaw) ? 30 : limitRaw));
@@ -62,11 +61,7 @@ export async function GET(request: Request) {
 
   const scoreExpr = sql<number>`coalesce(${voteAggSq.up}, 0) - coalesce(${voteAggSq.down}, 0)`;
 
-  // Apply buried filter — but only when status filter is NOT "archived"
   const appliedConditions = [...conditions];
-  if (!includeBuried && status !== "archived") {
-    appliedConditions.push(sql`${scoreExpr} >= 0`);
-  }
 
   let orderBy;
   switch (sort) {
@@ -123,18 +118,9 @@ export async function GET(request: Request) {
     .leftJoin(voteAggSq, eq(ideas.id, voteAggSq.ideaId))
     .where(appliedConditions.length ? and(...appliedConditions) : undefined);
 
-  const buriedConditions = [...conditions];
-  buriedConditions.push(sql`${scoreExpr} < 0`);
-  const [buriedRow] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(ideas)
-    .leftJoin(voteAggSq, eq(ideas.id, voteAggSq.ideaId))
-    .where(and(...buriedConditions));
-
   return NextResponse.json({
     items,
     total: Number(totalRow?.count ?? 0),
-    buriedCount: Number(buriedRow?.count ?? 0),
   });
 }
 

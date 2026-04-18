@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Map, Lightbulb, Settings, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatarPopover } from "@/components/user-avatar-popover";
@@ -13,10 +14,10 @@ interface SidebarProps {
   userEmail: string | null;
 }
 
-const NAV_ITEMS = [
-  { href: "/", label: "Roadmap", abbr: "RM" },
-  { href: "/ideas", label: "Ideas", abbr: "ID" },
-  { href: "/settings", label: "Settings", abbr: "SX" },
+const NAV_ITEMS: Array<{ href: string; label: string; icon: LucideIcon }> = [
+  { href: "/", label: "Roadmap", icon: Map },
+  { href: "/ideas", label: "Ideas", icon: Lightbulb },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar({ openIdeaCount, userName, userEmail }: SidebarProps) {
@@ -35,19 +36,21 @@ export function Sidebar({ openIdeaCount, userName, userEmail }: SidebarProps) {
             item.href === "/"
               ? pathname === "/"
               : pathname.startsWith(item.href);
+          const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={item.href}
               aria-label={item.label}
+              title={item.label}
               className={cn(
-                "relative flex h-11 w-11 items-center justify-center border-2 font-display text-[13px] tracking-[-0.05em] uppercase transition-transform",
+                "relative flex h-11 w-11 items-center justify-center border-2 transition-transform",
                 isActive
                   ? "border-sidebar-foreground bg-sidebar-foreground text-ink shadow-[3px_3px_0_var(--pillar-ai)]"
                   : "border-sidebar-foreground/60 bg-transparent text-sidebar-foreground hover:border-sidebar-foreground hover:shadow-[2px_2px_0_var(--sidebar-foreground)]"
               )}
             >
-              <span aria-hidden>{item.abbr}</span>
+              <Icon aria-hidden className="h-5 w-5" strokeWidth={2.5} />
               {item.label === "Ideas" && openIdeaCount > 0 && (
                 <span
                   aria-hidden

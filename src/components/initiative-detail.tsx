@@ -218,11 +218,23 @@ export function InitiativeDetail({
           <SheetTitle className="font-display text-[32px] leading-[0.95] tracking-[-0.035em] pb-3 border-b-[3px] border-border">
             {initiative.title}
           </SheetTitle>
-          {initiative.linearProjectId && (
-            <div className="mt-2 font-mono text-[11px] border-2 border-border bg-muted px-2 py-1 shadow-brut-sm self-start">
-              INIT-{initiative.id.slice(0, 6).toUpperCase()} · LIN
-            </div>
-          )}
+          <div className="mt-2 flex items-center gap-2 flex-wrap">
+            {initiative.linearProjectId && (
+              <div className="font-mono text-[11px] border-2 border-border bg-muted px-2 py-1 shadow-brut-sm">
+                INIT-{initiative.id.slice(0, 6).toUpperCase()} · LIN
+              </div>
+            )}
+            {initiative.linearProjectUrl && (
+              <a
+                href={initiative.linearProjectUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-display text-[10px] tracking-[0.16em] uppercase border-2 border-foreground bg-foreground text-background px-2.5 py-1 shadow-brut-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_var(--shadow-color)] transition-transform"
+              >
+                Open in Linear ↗
+              </a>
+            )}
+          </div>
         </SheetHeader>
 
         <div className="mt-2 space-y-6 px-7 pb-7">
@@ -242,7 +254,7 @@ export function InitiativeDetail({
                 onUpdate();
               }}
             >
-              <SelectTrigger className="h-auto border-2 border-foreground bg-ink text-cream px-2.5 py-1 shadow-[2px_2px_0_var(--foreground)] font-bold text-[11px] tracking-[0.04em] w-auto gap-1.5">
+              <SelectTrigger className="h-auto! border-2 border-border bg-ink text-cream px-2.5 py-1 shadow-[2px_2px_0_var(--shadow-color)] font-bold text-[11px] tracking-[0.04em] w-auto gap-1.5">
                 <span className="text-[8px] tracking-[0.2em] uppercase opacity-70 mr-0.5">Lane</span>
                 <SelectValue />
               </SelectTrigger>
@@ -272,6 +284,7 @@ export function InitiativeDetail({
 
             {/* Assignee */}
             <AssigneeSelect
+              chip
               value={assigneeId}
               onChange={async (userId) => {
                 setAssigneeId(userId);
@@ -302,26 +315,13 @@ export function InitiativeDetail({
           )}
 
           {/* Metadata row */}
-          <div className="flex gap-3.5 font-mono text-[10px] tracking-[0.04em] items-center">
-            {initiative.linearProjectUrl && (
-              <a
-                href={initiative.linearProjectUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-bold underline-offset-2 hover:underline"
-              >
-                VIEW IN LINEAR ↗
-              </a>
-            )}
-            {initiative.linearSyncedAt && (
-              <>
-                <span className="opacity-30">·</span>
-                <span>
-                  SYNCED {new Date(initiative.linearSyncedAt).toLocaleTimeString()} · {new Date(initiative.linearSyncedAt).toLocaleDateString()}
-                </span>
-              </>
-            )}
-          </div>
+          {initiative.linearSyncedAt && (
+            <div className="flex gap-3.5 font-mono text-[10px] tracking-[0.04em] items-center">
+              <span>
+                SYNCED {new Date(initiative.linearSyncedAt).toLocaleTimeString()} · {new Date(initiative.linearSyncedAt).toLocaleDateString()}
+              </span>
+            </div>
+          )}
 
           {/* §01 Why — Rationale */}
           <SectionHeader num="01" label="Why" detail="Rationale" />

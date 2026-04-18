@@ -261,7 +261,7 @@ export function InitiativesTable<T extends Initiative>({
                     onValueChange={(v) => v && onUpdate(initiative.id, { size: v })}
                   >
                     <SelectTrigger className={cn(
-                      "h-auto w-[32px] border-[1.5px] border-border px-0 py-0 justify-center font-display text-[12px] shadow-none",
+                      "h-[28px]! w-[44px] border-[1.5px] border-border px-1.5 py-0 justify-between gap-0.5 font-display text-[12px] text-ink shadow-none",
                       initiative.size === "S" && "bg-pillar-bx",
                       initiative.size === "M" && "bg-pillar-ai",
                       initiative.size === "L" && "bg-pillar-ac",

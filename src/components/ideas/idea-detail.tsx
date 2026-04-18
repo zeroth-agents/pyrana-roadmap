@@ -191,7 +191,7 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
                   Author · Submitted
                 </div>
                 <div className="font-mono text-[12px] mt-0.5 flex items-center gap-1.5">
-                  <span className="inline-flex h-5 w-5 items-center justify-center border-[1.5px] border-border bg-pillar-pf font-display text-[9px]">
+                  <span className="inline-flex h-5 w-5 items-center justify-center border-[1.5px] border-border bg-pillar-pf text-ink font-display text-[9px]">
                     {getMonogram(idea.authorName)}
                   </span>
                   {idea.authorName} · {new Date(idea.createdAt).toLocaleDateString()}
@@ -290,7 +290,7 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
                         <div
                           key={v.userId}
                           title={v.userName}
-                          className="flex h-5 w-5 items-center justify-center border-[1.5px] border-ink bg-pillar-ac font-display text-[7px]"
+                          className="flex h-5 w-5 items-center justify-center border-[1.5px] border-ink bg-pillar-ac text-ink font-display text-[7px]"
                         >
                           {getMonogram(v.userName)}
                         </div>

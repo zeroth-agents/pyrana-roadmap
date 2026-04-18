@@ -15,7 +15,7 @@ import { IdeasGallery } from "@/components/ideas/ideas-gallery";
 import { IdeasList } from "@/components/ideas/ideas-list";
 import { IdeaDetail } from "@/components/ideas/idea-detail";
 import { CreateIdeaDialog } from "@/components/ideas/create-idea-dialog";
-import { LayoutGrid, List, Plus } from "lucide-react";
+import { LayoutGrid, List, Plus, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -77,6 +77,7 @@ export default function IdeasPage() {
   const [buriedCount, setBuriedCount] = useState(0);
   const [includeBuried, setIncludeBuried] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const didInitialLoadRef = useRef(false);
 
   useEffect(() => {
     const handle = setTimeout(() => setQ(searchInput), 200);
@@ -101,11 +102,19 @@ export default function IdeasPage() {
   );
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      fetchIdeas(0, false),
-      fetch("/api/pillars").then((r) => r.json()).then(setPillars),
-    ]).finally(() => setLoading(false));
+    const isInitial = !didInitialLoadRef.current;
+    if (isInitial) {
+      setLoading(true);
+      Promise.all([
+        fetchIdeas(0, false),
+        fetch("/api/pillars").then((r) => r.json()).then(setPillars),
+      ]).finally(() => {
+        didInitialLoadRef.current = true;
+        setLoading(false);
+      });
+    } else {
+      fetchIdeas(0, false);
+    }
   }, [fetchIdeas]);
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -164,36 +173,38 @@ export default function IdeasPage() {
   if (loading) {
     return (
       <div>
-        {/* Header skeleton */}
+        {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-xl font-semibold">Ideas</h1>
-          <Skeleton className="h-8 w-24 rounded-md" />
+          <Skeleton className="h-9 w-28" />
         </div>
-        {/* Toolbar skeleton */}
+        {/* Toolbar */}
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          <Skeleton className="h-8 w-[140px] rounded-lg" />
+          <Skeleton className="h-8 w-[220px]" />
+          <Skeleton className="h-8 w-[170px]" />
           <Skeleton className="h-8 w-[160px]" />
           <Skeleton className="h-8 w-[120px]" />
-          <Skeleton className="h-8 w-[160px]" />
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-12 w-[160px]" />
           <div className="ml-auto flex items-center gap-2">
-            <Skeleton className="h-4 w-8" />
+            <Skeleton className="h-3 w-8" />
             <Skeleton className="h-8 w-[150px]" />
           </div>
         </div>
-        {/* Card grid skeleton */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-lg border p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-5 w-3/5" />
-                <Skeleton className="h-5 w-10 rounded-full" />
-              </div>
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-4/5" />
-              <div className="flex items-center gap-3 pt-2">
-                <Skeleton className="h-4 w-12" />
-                <Skeleton className="h-4 w-12" />
-                <Skeleton className="ml-auto h-5 w-16 rounded-full" />
+        {/* Card grid */}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div key={i} className="border-2 border-border bg-muted shadow-brut-sm p-3 grid grid-cols-[38px_1fr] gap-2.5">
+              <Skeleton className="h-full w-[38px]" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-[85%]" />
+                <Skeleton className="h-3 w-full" />
+                <Skeleton className="h-3 w-[70%]" />
+                <div className="flex items-center gap-2 pt-1">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-3 w-10" />
+                </div>
               </div>
             </div>
           ))}
@@ -215,37 +226,48 @@ export default function IdeasPage() {
 
       {/* Toolbar */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Input
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Search ideas..."
-          className="h-8 w-[200px] text-xs"
-        />
+        <div className="relative">
+          <Input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search title, body…"
+            title="Searches idea title and body"
+            className="h-8 w-[220px] pr-7 font-sans text-xs font-medium shadow-brut-sm"
+          />
+          {searchInput && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() => setSearchInput("")}
+              className="absolute right-1 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center border-[1.5px] border-transparent hover:border-border hover:bg-muted text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
 
         {/* View toggle */}
-        <div className="flex rounded-lg border">
+        <div className="flex h-8 border-2 border-foreground bg-background shadow-brut-sm">
           <button
             onClick={() => setView("gallery")}
+            aria-pressed={view === "gallery"}
             className={cn(
-              "flex items-center gap-1 px-3 py-1.5 text-xs transition-colors",
-              view === "gallery"
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground"
+              "flex items-center gap-1.5 px-2.5 font-display text-[10px] tracking-[0.14em] uppercase border-r-2 border-foreground transition-colors",
+              view === "gallery" ? "bg-ink text-cream" : "bg-transparent hover:bg-muted"
             )}
           >
-            <LayoutGrid className="h-3.5 w-3.5" />
+            <LayoutGrid className="h-3 w-3" />
             Gallery
           </button>
           <button
             onClick={() => setView("list")}
+            aria-pressed={view === "list"}
             className={cn(
-              "flex items-center gap-1 px-3 py-1.5 text-xs transition-colors",
-              view === "list"
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground"
+              "flex items-center gap-1.5 px-2.5 font-display text-[10px] tracking-[0.14em] uppercase transition-colors",
+              view === "list" ? "bg-ink text-cream" : "bg-transparent hover:bg-muted"
             )}
           >
-            <List className="h-3.5 w-3.5" />
+            <List className="h-3 w-3" />
             List
           </button>
         </div>

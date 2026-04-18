@@ -39,29 +39,31 @@ export function AssigneeSelect({ value, onChange, className }: AssigneeSelectPro
     >
       <SelectTrigger className={cn(
         "h-auto min-h-12 gap-2 border-2 border-foreground bg-background px-3 py-1.5 shadow-brut-sm",
-        "flex flex-col items-start data-placeholder:text-muted-foreground",
+        "flex items-center data-placeholder:text-muted-foreground",
         className
       )}>
-        <span className="text-[9px] font-display uppercase tracking-[0.18em] opacity-70 leading-none">
-          Filter by assignee
-        </span>
-        <SelectValue placeholder="Anyone">
-          {(val: string) => {
-            if (val === "unassigned" || !val) {
-              return <span className="font-display text-base leading-none">Anyone</span>;
-            }
-            const user = users.find((u) => u.id === val);
-            if (!user) return <span className="font-display text-base leading-none">Anyone</span>;
-            return (
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center border-2 border-border bg-pillar-bx font-display text-[11px] text-ink">
-                  {getMonogram(user.name)}
-                </span>
-                <span className="font-display text-base leading-none">{user.name}</span>
-              </div>
-            );
-          }}
-        </SelectValue>
+        <div className="flex flex-1 flex-col items-start gap-1 min-w-0">
+          <span className="text-[9px] font-display uppercase tracking-[0.18em] opacity-70 leading-none">
+            Filter by assignee
+          </span>
+          <SelectValue placeholder="Anyone">
+            {(val: string) => {
+              if (val === "unassigned" || !val) {
+                return <span className="font-display text-base leading-none">Anyone</span>;
+              }
+              const user = users.find((u) => u.id === val);
+              if (!user) return <span className="font-display text-base leading-none">Anyone</span>;
+              return (
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center border-2 border-border bg-pillar-bx font-display text-[11px] text-ink">
+                    {getMonogram(user.name)}
+                  </span>
+                  <span className="font-display text-base leading-none">{user.name}</span>
+                </div>
+              );
+            }}
+          </SelectValue>
+        </div>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="unassigned">Anyone</SelectItem>

@@ -256,7 +256,7 @@ export function InitiativeDetail({
             {/* Pillar chip (color-filled) */}
             <div
               className={cn(
-                "flex items-center gap-1.5 border-2 border-border px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)]",
+                "flex items-center gap-1.5 border-2 border-border px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)] text-ink",
                 `bg-pillar-${getPillarSlug(pillarName)}`
               )}
             >

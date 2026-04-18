@@ -79,38 +79,57 @@ export default function BoardPage() {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        {/* Assignee filter skeleton */}
-        <div className="flex items-center gap-2 px-4">
-          <Skeleton className="h-4 w-14" />
-          <Skeleton className="h-7 w-[180px]" />
-        </div>
-        {/* Capacity indicator + lane toggles */}
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-5 w-32" />
-          <div className="ml-auto flex gap-2">
-            <Skeleton className="h-7 w-20 rounded-md" />
-            <Skeleton className="h-7 w-16 rounded-md" />
+      <div>
+        {/* Title + assignee chip */}
+        <div className="grid grid-cols-[1fr_auto] gap-4 items-stretch mb-4">
+          <div className="border-b-[3px] border-ink pb-1.5 flex items-baseline gap-3">
+            <Skeleton className="h-[40px] w-[340px]" />
+            <Skeleton className="h-5 w-20" />
           </div>
+          <Skeleton className="h-12 w-[200px]" />
         </div>
-        {/* Board grid — 5 pillar columns, 2 lane rows */}
-        <div className="grid grid-cols-5 gap-4">
+
+        {/* Lane toggles */}
+        <div className="flex items-center gap-2.5 mb-3">
+          <Skeleton className="h-3 w-14" />
+          <Skeleton className="h-7 w-24" />
+          <Skeleton className="h-7 w-20" />
+        </div>
+
+        {/* Board grid */}
+        <div
+          className="pb-4"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "44px repeat(5, minmax(240px, 1fr))",
+            gap: "14px",
+          }}
+        >
+          <div aria-hidden />
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={`header-${i}`} className="h-4 w-24" />
+            <Skeleton key={`header-${i}`} className="h-[96px] w-full" />
           ))}
-          {/* Now lane */}
+
+          {/* Now lane gutter + cells */}
+          <div className="flex items-end justify-end pb-3">
+            <Skeleton className="h-[72px] w-5" />
+          </div>
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={`now-${i}`} className="space-y-2">
-              {i === 0 && <Skeleton className="h-3 w-8" />}
-              <Skeleton className="h-20 w-full rounded-lg" />
-              {i % 2 === 0 && <Skeleton className="h-20 w-full rounded-lg" />}
+              <Skeleton className="h-[70px] w-full" />
+              {i % 2 === 0 && <Skeleton className="h-[70px] w-full" />}
             </div>
           ))}
+
+          <div aria-hidden style={{ gridColumn: "1 / -1", borderTop: "3px solid var(--border)", height: 0, marginTop: "2px" }} />
+
           {/* Next lane */}
+          <div className="flex items-end justify-end pb-3">
+            <Skeleton className="h-[72px] w-5" />
+          </div>
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={`next-${i}`} className="space-y-2">
-              {i === 0 && <Skeleton className="h-3 w-8" />}
-              <Skeleton className="h-20 w-full rounded-lg" />
+              <Skeleton className="h-[70px] w-full" />
             </div>
           ))}
         </div>

@@ -75,7 +75,7 @@ export function IdeaCard({ idea, pillars, onClick, onVoteChange, onArchive }: Id
         {pillar && (
           <span
             className={cn(
-              "inline-block border-[1.5px] border-border font-display text-[8px] tracking-[0.18em] uppercase px-1 py-0.5 mb-1",
+              "inline-block border-[1.5px] border-ink text-ink font-display text-[8px] tracking-[0.18em] uppercase px-1 py-0.5 mb-1",
               `bg-pillar-${pillarSlug}`
             )}
           >

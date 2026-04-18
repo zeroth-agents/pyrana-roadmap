@@ -62,35 +62,41 @@ export default function TablePage() {
         <h1 className="font-display text-[32px] tracking-[-0.035em] mb-4 border-b-[3px] border-border pb-1.5">
           TABLE VIEW
         </h1>
-        <div className="space-y-4">
+        <div className="border-2 border-border bg-card shadow-brut-md overflow-hidden">
+          {/* Header bar */}
+          <div className="bg-ink text-cream px-4 py-2.5 flex justify-between items-baseline">
+            <span className="font-display text-[18px] tracking-[-0.02em]">INITIATIVES · ALL</span>
+            <Skeleton className="h-3 w-16 bg-cream/20" />
+          </div>
           {/* Filter bar */}
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3 px-4 py-3 border-b-2 border-border bg-muted">
             <Skeleton className="h-9 w-48" />
             <Skeleton className="h-9 w-32" />
             <Skeleton className="h-9 w-32" />
           </div>
-          {/* Table header */}
-          <div className="rounded-md border">
-            <div className="flex items-center gap-4 border-b px-4 py-3">
-              <Skeleton className="h-4 w-4" />
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-16" />
-              <Skeleton className="h-4 w-12" />
-              <Skeleton className="h-4 w-48" />
-            </div>
-            {/* Table rows */}
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-4 border-b px-4 py-3 last:border-0">
-                <Skeleton className="h-4 w-4" />
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-4 w-28" />
-                <Skeleton className="h-4 w-14" />
-                <Skeleton className="h-4 w-8" />
-                <Skeleton className="h-4 w-52" />
-              </div>
-            ))}
+          {/* Table header row */}
+          <div className="grid grid-cols-[32px_1.5fr_1fr_0.7fr_64px_2fr] items-center gap-3 border-b-[1.5px] border-border px-4 py-2.5">
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-3.5 w-16" />
+            <Skeleton className="h-3.5 w-14" />
+            <Skeleton className="h-3.5 w-12" />
+            <Skeleton className="h-3.5 w-10" />
+            <Skeleton className="h-3.5 w-12" />
           </div>
+          {/* Rows */}
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div
+              key={i}
+              className="grid grid-cols-[32px_1.5fr_1fr_0.7fr_64px_2fr] items-center gap-3 border-b-[1.5px] border-border px-4 py-3 last:border-0"
+            >
+              <Skeleton className="h-4 w-4" />
+              <Skeleton className="h-4 w-[70%]" />
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-4 w-12" />
+              <Skeleton className="h-6 w-8" />
+              <Skeleton className="h-4 w-[80%]" />
+            </div>
+          ))}
         </div>
       </div>
     );

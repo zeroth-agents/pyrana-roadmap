@@ -256,7 +256,7 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
                   >
                     <SelectTrigger className={cn(
                       "h-auto border-2 border-border px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)] w-auto gap-1.5",
-                      pillar ? `bg-pillar-${getPillarSlug(pillar.name)}` : "bg-background"
+                      pillar ? `bg-pillar-${getPillarSlug(pillar.name)} text-ink` : "bg-background"
                     )}>
                       <span className="text-[8px] tracking-[0.2em] uppercase opacity-55 mr-0.5">Pillar</span>
                       <SelectValue placeholder="Choose pillar" />

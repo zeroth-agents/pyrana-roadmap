@@ -101,7 +101,7 @@ export default function IdeasPage() {
   );
 
   useEffect(() => {
-    setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
+    setLoading(true);
     Promise.all([
       fetchIdeas(0, false),
       fetch("/api/pillars").then((r) => r.json()).then(setPillars),

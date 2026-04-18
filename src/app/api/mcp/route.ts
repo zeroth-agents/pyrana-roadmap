@@ -4,6 +4,7 @@ import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 import { getUser } from "@/lib/auth-utils";
 import { createMcpServer } from "@/lib/mcp/server";
 import { storeSession, getSession, deleteSession } from "@/lib/mcp/session-store";
+import { registerPromptsFromDb } from "@/lib/mcp/prompts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,10 +50,19 @@ export async function POST(request: Request) {
 
   // New session (must be initialize)
   if (isInitializeRequest(body)) {
+    const server = createMcpServer(user);
+    const prompts = await registerPromptsFromDb(server);
+
     const transport = new WebStandardStreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
       onsessioninitialized: (sid) => {
-        storeSession(sid, { transport, server, userOid: user.oid, lastSeen: Date.now() });
+        storeSession(sid, {
+          transport,
+          server,
+          userOid: user.oid,
+          lastSeen: Date.now(),
+          prompts,
+        });
       },
     });
 
@@ -60,7 +70,6 @@ export async function POST(request: Request) {
       if (transport.sessionId) deleteSession(transport.sessionId);
     };
 
-    const server = createMcpServer(user);
     await server.connect(transport);
 
     return transport.handleRequest(request, { parsedBody: body });

@@ -9,8 +9,10 @@ import {
   comments,
   users,
   attachments,
+  mcpPrompts,
 } from "@/db/schema";
 import type { AuthUser } from "@/lib/auth-utils";
+import { renderPromptPreview, type PromptRow } from "@/lib/mcp/prompts";
 
 function textResult(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data) }] };
@@ -288,6 +290,50 @@ export function registerReadTools(server: McpServer, user: AuthUser) {
           )
           .orderBy(asc(attachments.createdAt))
       )
+  );
+
+  server.registerTool(
+    "list_prompts",
+    {
+      description: "List all MCP prompts registered in the roadmap (enabled and disabled).",
+      inputSchema: {
+        includeDisabled: z
+          .boolean()
+          .optional()
+          .describe("Include disabled prompts (default true)"),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async (args) => {
+      const rows = await db.select().from(mcpPrompts).orderBy(asc(mcpPrompts.name));
+      const filtered = args.includeDisabled === false ? rows.filter((r) => r.enabled) : rows;
+      return textResult(filtered);
+    }
+  );
+
+  server.registerTool(
+    "render_prompt",
+    {
+      description:
+        "Dry-run render a prompt template with the given arguments. Does NOT invoke the model — returns the substituted messages only.",
+      inputSchema: {
+        name: z.string().describe("Prompt name (slug)"),
+        args: z
+          .record(z.string(), z.string())
+          .optional()
+          .describe("Argument values keyed by name"),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async (input) => {
+      const rows = await db
+        .select()
+        .from(mcpPrompts)
+        .where(eq(mcpPrompts.name, input.name));
+      if (rows.length === 0) throw new Error("not_found");
+      const row = rows[0] as PromptRow;
+      return textResult(renderPromptPreview(row, input.args ?? {}));
+    }
   );
 
   server.registerTool(

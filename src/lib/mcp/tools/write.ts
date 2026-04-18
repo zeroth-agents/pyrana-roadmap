@@ -8,10 +8,13 @@ import {
   ideas,
   ideaVotes,
   initiatives,
+  mcpPrompts,
 } from "@/db/schema";
 import { requireScope } from "@/lib/mcp/require-scope";
 import type { AuthUser } from "@/lib/auth-utils";
 import { parseDriveFileId } from "@/lib/attachment-utils";
+import { validatePromptName, validateArguments } from "@/lib/mcp/prompts";
+import { broadcastPromptsChanged } from "@/lib/mcp/session-store";
 
 function textResult(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data) }] };
@@ -371,6 +374,130 @@ export function registerWriteTools(server: McpServer, user: AuthUser) {
         })
         .returning();
       return textResult(row);
+    }
+  );
+
+  const promptArgumentSchema = z.object({
+    name: z
+      .string()
+      .min(1)
+      .max(32)
+      .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/),
+    description: z.string().max(500).optional(),
+    required: z.boolean().optional(),
+  });
+
+  server.registerTool(
+    "create_prompt",
+    {
+      description:
+        "Create a new MCP prompt. Template supports {{varname}} placeholders matching declared arguments. Broadcasts prompts/listChanged to active sessions.",
+      inputSchema: {
+        name: z
+          .string()
+          .describe("Unique slug — 2-64 chars, lowercase letters/digits/underscore"),
+        title: z.string().min(1).max(200).describe("Human-readable title"),
+        description: z.string().max(1000).optional().describe("What this prompt does"),
+        template: z
+          .string()
+          .min(1)
+          .max(10000)
+          .describe("Prompt body with {{var}} placeholders"),
+        arguments: z
+          .array(promptArgumentSchema)
+          .max(20)
+          .optional()
+          .describe("Declared arguments"),
+        enabled: z.boolean().optional().describe("Default true"),
+      },
+    },
+    async (args) => {
+      requireScope(user, "write");
+      validatePromptName(args.name);
+      const argsList = args.arguments ?? [];
+      validateArguments(argsList);
+      try {
+        const [row] = await db
+          .insert(mcpPrompts)
+          .values({
+            name: args.name,
+            title: args.title,
+            description: args.description ?? "",
+            template: args.template,
+            arguments: argsList,
+            enabled: args.enabled ?? true,
+            createdBy: user.oid,
+            createdByName: user.name,
+          })
+          .returning();
+        broadcastPromptsChanged().catch((err) =>
+          console.error("broadcastPromptsChanged failed:", err)
+        );
+        return textResult(row);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes("duplicate key") || msg.includes("unique")) {
+          throw new Error("A prompt with that name already exists");
+        }
+        throw err;
+      }
+    }
+  );
+
+  server.registerTool(
+    "update_prompt",
+    {
+      description:
+        "Update an existing MCP prompt by id. Any omitted field is left unchanged. Broadcasts prompts/listChanged to active sessions.",
+      inputSchema: {
+        id: z.string().uuid().describe("Prompt UUID"),
+        title: z.string().min(1).max(200).optional(),
+        description: z.string().max(1000).optional(),
+        template: z.string().min(1).max(10000).optional(),
+        arguments: z.array(promptArgumentSchema).max(20).optional(),
+        enabled: z.boolean().optional(),
+      },
+    },
+    async (args) => {
+      requireScope(user, "write");
+      if (args.arguments) validateArguments(args.arguments);
+      const updates: Record<string, unknown> = { updatedAt: new Date() };
+      if (args.title !== undefined) updates.title = args.title;
+      if (args.description !== undefined) updates.description = args.description;
+      if (args.template !== undefined) updates.template = args.template;
+      if (args.arguments !== undefined) updates.arguments = args.arguments;
+      if (args.enabled !== undefined) updates.enabled = args.enabled;
+      const [row] = await db
+        .update(mcpPrompts)
+        .set(updates)
+        .where(eq(mcpPrompts.id, args.id))
+        .returning();
+      if (!row) throw new Error("not_found");
+      broadcastPromptsChanged().catch((err) =>
+        console.error("broadcastPromptsChanged failed:", err)
+      );
+      return textResult(row);
+    }
+  );
+
+  server.registerTool(
+    "delete_prompt",
+    {
+      description:
+        "Delete an MCP prompt by id. Broadcasts prompts/listChanged to active sessions.",
+      inputSchema: { id: z.string().uuid().describe("Prompt UUID") },
+    },
+    async (args) => {
+      requireScope(user, "write");
+      const [row] = await db
+        .delete(mcpPrompts)
+        .where(eq(mcpPrompts.id, args.id))
+        .returning({ id: mcpPrompts.id });
+      if (!row) throw new Error("not_found");
+      broadcastPromptsChanged().catch((err) =>
+        console.error("broadcastPromptsChanged failed:", err)
+      );
+      return textResult({ ok: true, id: args.id });
     }
   );
 

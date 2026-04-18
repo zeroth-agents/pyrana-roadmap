@@ -7,6 +7,8 @@ import {
   timestamp,
   pgEnum,
   unique,
+  boolean,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 // Enums
@@ -159,6 +161,33 @@ export const attachments = pgTable("attachments", {
   driveFolderId: text("drive_folder_id"),
   uploadedBy: text("uploaded_by").notNull(),
   uploadedByName: text("uploaded_by_name").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const mcpPrompts = pgTable("mcp_prompts", {
+  id: uuid().defaultRandom().primaryKey(),
+  name: text().notNull().unique(),
+  title: text().notNull(),
+  description: text().notNull().default(""),
+  template: text().notNull(),
+  arguments: jsonb()
+    .$type<
+      Array<{
+        name: string;
+        description?: string;
+        required?: boolean;
+      }>
+    >()
+    .notNull()
+    .default([]),
+  enabled: boolean().notNull().default(true),
+  createdBy: text("created_by").notNull(),
+  createdByName: text("created_by_name").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

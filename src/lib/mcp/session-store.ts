@@ -1,11 +1,15 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { reconcileSessionPrompts } from "./prompts";
+
+type RegisteredPrompt = ReturnType<McpServer["registerPrompt"]>;
 
 export interface Session {
   transport: WebStandardStreamableHTTPServerTransport;
   server: McpServer;
   userOid: string;
   lastSeen: number;
+  prompts: Map<string, RegisteredPrompt>;
 }
 
 const IDLE_TTL_MS = 30 * 60 * 1000;
@@ -49,4 +53,17 @@ export function deleteSession(sessionId: string): boolean {
     return true;
   }
   return false;
+}
+
+export async function broadcastPromptsChanged(): Promise<void> {
+  const snapshot = Array.from(sessions.values());
+  await Promise.all(
+    snapshot.map(async (session) => {
+      try {
+        await reconcileSessionPrompts(session.server, session.prompts);
+      } catch (err) {
+        console.error("Failed to reconcile prompts for session:", err);
+      }
+    })
+  );
 }

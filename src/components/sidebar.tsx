@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Map, Lightbulb, Settings, type LucideIcon } from "lucide-react";
+import { Map, Lightbulb, Settings, Sparkles, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatarPopover } from "@/components/user-avatar-popover";
@@ -17,6 +17,7 @@ interface SidebarProps {
 const NAV_ITEMS: Array<{ href: string; label: string; icon: LucideIcon }> = [
   { href: "/", label: "Roadmap", icon: Map },
   { href: "/ideas", label: "Ideas", icon: Lightbulb },
+  { href: "/prompts", label: "Prompts", icon: Sparkles },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

@@ -103,6 +103,41 @@ export type VoteResponse = {
   userVote: 1 | -1 | 0;
 };
 
+// MCP Prompt schemas
+export const PromptArgumentSchema = z.object({
+  name: z
+    .string()
+    .min(1)
+    .max(32)
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "Argument name must start with a letter or underscore"),
+  description: z.string().max(500).optional(),
+  required: z.boolean().optional(),
+});
+
+export const CreatePromptSchema = z.object({
+  name: z
+    .string()
+    .min(2)
+    .max(64)
+    .regex(
+      /^[a-z][a-z0-9_]+$/,
+      "Prompt name must be 2-64 chars, lowercase letters/digits/underscore, starting with a letter"
+    ),
+  title: z.string().min(1).max(200),
+  description: z.string().max(1000).optional().default(""),
+  template: z.string().min(1).max(10000),
+  arguments: z.array(PromptArgumentSchema).max(20).optional().default([]),
+  enabled: z.boolean().optional().default(true),
+});
+
+export const UpdatePromptSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  description: z.string().max(1000).optional(),
+  template: z.string().min(1).max(10000).optional(),
+  arguments: z.array(PromptArgumentSchema).max(20).optional(),
+  enabled: z.boolean().optional(),
+});
+
 export type IdeasListResponse = {
   items: Array<{
     id: string;

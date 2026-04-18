@@ -224,7 +224,7 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
                     value={idea.priorityScore?.toString() ?? "none"}
                     onValueChange={handlePriorityChange}
                   >
-                    <SelectTrigger className="h-auto border-2 border-border px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)] w-auto gap-1.5 bg-background">
+                    <SelectTrigger className="h-auto! border-2 border-border px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)] w-auto gap-1.5 bg-background">
                       <span className="text-[8px] tracking-[0.2em] uppercase opacity-55 mr-0.5">Priority</span>
                       <SelectValue>
                         {(value: string) => value === "none" ? "—" : `P${value}`}
@@ -255,7 +255,7 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
                     }}
                   >
                     <SelectTrigger className={cn(
-                      "h-auto border-2 border-border px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)] w-auto gap-1.5",
+                      "h-auto! border-2 border-border px-2.5 py-1 font-bold text-[11px] tracking-[0.04em] shadow-[2px_2px_0_var(--shadow-color)] w-auto gap-1.5",
                       pillar ? `bg-pillar-${getPillarSlug(pillar.name)} text-ink` : "bg-background"
                     )}>
                       <span className="text-[8px] tracking-[0.2em] uppercase opacity-55 mr-0.5">Pillar</span>
@@ -268,6 +268,7 @@ export function IdeaDetail({ ideaId, pillars, onClose, onUpdate }: IdeaDetailPro
                   </Select>
 
                   <AssigneeSelect
+                    chip
                     value={idea.assigneeId ?? null}
                     onChange={async (userId) => {
                       await fetch(`/api/ideas/${idea.id}`, {

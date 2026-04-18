@@ -78,7 +78,7 @@ export function InitiativeCard({
             </h3>
             <div
               className={cn(
-                "h-[26px] w-[26px] border-2 border-border flex items-center justify-center font-display text-[15px]",
+                "h-[26px] w-[26px] border-2 border-border flex items-center justify-center font-display text-[15px] text-ink",
                 SIZE_BG[initiative.size] ?? "bg-ink text-cream"
               )}
             >

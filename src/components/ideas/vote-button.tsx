@@ -59,7 +59,7 @@ export function VoteCluster({
   return (
     <div
       className={cn(
-        "border-2 border-border bg-background w-[38px] flex flex-col items-stretch justify-start font-display select-none",
+        "self-stretch border-2 border-border bg-background w-[38px] grid grid-rows-[auto_1fr_auto] items-stretch font-display select-none",
         loading && "opacity-50"
       )}
     >
@@ -70,7 +70,7 @@ export function VoteCluster({
         aria-pressed={userVote === 1}
         disabled={loading}
         className={cn(
-          "block w-full border-b-2 border-border py-0.5 text-[12px]",
+          "block w-full border-b-2 border-border py-1 text-[12px]",
           userVote === 1 ? "bg-pillar-bx" : "bg-pillar-ai"
         )}
       >
@@ -78,7 +78,7 @@ export function VoteCluster({
       </button>
       <span
         className={cn(
-          "block py-1 text-[16px] tracking-[-0.04em] leading-none text-center",
+          "flex items-center justify-center text-[16px] tracking-[-0.04em] leading-none",
           scoreTone
         )}
       >
@@ -91,7 +91,7 @@ export function VoteCluster({
         aria-pressed={userVote === -1}
         disabled={loading}
         className={cn(
-          "block w-full border-t-2 border-border py-0.5 text-[12px]",
+          "block w-full border-t-2 border-border py-1 text-[12px]",
           userVote === -1 ? "bg-destructive/30" : "bg-muted"
         )}
       >

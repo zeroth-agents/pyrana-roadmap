@@ -221,7 +221,7 @@ export function InitiativesTable({
                 </TableCell>
                 <TableCell>
                   <span className={cn(
-                    "border-[1.5px] border-ink font-display text-[9px] tracking-[0.12em] uppercase px-1.5 py-0.5 inline-block",
+                    "border-[1.5px] border-ink text-ink font-display text-[9px] tracking-[0.12em] uppercase px-1.5 py-0.5 inline-block",
                     `bg-pillar-${pillarSlug}`
                   )}>
                     {pillar?.name ?? "Unknown"}

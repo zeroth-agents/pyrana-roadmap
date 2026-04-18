@@ -140,27 +140,86 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-xl">
+      <div className="max-w-xl space-y-6">
         <h1 className="mb-4 text-xl font-semibold">Settings</h1>
 
-        <h2 className="mb-2 text-lg font-medium">Linear Sync</h2>
-        <Skeleton className="mb-4 h-4 w-72" />
-        <Skeleton className="mb-8 h-9 w-36 rounded-md" />
-
-        <h2 className="mb-2 text-lg font-medium">API Tokens</h2>
-        <Skeleton className="mb-4 h-4 w-80" />
-        <Skeleton className="mb-4 h-9 w-40 rounded-md" />
-        <div className="space-y-2">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="flex items-center justify-between rounded-lg border p-3">
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-4 w-28" />
+        {/* Connected Apps section */}
+        <section className="border-2 border-border bg-card shadow-brut-md overflow-hidden">
+          <header className="bg-ink text-cream px-3.5 py-2.5 flex justify-between items-baseline">
+            <span className="font-display text-[16px] tracking-[-0.02em]">CONNECTED APPS</span>
+            <Skeleton className="h-3 w-14 bg-cream/20" />
+          </header>
+          <div className="p-4 space-y-2.5">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="border-2 border-border bg-card shadow-brut-sm p-3 grid grid-cols-[auto_1fr_auto] items-center gap-3">
+                <Skeleton className="h-8 w-8" />
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-48" />
+                </div>
+                <Skeleton className="h-9 w-24" />
               </div>
-              <Skeleton className="h-8 w-16 rounded-md" />
+            ))}
+          </div>
+        </section>
+
+        {/* OAuth Apps section */}
+        <section className="border-2 border-border bg-card shadow-brut-md overflow-hidden">
+          <header className="bg-ink text-cream px-3.5 py-2.5 flex justify-between items-baseline">
+            <span className="font-display text-[16px] tracking-[-0.02em]">OAUTH APPS</span>
+            <Skeleton className="h-3 w-14 bg-cream/20" />
+          </header>
+          <div className="p-4 space-y-2.5">
+            <div className="border-2 border-dashed border-border p-3 flex items-center justify-between">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-9 w-28" />
             </div>
-          ))}
-        </div>
+          </div>
+        </section>
+
+        {/* Linear Sync section */}
+        <section className="border-2 border-border bg-card shadow-brut-md overflow-hidden">
+          <header className="bg-ink text-cream px-3.5 py-2.5 flex justify-between items-baseline">
+            <span className="font-display text-[16px] tracking-[-0.02em]">LINEAR SYNC</span>
+            <Skeleton className="h-3 w-32 bg-cream/20" />
+          </header>
+          <div className="p-4">
+            <div className="flex justify-between items-baseline mb-2.5">
+              <Skeleton className="h-7 w-20" />
+              <Skeleton className="h-9 w-28" />
+            </div>
+            <Skeleton className="h-[26px] w-full" />
+            <div className="mt-4 space-y-1.5">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="grid grid-cols-[22px_1fr_auto] items-center gap-2.5 py-1.5 border-b-[1.5px] border-border">
+                  <Skeleton className="h-4 w-4" />
+                  <Skeleton className="h-3 w-[70%]" />
+                  <Skeleton className="h-3 w-8" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Access Tokens section */}
+        <section className="border-2 border-border bg-card shadow-brut-md overflow-hidden">
+          <header className="bg-ink text-cream px-3.5 py-2.5 flex justify-between items-baseline">
+            <span className="font-display text-[16px] tracking-[-0.02em]">ACCESS TOKENS</span>
+            <Skeleton className="h-3 w-14 bg-cream/20" />
+          </header>
+          <div className="p-4 space-y-2.5">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="border-2 border-border bg-card shadow-brut-sm p-3 grid grid-cols-[1fr_auto] items-center gap-2">
+                <div className="space-y-1.5">
+                  <Skeleton className="h-3.5 w-28" />
+                  <Skeleton className="h-3 w-48" />
+                </div>
+                <Skeleton className="h-9 w-20" />
+              </div>
+            ))}
+            <Skeleton className="h-[46px] w-full" />
+          </div>
+        </section>
       </div>
     );
   }

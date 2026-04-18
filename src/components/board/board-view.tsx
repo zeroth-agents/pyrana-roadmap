@@ -245,7 +245,7 @@ export function BoardView({
               <div
                 key={pillar.id}
                 className={cn(
-                  "border-2 border-border p-3 min-h-[96px] shadow-brut-sm flex flex-col justify-between",
+                  "border-2 border-border p-3 min-h-[96px] shadow-brut-sm flex flex-col justify-between text-ink",
                   `bg-pillar-${slug}`
                 )}
               >

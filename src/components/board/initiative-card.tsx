@@ -110,7 +110,7 @@ export function InitiativeCard({
             <div className="mt-2 flex items-center gap-1.5 border-t-[1.5px] border-border pt-1.5">
               <div
                 className={cn(
-                  "h-5 w-5 border-[1.5px] border-border font-display text-[9px] flex items-center justify-center",
+                  "h-5 w-5 border-[1.5px] border-border font-display text-[9px] flex items-center justify-center text-ink",
                   `bg-pillar-${pillarSlug}`
                 )}
               >

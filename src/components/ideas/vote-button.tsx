@@ -70,7 +70,7 @@ export function VoteCluster({
         aria-pressed={userVote === 1}
         disabled={loading}
         className={cn(
-          "block w-full border-b-2 border-border py-1 text-[12px]",
+          "block w-full border-b-2 border-border py-1 text-[12px] text-ink",
           userVote === 1 ? "bg-pillar-bx" : "bg-pillar-ai"
         )}
       >

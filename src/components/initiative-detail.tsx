@@ -485,7 +485,7 @@ export function InitiativeDetail({
                       <span className="text-[12px] font-semibold truncate">{issue.title}</span>
                       <span className="font-mono text-[10px] tracking-[0.04em] opacity-70">{issue.identifier}</span>
                       {issue.assigneeName && (
-                        <span className="h-[18px] w-[18px] border-[1.5px] border-border bg-pillar-pf font-display text-[9px] flex items-center justify-center">
+                        <span className="h-[18px] w-[18px] border-[1.5px] border-border bg-pillar-pf text-ink font-display text-[9px] flex items-center justify-center">
                           {getMonogram(issue.assigneeName)}
                         </span>
                       )}

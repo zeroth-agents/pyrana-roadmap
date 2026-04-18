@@ -428,15 +428,16 @@ export async function searchOpenProjects(
   if (!trimmed) return [];
 
   const projects = await linear.projects({
-    filter: { name: { containsIgnoreCase: trimmed } },
+    filter: {
+      name: { containsIgnoreCase: trimmed },
+      status: { type: { nin: ["completed", "canceled"] } },
+    },
     first: 20,
   });
 
   const results: LinearProjectSearchResult[] = [];
   for (const project of projects.nodes) {
     const status = await project.status;
-    const statusType = status?.type ?? "unstarted";
-    if (statusType === "completed" || statusType === "canceled") continue;
     results.push({
       id: project.id,
       name: project.name,

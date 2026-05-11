@@ -2,6 +2,7 @@
   "name": "pyrana-roadmap",
   "version": "0.3.10",
   "private": true,
+  "packageManager": "pnpm@10.15.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
